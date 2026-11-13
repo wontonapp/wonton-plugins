@@ -1,0 +1,128 @@
+# SearXNG：聚合多家搜索引擎的元搜索。网页给家里人搜东西，JSON 接口和搜索工具给 Bot 和 Agent 用。
+#
+# 配置只开两样上游默认关着的东西：JSON 输出（Agent 的接口约定）和国内能直连的引擎。
+# secret 用核心生成的密钥经环境变量注入（上游支持 SEARXNG_SECRET 覆盖 server.secret_key），
+# 不写进设置文件。SearXNG 不读 HTTP(S)_PROXY，出网代理写在 outgoing.proxies 里：
+# 核心没配代理时 WONTON_PROXY_URL 是空串，空值在上游客户端里按直连处理（searx/network/client.py 的空值判断）。
+services:
+  searxng:
+    image: searxng/searxng:2026.11.11-626105eec@sha256:606fc8852a53f0be4ac05116950ff480f6f56b8ef7d77b366868cc76478036e5
+    environment:
+      SEARXNG_SECRET: ${WONTON_SECRET_SEARXNG_SECRET}
+    configs:
+      - source: settings
+        target: /etc/searxng/settings.yml
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz | grep -q OK"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+      retries: 3
+
+  # 搜索工具（mcp-searxng，MIT）：让 Bot 能调“搜索”和“读网页”，工具都标了只读，不碰数据。
+  # 上游镜像设 MCP_HTTP_PORT 即启用 Streamable HTTP；SSRF 防护默认开着，读不了内网地址。
+  mcp:
+    image: isokoliuk/mcp-searxng:2.10.0@sha256:36984f151e3b575b17063eb222ce430dbb8b4bcf3f0abf0e86df18f20731d19b
+    environment:
+      SEARXNG_URL: http://searxng:8080
+      MCP_HTTP_PORT: "8080"
+      MCP_HTTP_HOST: "0.0.0.0"
+      # 上游默认 10s：没配出网代理时，被墙引擎要等满各自的超时（有引擎声明 20s），整次搜索实测 10–20s，
+      # 工具侧得等得住；配了出网代理后搜索一般在几秒内，放宽的期限不影响快路径。
+      SEARXNG_TIMEOUT_MS: "30000"
+    depends_on:
+      searxng:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health | grep -q healthy"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+      retries: 3
+
+configs:
+  settings:
+    content: |
+      use_default_settings: true
+
+      search:
+        formats:
+          - html
+          - json
+
+      # 国内能直连的引擎；上游默认全关。逐个用 JSON 接口实测过出结果（百度在机房 IP 上被 CAPTCHA，
+      # 家里宽带 IP 通常没问题，保留并如实写进验证）。
+      # bing 用 cn.bing.com：上游 settings.yml 的注释说这是给“instances hosted in China”的；
+      # 开发机上 www.bing.com 返回的页面解析不出结果，cn.bing.com 实测出结果。
+      engines:
+        - name: baidu
+          disabled: false
+        - name: bing
+          disabled: false
+          base_url: https://cn.bing.com
+        - name: sogou
+          disabled: false
+        - name: 360search
+          disabled: false
+        - name: bilibili
+          disabled: false
+
+      outgoing:
+        proxies:
+          'all://': "${WONTON_PROXY_URL:-}"
+
+x-wonton:
+  spec: "0.11"
+  id: org.searxng.searxng
+  version: 0.1.1
+  kind: app
+  title: { zh: AI 搜索引擎（SearXNG）, en: AI Search Engine (SearXNG) }
+  description:
+    zh: 像百度，但一次帮你搜好几家，不记录你搜了什么；家里的 AI 助手也用它上网查资料。
+    en: Like a search engine, but queries several at once and keeps no record of what you searched; your home AI assistant uses it to look things up too.
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/01-home.png, screenshots/02-results.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/searxng/searxng
+  license: AGPL-3.0-or-later
+  tags:
+    zh: [AI, 搜索, 工具]
+    en: [AI, Search, Tools]
+  about:
+    zh: |
+      一次搜索同时问百度、必应、搜狗、360、B 站这些搜索引擎，把结果排在一起，不记录你搜过什么。
+
+      平时当搜索引擎用；家里的 AI 助手要查资料时，也用它来搜网页、读网页，再把结果讲给你。
+      和 vane 那种“先搜再写答案”的 AI 搜索不同，这里给的是各家的原始结果，适合自己看，也适合给 AI 当资料来源。
+    en: |
+      One search queries Baidu, Bing, Sogou, 360 and Bilibili together and ranks the results, keeping no record of your searches.
+
+      Use it as your everyday search engine; when your home AI assistant needs to look things up, it searches and reads the web through this.
+      Unlike AI search apps that write an answer for you, this shows each source's original results — good for reading yourself and for AI to cite.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: searxng
+    port: 8080
+    # 应用没有账号体系，本来就不需要登录；网关照常校验会话。
+    sso: none
+  # 其他插件按能力名接入搜索（x-wonton.search，GET /search?q=…&format=json）要等核心支持插件间依赖，
+  # 当前核心会因清单声明 provides 而拒绝安装（wontonapp/wonton#28），见 PR“底座的问题”。
+  mcp:
+    service: mcp
+    port: 8080
+    path: /mcp
+    transport: streamable-http
+  permissions:
+    # 搜索引擎和读网页都要访问外网。
+    # Search engines and web reads need external network access.
+    - network.egress
+  secrets:
+    searxng_secret:
+      generate: { bytes: 32 }
+  # 两个镜像都有 amd64 和 arm64（docker pull --platform 验证）；上游没写最低内存，按本机空闲实测取整。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

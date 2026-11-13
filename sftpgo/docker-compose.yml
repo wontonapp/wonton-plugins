@@ -1,0 +1,157 @@
+# SFTPGo：SFTP、WebDAV 和 Web 文件客户端在同一个进程里，内置 SQLite，不额外起数据库。
+#
+# 登录全走核心的 OIDC：打开网页就是 WebClient 的 OpenID 登录入口，由核心的身份提供方认证。
+# SFTPGo 的 OIDC 按绑定配置（v2.7 起），端点由它自己从发现文档取（config_url 写 issuer）。
+# implicit_roles 让角色由登录入口决定（WebClient 入口进用户，WebAdmin 入口进管理员），
+# 不依赖身份提供方的角色声明。OIDC 映射的账号必须已存在：主人的 WebClient 账号由上游的
+# pre-login hook 在首次登录时创建（见 prelogin-hook.sh），WebAdmin 没有对应的自动建号机制，
+# 需要的用户在 /web/admin 的初始化页自己建（用户名填云吞用户名即可走 OIDC 进管理员）。
+services:
+  sftpgo:
+    # 上游官方镜像。选 alpine 变体而不是默认的 debian：debian 变体里没有 wget/curl，
+    # 写不了健康检查；两个变体是同一套 CI 从同一份代码发的，alpine 版带 jq（hook 要用）。
+    # 镜像按摘要固定（多架构清单列表的摘要），标签只给人看。
+    image: drakkan/sftpgo:v2.7.6-alpine@sha256:484f430b2115ec8e015644b1a5e54a5f5b8568f883cb5146e9043885f691d8f7
+    # 镜像固定以 1000 运行，二进制能以任意 uid 跑；以用户身份运行，新建文件属主就是 PUID:PGID。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      # 数据库搬进数据目录：镜像默认把 SQLite 放在镜像内的 /var/lib/sftpgo，换 uid 跑时写不了。
+      SFTPGO_DATA_PROVIDER__NAME: /srv/sftpgo/sftpgo.db
+      SFTPGO_DATA_PROVIDER__PRE_LOGIN_HOOK: /etc/sftpgo/wonton-prelogin.sh
+      # OIDC：issuer、客户端、回调基址都用核心注入的值，不自己拼。
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__CONFIG_URL: ${WONTON_OIDC_ISSUER}
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__REDIRECT_BASE_URL: ${WONTON_APP_URL}
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__USERNAME_FIELD: preferred_username
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__IMPLICIT_ROLES: "true"
+      # 把 email 声明经 custom_fields 递给 pre-login hook（SFTPGO_LOGIND_USER 的
+      # oidc_custom_fields）：核心给每个人的 email 声明就是其内部邮箱，hook 按它填
+      # 账号邮箱，主人和家人一样。
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__CUSTOM_FIELDS: email
+      # 发信（找回密码、密码过期提醒、事件邮件）用核心注入的内部 SMTP：不认证、不加密。
+      # user/password 一律不设：SFTPGo 凭据非空就会在明文连接上尝试认证；port 必须给，
+      # 上游默认 587，而 encryption 的默认值恰好是 0（不加密）。
+      SFTPGO_SMTP__HOST: ${WONTON_SMTP_HOST}
+      SFTPGO_SMTP__PORT: ${WONTON_SMTP_PORT}
+      SFTPGO_SMTP__FROM: ${WONTON_MAIL_FROM}
+      # pre-login hook 建号时给用户设的 SFTP 密码；用户可在 WebClient 里自己改，
+      # 插件详情里显示的连接信息也用它。SFTPGo 起 hook 不继承容器环境，密码经
+      # configs 写成文件给 hook 读（见 prelogin-hook.sh）；账号邮箱不需要文件，
+      # hook 从 OIDC 的 email 声明里拿。
+      # 本插件只连核心的内部地址（OIDC 发现、令牌交换），不该走任何代理：宿主给
+      # 容器全局配过代理时（daemon 级 http_proxy），内部域名会被送去代理解析，实测
+      # 挡住过登出调用（dial tcp: lookup <实例域名>: server misbehaving）。
+      NO_PROXY: "*"
+      no_proxy: "*"
+    volumes:
+      # 绑定挂载源不能嵌套（规范卷规则），所以 app-data 按子目录分开挂，互为兄弟目录：
+      # 核心对 app-data 下作为挂载源的目录统一预创建并交给服务的 user（PUID:PGID），
+      # 容器里由 Docker 顺手建的中间目录（比如 /srv/sftpgo/data 的脚手架）才是 root，
+      # 不能把可写路径放在它们下面。
+      # - 配置、数据库和备份在 /srv/sftpgo（app-data 的 config 子目录）。
+      # - 所有用户主目录的父目录在 /srv/sftpgo/data（app-data 的 users 子目录），
+      #   管理员在 WebAdmin 里建的用户也能由应用自己建家。
+      # - 主人家的根目录单独挂（app-data 的 owner-home 子目录）：pre-login hook 建号
+      #   用的就是 /srv/sftpgo/data/<用户名>，首登录即可写；host 上它是和 users 平级的
+      #   空目录，属主交给 PUID。
+      # - 共享文件夹挂进主人主目录的子目录（挂载目标是共享文件夹本身，PUID 属主）：
+      #   Web 客户端和 SFTP 的根目录就是这几个共享文件夹，传进来的文件别的插件共用。
+      # 不走 SFTPGo 的虚拟文件夹：那要先建共享文件夹记录，动态建号时对不上。
+      - ${WONTON_APP_DATA}/config:/srv/sftpgo
+      - ${WONTON_APP_DATA}/users:/srv/sftpgo/data
+      - ${WONTON_APP_DATA}/owner-home:/srv/sftpgo/data/${WONTON_OWNER_NAME}
+      - ${WONTON_SHARE_DOCUMENTS}:/srv/sftpgo/data/${WONTON_OWNER_NAME}/documents
+      - ${WONTON_SHARE_DOWNLOADS}:/srv/sftpgo/data/${WONTON_OWNER_NAME}/downloads
+      - ${WONTON_SHARE_TRANSFERS}:/srv/sftpgo/data/${WONTON_OWNER_NAME}/transfers
+      - ${WONTON_SHARE_PHOTOS}:/srv/sftpgo/data/${WONTON_OWNER_NAME}/photos
+    configs:
+      - source: prelogin
+        target: /etc/sftpgo/wonton-prelogin.sh
+        mode: 0555
+      - source: sftp-password
+        target: /etc/sftpgo/wonton-sftp-password
+        mode: 0400
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+      start_interval: 2s
+
+configs:
+  prelogin:
+    file: prelogin-hook.sh
+  sftp-password:
+    content: ${WONTON_SECRET_CLIENT_PASSWORD}
+
+x-wonton:
+  spec: "0.11"
+  id: com.sftpgo.sftpgo
+  version: 0.1.1
+  kind: app
+  title: { zh: 文件传输站（SFTPGo）, en: File Transfer Hub (SFTPGo) }
+  description:
+    zh: 给传文件用的中转站：在家里用电脑、手机上的传输软件（比如 FileZilla）直接连上来批量传文件，网页里也能上传下载和分享。适合常大批量倒文件、习惯用传输软件的人。
+    en: "A transfer station for your files: at home, connect a transfer app such as FileZilla from your computer or phone to move files in bulk, or upload, download and share in the browser. For big batches and people who already use a transfer app."
+  icon: icon.png
+  notices: [NOTICE]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://sftpgo.com
+  # 应用（SFTPGo）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: AGPL-3.0-only
+  tags:
+    zh: [文件, 传输, 同步, SFTP]
+    en: [Files, Transfer, Sync, SFTP]
+  about:
+    zh: |
+      一台自己的文件传输站：手机、电脑用顺手的传输软件（FileZilla 这类）直连家里的文件，浏览器里也能上传下载和分享。
+
+      打开网页直接进文件客户端，用的是云吞的账号，不用再设密码。文档、下载、传输、照片这些共享文件夹都在里面，传进来的文件和别的插件共用。
+
+      想用 SFTP 客户端连：在插件详情里打开局域网开关，连接地址和账号就在旁边。改密码、双因子验证在网页右上角的个人资料里。应用发的信（找回密码、事件通知）会出现在你的 Wonton 私聊里，发给外部地址的信发不出去。
+
+      想管理服务器（建别的账号、加存储），打开 /web/admin：第一次会让你建管理员，用户名填你的云吞用户名，之后同样用云吞账号登进管理界面。
+    en: |
+      Your own file transfer station: connect from any phone or computer with a transfer app such as FileZilla, or work in the browser to upload, download and share.
+
+      Open the web UI and you are straight into the file client with your Wonton account — no second password. Your shared folders (documents, downloads, transfers, photos) are all there, so files you transfer are available to other plugins.
+
+      For SFTP clients, turn on the LAN switch in the plugin details; the address and account are right next to it. Change your SFTP password or set up two-factor authentication from your profile in the web client. Mails the app sends (password resets, event notices) appear in your Wonton private chat; mail to external addresses cannot be sent.
+
+      To administer the server (more accounts, more storage), open /web/admin: the first visit asks you to create an admin — use your Wonton username and future admin logins go through Wonton too.
+  release_notes:
+    zh: 应用发的信（找回密码、事件通知）改走云吞的内部邮箱，会出现在你的 Wonton 私聊里；发给外部地址的信发不出去。账号登录时自动带上内部邮箱（按 OIDC 声明，主人和家人一样），找回密码可用。
+    en: Mails the app sends (password resets, event notices) now go through Wonton's internal mailbox and appear in your Wonton private chat; mail to external addresses cannot be sent. Accounts pick up their internal mailbox address at login (from the OIDC claim), so password reset works.
+  webui:
+    service: sftpgo
+    port: 8080
+    # 直接进 WebClient 的 OpenID 登录入口，不先看到应用的登录页。
+    path: /web/client/oidclogin
+    sso: oidc
+    oidc:
+      redirect_paths: [/web/oidc/redirect]
+  lan:
+    ports:
+      - { service: sftpgo, port: 2022 }
+    client:
+      address: "sftp://{host}:2022"
+      username: "{user}"
+      password: "{secret:client_password}"
+  secrets:
+    client_password:
+      generate: { bytes: 24 }
+  permissions:
+    - owner.identity
+    - notify
+    - network.lan
+    - storage.share.documents:write
+    - storage.share.downloads:write
+    - storage.share.transfers:write
+    - storage.share.photos:write
+  # 上游没写最低内存，本机空闲实测约 40M，取 128M。镜像有 amd64、arm64、arm/v7、ppc64le。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 128M

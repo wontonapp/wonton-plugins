@@ -1,0 +1,158 @@
+# 思源笔记插件：本地优先的个人知识库，块级引用、双链和 Markdown 所见即所得。
+# 两个服务：siyuan 跑上游官方镜像（工作区整体放在插件数据目录，升级、重装保数据靠它）；
+# web 是上游官方 nginx，一个作用：`/welcome` 引导页把访问授权码交给主人（见下），其余请求
+# 原样反代给思源（含 WebSocket 和 Host 头，思源要靠它做来源校验）。
+#
+# 登录（sso: none）：思源是单用户工作区，没有用户体系，自带的锁屏密码（访问授权码）就是它的
+# 应用登录。授权码用云吞生成的插件密钥（secrets），第一次打开经 /welcome 交给主人，锁屏支持
+# 「记住我」；不再用 SIYUAN_ACCESS_AUTH_CODE_BYPASS 关掉思源自己的鉴权。
+#
+# 为什么不接 OIDC（SIYUAN_OIDC_*）：上游支持，但它的网页登录对非本机请求强制 https 回调
+# （内核 model/oidc.go，Public OIDC redirect URL must use HTTPS），云吞给插件的网页地址是
+# http，接不上——单容器实测容器启动即退出（退出码 22），见仓库 README。等核心网关有 https
+# 公开地址后，把 sso 换成 oidc、redirect_paths 配 /api/system/oidc/callback 即可。
+services:
+  siyuan:
+    # 上游官方镜像（b3log/siyuan，license: AGPL-3.0-or-later）。
+    # 镜像按摘要固定（多架构清单的摘要，amd64/arm64），标签只给人看。
+    image: b3log/siyuan:v3.8.9@sha256:4f9c119048b9dc685603b04aebf9e9d513695014c9fbd834e0dadd1c22801235
+    # v3.7.0 起必须显式带 serve 子命令（上游 README）；访问授权码经 SIYUAN_ACCESS_AUTH_CODE 注入。
+    command: ["serve", "--workspace=/siyuan/workspace"]
+    environment:
+      TZ: ${TZ}
+      # 上游 entrypoint 按 PUID/PGID chown 工作区再降权（默认 1000）；不传的话宿主 PUID≠1000 时
+      # 数据目录会被整体改成 1000:1000，主人失去对自己数据目录的写权限。空值时上游自己落回 1000。
+      PUID: ${PUID}
+      PGID: ${PGID}
+      # 思源自带的锁屏密码：云吞生成的插件密钥，主人第一次从 /welcome 拿到后输入（可记住）。
+      SIYUAN_ACCESS_AUTH_CODE: ${WONTON_SECRET_ACCESS_AUTH_CODE}
+    volumes:
+      # 工作区目录：上游默认容器路径就是 /siyuan/workspace，入口脚本按 PUID/PGID 调整属主。
+      - ${WONTON_APP_DATA}/workspace:/siyuan/workspace
+    # 健康检查脚本经 configs 交给容器（见 healthcheck.sh）。
+    configs:
+      - source: healthcheck
+        target: /healthcheck.sh
+        mode: 0555
+    healthcheck:
+      test: ["CMD-SHELL", "/healthcheck.sh | grep -q notebooks"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 3m
+      start_interval: 5s
+
+  web:
+    # 上游官方镜像（nginx，license: BSD-2-Clause；与模板示例同一份）。
+    image: nginx:1.31.8-alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
+    configs:
+      - source: nginx-conf
+        target: /etc/nginx/conf.d/default.conf
+      - source: welcome
+        target: /usr/share/nginx/html/welcome.html
+    healthcheck:
+      # 反代链路真通：经 nginx 自己打到思源的公开 version 接口。
+      test: ["CMD-SHELL", "wget -Y off -qO- http://127.0.0.1/api/system/version | grep -q ."]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+    depends_on:
+      siyuan:
+        condition: service_healthy
+
+configs:
+  healthcheck:
+    file: healthcheck.sh
+  nginx-conf:
+    file: web/default.conf
+  # 引导页按注入的变量插值（规范「配置文件」）：只有这一处出现授权码，页面只经网关给主人。
+  welcome:
+    content: |
+      <!DOCTYPE html>
+      <html lang="zh-CN">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+        <title>思源笔记 · 首次使用</title>
+        <style>
+          :root { color-scheme: light dark; }
+          body { margin: 0; font-family: system-ui, sans-serif; background: Canvas; color: CanvasText; }
+          main { max-width: 30rem; margin: 8vh auto 0; padding: 0 1.25rem 3rem; }
+          code { display: block; margin: .75rem 0 1.25rem; padding: .8em; border: 1px solid color-mix(in srgb, CanvasText 25%, transparent); border-radius: 8px; font-size: 1.05em; word-break: break-all; user-select: all; }
+          button { font: inherit; padding: .6em 1.2em; border-radius: 8px; border: 1px solid color-mix(in srgb, CanvasText 25%, transparent); background: transparent; color: inherit; cursor: pointer; }
+          a { color: inherit; }
+          .done { display: none; text-align: center; }
+          @media (prefers-color-scheme: dark) { img { filter: invert(1) hue-rotate(180deg); } }
+        </style>
+      </head>
+      <body>
+        <main id="need">
+          <p><img src="/stage/icon.svg" alt="" width="40" height="40" style="vertical-align: -10px"> <strong>思源笔记</strong>的访问授权码如下。回到锁屏输入它即可进入（可勾选记住），之后也可以在思源「设置 - 关于」里改成自己的。</p>
+          <code data-code="${WONTON_SECRET_ACCESS_AUTH_CODE}">${WONTON_SECRET_ACCESS_AUTH_CODE}</code>
+          <p><button type="button" id="copy">复制授权码</button> <a id="enter" href="/stage/build/mobile/">进入思源</a></p>
+        </main>
+        <main class="done" id="ok"><p>已经登录，正在进入思源…</p></main>
+        <script>
+          // 已有工作区会话时（锁屏输过、记住我生效）直接进应用，不再停在引导页。
+          var appPath = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? '/stage/build/mobile/' : '/stage/build/desktop/';
+          document.getElementById('enter').href = appPath;
+          fetch('/api/notebook/lsNotebooks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+            .then(r => r.json())
+            .then(d => { if (d && d.code === 0) { document.getElementById('need').style.display = 'none'; document.getElementById('ok').style.display = 'block'; location.replace(appPath); } })
+            .catch(() => {});
+          document.getElementById('copy').addEventListener('click', () => navigator.clipboard.writeText('${WONTON_SECRET_ACCESS_AUTH_CODE}'));
+        </script>
+      </body>
+      </html>
+
+x-wonton:
+  spec: "0.6"
+  id: org.b3log.siyuan
+  version: 0.1.1
+  kind: app
+  title: { zh: 知识笔记本（思源笔记）, en: Knowledge Notebook (SiYuan) }
+  description:
+    zh: 给长期积累用的笔记本：任何一段话都能被别的笔记引用，笔记之间自然连成一张网，还带大纲和复习卡片。写读书笔记、学习笔记，越记越成体系。
+    en: "A notebook for knowledge you build over years: any paragraph can be linked from another note so your notes grow into a web, with outlines and flashcards built in. Great for study and reading notes."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/mobile-editor.png, screenshots/mobile-home.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://b3log.org/siyuan
+  # 上游应用的许可证（源码文件头 SPDX: AGPL-3.0-or-later）；插件包自己的许可证写在仓库 LICENSE 里。
+  license: AGPL-3.0-or-later
+  tags:
+    zh: [笔记, 文档, Markdown]
+    en: [Notes, Documents, Markdown]
+  about:
+    zh: |
+      思源笔记的网页版：笔记按“块”编辑——一段话、一张图都是一块，块与块互相引用、自动连成一张网；还带大纲、复习卡片、表格，支持多标签页和分屏。
+
+      笔记、图片附件和索引全部存在这台服务器的插件数据目录里，本地优先；手机浏览器打开就是移动版布局，可以加到主屏。
+
+      第一次打开会看到思源的锁屏：访问授权码由云吞生成，在打开的引导页上（也可以随时再打开 /welcome 查看），输入时可勾选「记住」，之后不用再输；建议登录后在思源「设置 - 关于」里改成自己的。
+
+      集市主题和插件下载、云同步、AI 写作这些要连外网的功能默认用不了——本插件不申请出网权限，笔记数据只留在家里。
+    en: |
+      SiYuan in the browser: notes are edited as blocks — a paragraph or an image is one block, and blocks reference each other to grow into a web of links; with outlines, flashcards, tables, tabs and split view.
+
+      Notebooks, assets and indexes all live in this server's plugin data directory, local-first; the phone browser gets the mobile layout and can be added to the home screen.
+
+      The first open shows SiYuan's lock screen: the access code is generated by Wonton and shown on the welcome page (reopen /welcome any time). Tick "remember" to skip it later; you can change it in SiYuan settings afterwards.
+
+      Marketplace downloads, cloud sync and AI writing need the internet and are unavailable by default — this plugin asks no outbound access, so notes never leave home.
+  release_notes: { zh: 网关反代用的 nginx 镜像升到 1.31.8。, en: "The gateway reverse-proxy image nginx is upgraded to 1.31.8." }
+  webui:
+    service: web
+    port: 80
+    sso: none
+  permissions: []
+  secrets:
+    # 思源的锁屏密码（访问授权码）：云吞生成，经引导页交给主人，主人可随时在思源里改。
+    access_auth_code:
+      generate: { bytes: 16, encoding: hex }
+  # 多架构镜像；上游没有写部署内存下限，按空载实测取整（实测方式见 PR）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M
