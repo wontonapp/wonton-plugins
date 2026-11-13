@@ -1,0 +1,59 @@
+name: 发布
+
+# 推 tag 触发：`<id>/v<版本>`。有自建镜像的插件（<id>/images/ 下有 Dockerfile）多架构构建、用 GITHUB_TOKEN
+# 推到 ghcr.io，不登录别的镜像仓库；推完把摘要写进 compose 提交，再把 tag 移到这个提交上——发布过的 tag
+# 只在这一步移动，之后不再动。这个提交只挂在 tag 上，不推回 main。纯上游镜像的插件没有这一步：
+# 直接按官方索引的要求检查，tag 打在清单版本的提交上。
+on:
+  push:
+    tags: ['*/v*']
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  # 一次只发一个，tag 的移动按推送顺序。
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      id: ${{ steps.tag.outputs.id }}
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: tag
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: python3 .github/tag.py "$REF_NAME"
+
+  plugin:
+    needs: plan
+    runs-on: ubuntu-24.04
+    env:
+      WONTON_PLUGIN: ${{ needs.plan.outputs.id }}
+      TAG_PUSHED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        if: hashFiles(format('{0}/images/**/Dockerfile', needs.plan.outputs.id)) != ''
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        if: hashFiles(format('{0}/images/**/Dockerfile', needs.plan.outputs.id)) != ''
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        if: hashFiles(format('{0}/images/**/Dockerfile', needs.plan.outputs.id)) != ''
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: 发布
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          scripts/publish.sh --official

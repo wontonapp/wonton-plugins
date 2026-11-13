@@ -1,0 +1,13 @@
+# 上游镜像发新版时开 PR，标签和摘要一起改；每个插件目录一份检查。
+# directories 的 /* 只匹配第一层目录，正好是各插件的子目录；scripts/、.github/ 没有 compose 清单，自动跳过。
+# group-by: dependency-name 把同一个上游镜像在多个插件里的升级合成一个 PR，避免几十个插件同时发版时刷屏。
+version: 2
+updates:
+  - package-ecosystem: docker-compose
+    directories:
+      - "/*"
+    schedule:
+      interval: daily
+    groups:
+      image-updates:
+        group-by: dependency-name
