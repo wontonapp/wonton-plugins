@@ -20,7 +20,10 @@ id_of() { sed -n 's/.*"id":"\([^"]*\)".*/\1/p'; }
 admin_json="$(json --post-data="{\"username\":\"admin\",\"password\":\"$WONTON_SECRET_CLIENT_PASSWORD\"}" "$base/auth/login")"
 admin_token="$(printf '%s' "$admin_json" | token_of)"
 admin_id="$(printf '%s' "$admin_json" | id_of)"
-[ -n "$admin_token" ] && [ -n "$admin_id" ] || { echo "admin 登录失败：$admin_json" >&2; exit 1; }
+if [ -z "$admin_token" ] || [ -z "$admin_id" ]; then
+  echo "admin 登录失败：$admin_json" >&2
+  exit 1
+fi
 
 # 账号已存在时（重装没删数据、但 ready 文件丢了）接口回 409，接着用新账号登录就行。
 json --header="x-nd-authorization: Bearer $admin_token" \
