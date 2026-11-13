@@ -1,0 +1,72 @@
+图标
+====
+
+`icon.svg` 取自上游 Frigate 的品牌标志
+（https://github.com/blakeblackshear/frigate/blob/v0.18.2/docs/static/img/branding/logo.svg）：
+图形、颜色、比例原样保留，只按插件规范的满幅要求在底下垫了一层不透明浅灰底色
+（#F4F4F4），未裁切、未改动图形本身。
+
+来源目录的版权与商标声明（https://github.com/blakeblackshear/frigate/blob/v0.18.2/docs/static/img/branding/LICENSE.md）
+全文如下：
+
+# COPYRIGHT AND TRADEMARK NOTICE
+
+The images, logos, and icons contained in this directory (the "Brand Assets") are
+proprietary to Frigate, Inc. and are NOT covered by the MIT License governing the
+rest of this repository.
+
+1. TRADEMARK STATUS
+   The "Frigate" name and the accompanying logo are common law trademarks™ of
+   Frigate, Inc. Frigate, Inc. reserves all rights to these marks.
+
+2. LIMITED PERMISSION FOR USE
+   Permission is hereby granted to display these Brand Assets strictly for the
+   following purposes:
+   a. To execute the software interface on a local machine.
+   b. To identify the software in documentation or reviews (nominative use).
+
+3. RESTRICTIONS
+   You may NOT:
+   a. Use these Brand Assets to represent a derivative work (fork) as an official
+      product of Frigate, Inc.
+   b. Use these Brand Assets in a way that implies endorsement, sponsorship, or
+      commercial affiliation with Frigate, Inc.
+   c. Modify or alter the Brand Assets.
+
+If you fork this repository with the intent to distribute a modified or competing
+version of the software, you must replace these Brand Assets with your own
+original content.
+
+ALL RIGHTS RESERVED.
+Copyright (c) 2026 Frigate, Inc.
+
+本插件打包的是未改动的上游官方软件，图标用于指认软件本身（nominative use），
+不把本插件当作 Frigate, Inc. 的官方产品，也不表示获得其背书或隶属关系。
+
+运行时软件
+==========
+
+Frigate 0.18.2 由上游官方镜像 ghcr.io/blakeblackshear/frigate 提供，按 MIT 许可证发布
+（https://github.com/blakeblackshear/frigate/blob/v0.18.2/LICENSE.md）：
+
+The MIT License
+
+Copyright (c) 2026 Frigate, Inc. (Frigate™)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

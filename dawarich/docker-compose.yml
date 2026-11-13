@@ -1,0 +1,219 @@
+# Dawarich（自己的位置时间线）：照上游官方 docker-compose.yml（1.22.0）改写。
+# 上游 1.17.0 起后台任务内嵌进 web 进程（SIDEKIQ_EMBEDDED），没有独立的 sidekiq 容器；
+# 上游 compose 里的 /dawarich_db_data、/var/shared 挂载是 SQLite 缓存时代的遗留，代码里零引用，不搬。
+services:
+  app:
+    image: freikin/dawarich:1.22.0@sha256:b8ee8d9fdff92a9d6ca570f98e0e875624f4bfb24b61363f8246bba124d5849d
+    # 上游入口脚本要求以 root 启动：按 PUID/PGID 修数据目录属主后用 gosu 降权，
+    # 官方注释明说这种镜像不要写 compose 的 user:。核心也把数据目录交给 PUID:PGID，两边一致。
+    environment:
+      RAILS_ENV: production
+      SELF_HOSTED: "true"
+      STORE_GEODATA: "true"
+      RAILS_LOG_TO_STDOUT: "true"
+      SECRET_KEY_BASE: ${WONTON_SECRET_RAILS_SECRET}
+      TIME_ZONE: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      REDIS_URL: redis://redis:6379
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+      DATABASE_USERNAME: dawarich
+      DATABASE_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      DATABASE_NAME: dawarich
+      # production 只接受列出的 Host（Rails config.hosts）。localhost 三个给容器内健康检查；
+      # app.<域名> 是核心连 MCP 时用的 Host；公开主机名由包装入口脚本从 WONTON_APP_URL 取。
+      APPLICATION_HOSTS: localhost,::1,127.0.0.1,app.${WONTON_SERVICE_DOMAIN}
+      WONTON_APP_URL: ${WONTON_APP_URL:?核心没有注入网页地址}
+      # 后台任务内嵌（上游 1.17.0 起的默认形态），并发用上游默认的 2。
+      SIDEKIQ_EMBEDDED: "true"
+      WEB_CONCURRENCY: "0"
+      # OIDC：回调地址必须和核心登记的完全一致（插件网页地址 + 登录回调路径）。
+      # 上游的发现模式拿不到核心的 http 签发方（它依赖的 gem 对发现请求硬编码 https，见 PR），
+      # 走手册端点模式：三类端点都用核心注入的绝对地址（gem 对绝对地址原样保留），
+      # 授权端点是浏览器地址，令牌、用户信息和 JWKS 在插件网络里解析。
+      OIDC_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      OIDC_ISSUER: ${WONTON_OIDC_ISSUER}
+      OIDC_REDIRECT_URI: ${WONTON_APP_URL}/users/auth/openid_connect/callback
+      OIDC_DISCOVERY: "false"
+      OIDC_HOST: auth.wonton.internal
+      OIDC_SCHEME: http
+      OIDC_AUTHORIZATION_ENDPOINT: ${WONTON_OIDC_AUTH_URL}
+      OIDC_TOKEN_ENDPOINT: ${WONTON_OIDC_TOKEN_URL}
+      OIDC_USERINFO_ENDPOINT: ${WONTON_OIDC_USERINFO_URL}
+      OIDC_JWKS_URI: ${WONTON_OIDC_ISSUER}/.well-known/jwks.json
+      # 上游默认就不开放邮箱注册（OIDC 以外的建号路），保持默认；登录表单保留，账号口令无人知道。
+      # 找回密码等应用自己的邮件走核心的 SMTP（不加密、不 STARTTLS）。
+      SMTP_SERVER: ${WONTON_SMTP_HOST}
+      SMTP_PORT: ${WONTON_SMTP_PORT}
+      SMTP_FROM: ${WONTON_MAIL_FROM}
+      SMTP_STARTTLS: "false"
+      SMTP_AUTHENTICATION: none
+    volumes:
+      - ${WONTON_APP_DATA}/storage:/var/app/storage
+      - ${WONTON_APP_DATA}/public:/var/app/public
+      - ${WONTON_APP_DATA}/imports/watched:/var/app/tmp/imports/watched
+    # 包装入口：把公开主机名和协议补进环境后交给上游的 web-entrypoint.sh（建库、迁移、种子照上游跑）。
+    # compose 插值取不出 WONTON_APP_URL 里的主机名，Rails 又按 Host 拒请求，所以要有这一小段。
+    entrypoint: ["/bin/sh", "/usr/local/bin/wonton-web-entrypoint.sh"]
+    command: ["bin/rails", "server", "-p", "3000", "-b", "::"]
+    # 上游给运行中的后台任务 60 秒收尾，重启、升级时回到队列。
+    stop_grace_period: 60s
+    configs:
+      - source: web-entrypoint
+        target: /usr/local/bin/wonton-web-entrypoint.sh
+        mode: 0755
+    healthcheck:
+      # /api/v1/ready 真正连一次数据库和 Redis，比上游 compose 用的 /api/v1/health 更实。
+      test: ["CMD-SHELL", "wget -qO - http://127.0.0.1:3000/api/v1/ready | grep -q '\"status\"\\s*:\\s*\"ok\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
+      start_interval: 1s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 一次性：等应用健康后建主人管理员账号（OIDC 首次登录按 provider+uid 对上同一个号），
+  # 删掉上游种子在空库时建的 demo@dawarich.app（口令公开在 GitHub 上）。每次创建容器都会重跑，必须幂等。
+  owner-init:
+    image: freikin/dawarich:1.22.0@sha256:b8ee8d9fdff92a9d6ca570f98e0e875624f4bfb24b61363f8246bba124d5849d
+    entrypoint: ["bin/rails", "runner"]
+    command: ["/usr/local/bin/wonton-owner-init.rb"]
+    environment:
+      RAILS_ENV: production
+      REDIS_URL: redis://redis:6379
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+      DATABASE_USERNAME: dawarich
+      DATABASE_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      DATABASE_NAME: dawarich
+      SECRET_KEY_BASE: ${WONTON_SECRET_RAILS_SECRET}
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME:?核心没有注入用户名}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?核心没有注入邮箱}
+    configs:
+      - source: owner-init
+        target: /usr/local/bin/wonton-owner-init.rb
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: "no"
+
+  redis:
+    image: redis:8.2-alpine@sha256:fe9daae35cd4fd6ec22416aa4fe0cf6b3e36741e06ff45b9986253fe2a81c041
+    # 上游命令原样：快照存队列，后台任务的活不丢。
+    command: ["redis-server", "--save", "900", "1", "--save", "300", "10", "--appendonly", "no"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+
+  db:
+    # 官方 compose 的 postgis/postgis:17-3.5-alpine 没有 arm64，上游注释指定 ARM 用 imresamu 的多架构镜像。
+    image: imresamu/postgis:17-3.5-alpine@sha256:c7e4985375d8a9583e9bbdb33d0182138fa9a24d22ba9d7cc19362c4827b9038
+    shm_size: 1g
+    environment:
+      POSTGRES_USER: dawarich
+      POSTGRES_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      POSTGRES_DB: dawarich
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dawarich -d dawarich"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+
+volumes:
+  pgdata:
+  redisdata:
+
+configs:
+  web-entrypoint:
+    file: wonton-web-entrypoint.sh
+  owner-init:
+    file: wonton-owner-init.rb
+
+x-wonton:
+  spec: "0.12"
+  id: app.dawarich.dawarich
+  version: 0.1.1
+  kind: app
+  title: { en: Dawarich }
+  description: { zh: 像谷歌地图的时间线，手机自动记录你去过哪里，网页上看轨迹和统计, en: "Like Google Maps Timeline: your phone reports where you have been, and you browse tracks and stats on the web" }
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/map.png, screenshots/timeline.png]
+  author: { name: geraldpeng6 }
+  homepage: https://dawarich.app
+  # 上游应用的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: AGPL-3.0-only
+  tags:
+    zh: [位置, 出行, 记录]
+    en: [Location, Travel, Tracking]
+  about:
+    zh: |
+      像谷歌地图的时间线：手机把去过的地方报给家里这台服务器，网页上能看轨迹、去过哪、每次待了多久和月度统计。数据都在自己家里，不经过任何第三方。
+
+      手机装 Dawarich 官方 App，或 OwnTracks、Overland 这类定位应用，填上网页里的接口密钥就能自动上报。谷歌时间线导出的记录可以导入，搬过来接着看。
+
+      在网页右上角头像 → Account 复制接口密钥，填进手机 App 就能自动上报；Agent 查询“我上周去过哪”不用填，插件自己会拿到。
+    en: |
+      Like Google Maps Timeline: your phone reports visited places to the server at home, and the web page shows tracks, visits, durations and monthly stats. Everything stays at home, no third party involved.
+
+      Install the official Dawarich app (or a tracker like OwnTracks or Overland) on your phone, enter the key from the web page, and locations report automatically. You can import an exported Google Timeline and keep browsing it.
+
+      Copy the key from the avatar menu → Account on the web page into your phone app to start reporting; agents can answer "where did I go last week" without any setup, the plugin fetches the key itself.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  setup:
+    zh: 打开网页即可用。要在手机上自动上报位置，装 Dawarich App（或 OwnTracks、Overland），把网页 Account 页里的接口密钥填进去。
+    en: Open the web page and it works. To report locations from your phone, install the Dawarich app (or OwnTracks, Overland) and enter the key shown on the Account page.
+  webui:
+    service: app
+    port: 3000
+    # omniauth 2.x 的 OIDC 请求段只收 POST，没有可直接 GET 打开的登录起点，入口落在登录页（一键“Sign in with Openid Connect”）。
+    path: /users/sign_in
+    sso: oidc
+    oidc:
+      redirect_paths: [/users/auth/openid_connect/callback]
+  # 上游自带只读 MCP（/api/v1/mcp，Bearer 认证）；密钥是主人账号的接口密钥，一次性服务写进文件、核心收存。
+  mcp:
+    service: app
+    port: 3000
+    path: /api/v1/mcp
+    transport: streamable-http
+    headers:
+      Authorization: Bearer {secret:mcp_api_key}
+  # 出网：反向地理编码（默认 photon.komoot.io）、Immich/PhotoPrism 集成、S3 存储后端、外发邮件。
+  # 地图瓦片是浏览器侧加载的，不经容器。
+  permissions:
+    - network.egress
+    # 应用自己的邮件（找回密码、账号关联）走核心的 SMTP。
+    - notify
+    # 建主人管理员账号要用注入的用户名和邮箱。
+    - owner.identity
+  secrets:
+    # SECRET_KEY_BASE（openssl rand -hex 64 同规格），换值会把所有人登出，生成后不变。
+    rails_secret:
+      generate: { bytes: 64 }
+    db_password:
+      generate: { bytes: 32 }
+    mcp_api_key:
+      # 一次性服务把主人账号的接口密钥写进文件，核心收存后经 MCP 头带给上游（规范的 PAT 同款做法）。
+      # 主人在应用里重新生成密钥后，这里还是旧值：等下次重建容器或重启核心核对时更新。
+      collect: { service: owner-init, path: /run/api_key }
+  # 上游硬件要求 2 GB 内存（官方数字，给 PostgreSQL、Redis 和大导入留余量）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 2G
