@@ -13,6 +13,8 @@ scripts/lib.sh
 scripts/probes.sh
 scripts/smoke-probes.sh
 scripts/agent-probes.sh
+scripts/smoke-evidence.sh
+scripts/smoke-gpu.sh
 scripts/smoke.sh
 scripts/mcp_client.py
 scripts/kit.files

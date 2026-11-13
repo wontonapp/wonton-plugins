@@ -187,6 +187,14 @@ for pair in "${SMOKE_SETTINGS[@]}" "${cli_settings[@]}"; do
   setting_args+=(--setting "$pair")
 done
 
+gpu_rc=0
+"$copy/scripts/smoke-gpu.sh" "$SMOKE_PLUGIN" || gpu_rc=$?
+if ((gpu_rc == 77)); then
+  say "跳过：需要显卡，没跑"
+  exit 77
+elif ((gpu_rc != 0)); then
+  die "GPU 冒烟前置检查失败（退出码 $gpu_rc）"
+fi
 # ---------- 1. 装得上 ----------
 say "1. 装得上（check、install、running healthy）"
 chk_out="$(cd "$copy" && WONTON_PLUGIN="$SMOKE_PLUGIN" nice -n 19 timeout 900 scripts/check.sh 2>&1)" && chk_rc=0 || chk_rc=$?

@@ -241,20 +241,50 @@ jobs:
           WONTON_PLUGIN: ${{ matrix.plugin }}
         run: scripts/check.sh
 
+  smoke-plan:
+    name: 冒烟计划（GPU 前置）
+    needs: changed
+    if: ${{ (github.event_name == 'workflow_dispatch' || github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == 'dependabot[bot]') && needs.changed.outputs.plugins != '[]' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      plugins: ${{ steps.plan.outputs.plugins }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: plan
+        name: 按插件检查 GPU 可跑性
+        shell: bash
+        env:
+          PLUGINS: ${{ needs.changed.outputs.plugins }}
+        run: |
+          set -u
+          runnable='[]'
+          while IFS= read -r plugin; do
+            set +e
+            WONTON_PLUGIN="$plugin" scripts/smoke-gpu.sh "$plugin"
+            rc=$?
+            set -e
+            if [[ "$rc" == 0 ]]; then
+              runnable="$(jq -c --arg p "$plugin" '. + [$p]' <<<"$runnable")"
+            elif [[ "$rc" == 77 ]]; then
+              echo "### 跳过：需要显卡，没跑：$plugin" >> "$GITHUB_STEP_SUMMARY"
+              echo '该插件未安装、未执行冒烟，不计为通过。' >> "$GITHUB_STEP_SUMMARY"
+            else
+              exit "$rc"
+            fi
+          done < <(jq -r '.[]' <<<"$PLUGINS")
+          echo "plugins=$runnable" >> "$GITHUB_OUTPUT"
+
   smoke:
     name: 冒烟 ${{ matrix.plugin }}
-    # 依赖镜像的升级 PR 合并前要过端到端冒烟（scripts/dev.sh smoke，真实安装和四项探测，不用 mock）。
-    # 判“Dependabot 的 PR”同时看 actor 和 PR 作者：Dependabot 自己 rebase 时 actor 是 dependabot[bot]，
-    # 但任何人往 Dependabot 分支推 commit 都会把 actor 顶掉，PR 作者不会变。
-    # Dependabot 的 PR 拿到的是只读令牌：这一步只检出和起本地容器，不用仓库密钥、不写仓库。
-    if: ${{ (github.event_name == 'workflow_dispatch' || github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == 'dependabot[bot]') && needs.changed.outputs.plugins != '[]' }}
-    needs: [changed, plugin]
+    # GPU 不可用的插件已在 smoke-plan 中排除；非 Dependabot/手动触发仍不跑冒烟。
+    if: ${{ (github.event_name == 'workflow_dispatch' || github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == 'dependabot[bot]') && needs.smoke-plan.outputs.plugins != '[]' }}
+    needs: [changed, plugin, smoke-plan]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        plugin: ${{ fromJSON(needs.changed.outputs.plugins) }}
+        plugin: ${{ fromJSON(needs.smoke-plan.outputs.plugins) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -341,7 +371,7 @@ jobs:
   # 必需检查只设这个汇总作业：插件矩阵按改动生成，检查名不固定，规则集没法逐个列。
   summary:
     name: check 汇总
-    needs: [changed, repo, kit, plugin, smoke]
+    needs: [changed, repo, kit, plugin, smoke-plan, smoke]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5

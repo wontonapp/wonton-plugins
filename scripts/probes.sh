@@ -20,6 +20,8 @@ DID_FAIL=0
 # Agent 插件用的助手（扮演用户手机发加密消息等），插件在 extra_check 里组合。
 # shellcheck source=scripts/agent-probes.sh
 . "$(dirname "${BASH_SOURCE[0]}")/agent-probes.sh"
+# shellcheck source=scripts/smoke-evidence.sh
+. "$(dirname "${BASH_SOURCE[0]}")/smoke-evidence.sh"
 
 say() { echo "== $*"; }
 pass() { echo "PASS $1：$2"; }
@@ -385,12 +387,15 @@ extra_item() {
 # 限时 EXTRA_TIMEOUT 秒（探针里设，默认 600）。记了子项时先逐行打印子项，再打一行汇总：钩子非 0 或任一子项 FAIL
 # 是 FAIL，子项全是 N/A 是 N/A，否则 PASS。
 probes_extra() {
-  local before out rc=0 verdict item why passed=0 total=0 broken=""
+  local before out rc=0 verdict item why passed=0 total=0 broken="" since
   declare -F extra_check >/dev/null || return 0
   say "附加检查（extra_check）"
   before="$(wc -c <"$PROBES_LOG")"
   SMOKE_EXTRA_ITEMS="$(mktemp "${SMOKE_STATE%/*}/extra-items.XXXXXX")"
   export SMOKE_EXTRA_ITEMS
+  SMOKE_EXTRA_SINCE_FILE="$SMOKE_EXTRA_ITEMS.since"
+  export SMOKE_EXTRA_SINCE_FILE
+  probes_evidence_start
   probes_hook extra_check "${EXTRA_TIMEOUT:-600}" || rc=$?
   while IFS=$'\t' read -r verdict item why; do
     total=$((total + 1))
@@ -400,15 +405,19 @@ probes_extra() {
       *) na "附加检查·$item" "$why" ;;
     esac
   done <"$SMOKE_EXTRA_ITEMS"
-  rm -f "$SMOKE_EXTRA_ITEMS"
-  unset SMOKE_EXTRA_ITEMS
   out="$(tail -c "+$((before + 1))" "$PROBES_LOG" | tail -c 200 | tr '\n' ' ')"
+  if ((rc != 0)) || [[ -n "$broken" ]]; then
+    since="$(cat "$SMOKE_EXTRA_SINCE_FILE")"
+    probes_extra_failure_evidence "$since" >>"$PROBES_LOG" 2>&1
+  fi
+  rm -f "$SMOKE_EXTRA_ITEMS" "$SMOKE_EXTRA_SINCE_FILE"
+  unset SMOKE_EXTRA_ITEMS SMOKE_EXTRA_SINCE_FILE
   if ((rc == 124)); then
     fail 附加检查 "extra_check 超过 ${EXTRA_TIMEOUT:-600} 秒没跑完，见 $PROBES_LOG 末尾：$out"
   elif ((rc != 0)); then
     fail 附加检查 "extra_check 失败（退出 $rc），见 $PROBES_LOG 末尾：$out"
   elif [[ -n "$broken" ]]; then
-    fail 附加检查 "子项失败：$broken"
+    fail 附加检查 "子项失败：$broken；失败取证见 $PROBES_LOG"
   elif ((total == 0)); then
     pass 附加检查 "extra_check 通过${out:+：$out}"
   elif ((passed == 0)); then
