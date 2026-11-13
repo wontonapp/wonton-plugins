@@ -100,7 +100,7 @@ volumes:
 x-wonton:
   spec: "0.6"
   id: app.bookstack.bookstack
-  version: 0.1.0
+  version: 0.1.1
   kind: app
   title: { en: BookStack }
   description:
@@ -124,7 +124,7 @@ x-wonton:
       Organise your knowledge into books: chapters hold pages, editing is rich-text with images and attachments, and everything stays searchable.
 
       Signs in with BookStack's own account, not the Wonton login.
-  release_notes: { zh: 第一版。, en: First release. }
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
   webui:
     service: bookstack
     port: 80

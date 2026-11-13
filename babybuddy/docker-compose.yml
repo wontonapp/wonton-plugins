@@ -91,7 +91,7 @@ services:
 x-wonton:
   spec: "0.12"
   id: app.babybuddy.family
-  version: 0.1.0
+  version: 0.1.1
   kind: app
   title: { zh: 育儿记录（Baby Buddy）, en: Baby Buddy }
   description:
@@ -122,7 +122,7 @@ x-wonton:
       Big buttons make one-handed nighttime logging easy, and ongoing sleep sessions can be timed.
 
       Sign-in uses your Wonton account: the owner opens the app as the administrator. Family members get their own accounts; once the owner assigns them the Caregiver role in the app's Users page, they can log together.
-  release_notes: { zh: "首个版本：喂奶、换尿布、睡觉等记录，云吞账号直接登录。", en: "First release: feedings, diaper changes, sleep and more, signed in with your Wonton account." }
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
   webui:
     service: web
     port: 8000

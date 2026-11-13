@@ -56,7 +56,7 @@ x-wonton:
   # setup 是 0.11 的字段、show_owner 是 0.8 的；未用 0.12 的 settings，声明 0.11。
   spec: "0.11"
   id: game.razzia.app
-  version: 0.1.0
+  version: 0.1.1
   kind: app
   title: { zh: 抢答游戏（Razzia）, en: Quiz Game (Razzia) }
   description:
@@ -86,8 +86,8 @@ x-wonton:
 
       The interface follows the phone's system language; upstream has no Chinese yet (English, Japanese, German, French, Italian, Spanish, Polish, Turkish and Vietnamese), so it falls back to English. Quiz content is unaffected.
   release_notes:
-    zh: 首个版本：预置两套中文示例题（家庭常识赛、成语大会）。
-    en: "First release: two Chinese starter quizzes (general knowledge and idioms) ship preloaded."
+    zh: 插件包迁入官方插件合仓，内容与上一版相同。
+    en: "Package moved into the official Wonton plugin monorepo; same content as the previous release."
   setup:
     zh: 主持前在 App 的插件详情页点开“主持口令”查看口令，主持时输入它。
     en: Before hosting, open “Manager password” on the plugin's detail page in the app and enter it on the manager screen.

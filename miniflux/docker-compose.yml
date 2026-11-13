@@ -187,7 +187,7 @@ configs:
 x-wonton:
   spec: "0.4"
   id: app.miniflux.miniflux
-  version: 0.1.2
+  version: 0.1.3
   kind: app
   title: { en: Miniflux }
   description:
@@ -214,7 +214,7 @@ x-wonton:
       Follow sites and blogs in one place and read their updates. Filter by rules, and mark entries read or unread.
 
       The bot can list unread entries, search and mark them read; the tools carry no read-only hints, so each call waits for your confirmation.
-  release_notes: { zh: 新安装的用户界面默认中文。, en: New installs now start with a Chinese interface. }
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
   webui:
     service: miniflux
     port: 8080
