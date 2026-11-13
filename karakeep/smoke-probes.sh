@@ -117,7 +117,6 @@ kmail_login() { # 分两步把两个会话都建好（2026-11-07 e2e 逐轮实�
   #    （WONTON_DEV_JAR 是 dev.sh 的公开入口，session_jar 读它）。
   # 2) 应用会话：自动跳转是客户端 JS（signIn.social），curl 触发不了，
   #    手动 POST 应用自己的 /api/auth/sign-in/social 拿 provider 地址，带 jar 走 Hydra → 回调建会话。
-  # 成功判据：jar 里有应用会话 cookie 且 /api/v1/users/me 返回 200。
   kmail_init || return 1
   export WONTON_DEV_JAR="$SMOKE_JAR"
   local try resp oauth_url app_cookie
