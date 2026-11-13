@@ -111,7 +111,13 @@ kmail_app_log_tail() { # 诊断用（负责人要求）：应用容器日志最�
   echo "===== 容器日志完 =====" >&2
 }
 
-kmail_api_path() { printf '/%s/%s' api "$1"; }
+kmail_api_path() {
+  local path=api part
+  for part in "$@"; do path+="/$part"; done
+  printf '/%s' "$path"
+}
+kmail_url() { printf '%s%s' "${SMOKE_WEB_URL:-}" "$(kmail_api_path "$@")"; }
+kmail_get() { curl -fsS --noproxy '*' -b "$SMOKE_JAR" "$(kmail_url "$@")"; }
 kmail_login() { # 分两步把两个会话都建好（2026-11-07 e2e 逐轮实测的结论）：
   # 1) 核心会话：token POST 返回 303 但不发 cookie（jar 为空，同 jar GET 插件域 401），
   #    必须走 dev.sh 的表单登录回退——用 dweb，并把它写会话的 jar 指到 SMOKE_JAR
@@ -134,7 +140,7 @@ kmail_login() { # 分两步把两个会话都建好（2026-11-07 e2e 逐轮实�
       -H 'Content-Type: application/json' -H "Origin: $SMOKE_WEB_URL" \
       --data '{"provider":"custom","callbackURL":"/","errorCallbackURL":"/signin"}' \
       -D "$hdrs" -w $'\nKKMETA:%{http_code} LOC:%{redirect_url}' \
-      "${SMOKE_WEB_URL}$(kmail_api_path 'auth/sign-in/social')" 2>&1)" || resp=""
+      "$(kmail_url auth sign-in social)" 2>&1)" || resp=""
     body="${resp%$'\nKKMETA'*}" meta="${resp##*$'\nKKMETA'}"
     werr="$(grep -i '^x-wonton-error:' "$hdrs" 2>/dev/null | tr -d '\r')" || werr=""
     rm -f "$hdrs"
@@ -153,7 +159,7 @@ kmail_login() { # 分两步把两个会话都建好（2026-11-07 e2e 逐轮实�
     app_cookie='better''-auth'
     curl -sS --noproxy '*' -o /dev/null -L --max-redirs 30 -b "$SMOKE_JAR" -c "$SMOKE_JAR" "$oauth_url" || true
     if grep -q "$app_cookie" "$SMOKE_JAR" &&
-      curl -fsS --noproxy '*' -o /dev/null -b "$SMOKE_JAR" "${SMOKE_WEB_URL}$(kmail_api_path 'v1/users/me')"; then
+      kmail_get v1 users me >/dev/null; then
       return 0
     fi
     echo "走了 provider 但应用会话没建起来（应用会话 cookie $(grep -c "$app_cookie" "$SMOKE_JAR" 2>/dev/null || echo 0) 条，落点 ${page:-未知}）" >&2
@@ -177,7 +183,7 @@ identity_check() { # 应用认出的是主人本人：OAuth 会话的名字是�
   kmail_health_sampler
   kmail_login || { echo "登录链没建立应用会话"; return 1; }
   local me
-  me="$(curl -fsS --noproxy '*' -b "$SMOKE_JAR" "${SMOKE_WEB_URL:-}$(kmail_api_path 'v1/users/me')")" ||
+  me="$(kmail_get v1 users me)" ||
     { echo "users/me 请求失败"; return 1; }
   # 主人名非空才比对（e2e 直调未导出时兜底也可能为空；localUser==false 已证明是 OIDC 建的号）。
   if [[ -n "$SMOKE_OWNER" ]]; then
@@ -201,7 +207,7 @@ data_write() { # 写一条真实书签（文字书签，内容带时间戳），
   resp="$(curl -fsS --noproxy '*' -b "$SMOKE_JAR" -X POST \
     -H 'Content-Type: application/json' -H "Origin: $SMOKE_WEB_URL" \
     --data "$(jq -cn --arg t "$text" '{type:"text",text:$t}')" \
-    "${SMOKE_WEB_URL:-}$(kmail_api_path 'v1/bookmarks')")" || { echo "建书签失败"; return 1; }
+    "$(kmail_url v1 bookmarks)")" || { echo "建书签失败"; return 1; }
   id="$(jq -r '.id // empty' <<<"$resp")"
   [[ -n "$id" ]] || { echo "建书签响应没有 id：$(head -c 200 <<<"$resp")"; return 1; }
   kmail_state_write "$id" "$text"
@@ -216,14 +222,14 @@ data_check() { # 断言 data_write 写的书签还在、内容一字不差
   [[ -n "${KK_BOOKMARK_ID:-}" && -n "${KK_BOOKMARK_TEXT:-}" ]] ||
     { echo "标记文件不完整：$SMOKE_STATE"; return 1; }
   local resp text
-  resp="$(curl -fsS --noproxy '*' -b "$SMOKE_JAR" "${SMOKE_WEB_URL:-}$(kmail_api_path "v1/bookmarks/$KK_BOOKMARK_ID")")" ||
+  resp="$(kmail_get v1 bookmarks "$KK_BOOKMARK_ID")" ||
     { echo "读书签 $KK_BOOKMARK_ID 失败"; return 1; }
   text="$(jq -r '.content.text // empty' <<<"$resp")"
   [[ "$text" == "$KK_BOOKMARK_TEXT" ]] ||
     { echo "书签内容对不上：期望「$KK_BOOKMARK_TEXT」，拿到「$text」"; return 1; }
   # 账号邮箱在重装后仍是对账过的注入值（init 每次启动都对账一次，值不变）。
   # 比较对象用套件导出的 WONTON_OWNER_EMAIL 本身：e2e/kit 环境的值形制可能不同，别硬编码 @wonton.internal。
-  me="$(curl -fsS --noproxy '*' -b "$SMOKE_JAR" "${SMOKE_WEB_URL:-}$(kmail_api_path 'v1/users/me')")" ||
+  me="$(kmail_get v1 users me)" ||
     { echo "users/me 请求失败"; return 1; }
   email="$(jq -r '.email // empty' <<<"$me")"
   [[ "$email" == "${SMOKE_OWNER:-owner}@wonton.internal" ]] ||
@@ -276,7 +282,7 @@ kmail_mailpit() { # <path>：调 Mailpit API（basic core:<api-password>）。�
 kmail_mailpit_wait() { # <jq 过滤> [次数=40]：轮询 Mailpit 信箱直到过滤命中；过滤里的值先经 jq 转成字面量
   local filt="$1" n="${2:-40}" i out
   for ((i = 0; i < n; i++)); do
-    out="$(kmail_mailpit "$(kmail_api_path 'v1/messages?limit=100')")" || { sleep 2; continue; }
+    out="$(kmail_mailpit "$(kmail_api_path v1 'messages?limit=100')")" || { sleep 2; continue; }
     jq -e "$filt" <<<"$out" >/dev/null 2>&1 && return 0
     sleep 2
   done
@@ -285,7 +291,7 @@ kmail_mailpit_wait() { # <jq 过滤> [次数=40]：轮询 Mailpit 信箱直到�
 
 kmail_invite() { # <email>：管理员建用户邀请（上游 TRPC invites.create）
   curl -sS --noproxy '*' -b "$SMOKE_JAR" -H 'Content-Type: application/json' -H "Origin: $SMOKE_WEB_URL" \
-    --data "{\"0\":{\"json\":{\"email\":\"$1\"}}}" "${SMOKE_WEB_URL:-}$(kmail_api_path 'trpc/invites.create?batch=1')"
+    --data "{\"0\":{\"json\":{\"email\":\"$1\"}}}" "$(kmail_url trpc invites.create 'batch=1')"
 }
 
 kmail_wait_web_healthy() { # 重装后等 web 回到 healthy（最久 150 秒）
