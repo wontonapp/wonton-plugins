@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proxy</title>
+<style>
+:root{color-scheme:light dark;font:14px system-ui}*{box-sizing:border-box}body{margin:0;height:100dvh;display:flex;flex-direction:column;background:Canvas;color:CanvasText}nav{height:36px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid GrayText}a{color:LinkText}iframe{border:0;width:100%;flex:1;min-height:0}#status{font-size:12px}
+</style>
+<nav><span><span id="product">Proxy</span> <span id="status" role="status"></span></span><a href="/subscription/" id="subscription">Subscription</a></nav>
+<iframe src="/dashboard/" title="zashboard"></iframe>
+<script>
+const zh=navigator.language.toLowerCase().startsWith('zh');document.documentElement.lang=zh?'zh-CN':'en';document.title=zh?'代理':'Proxy';document.getElementById('product').textContent=zh?'代理':'Proxy';document.getElementById('subscription').textContent=zh?'订阅':'Subscription';
+fetch('/subscription/status').then(async r=>{const data=await r.json();if(!r.ok)throw Error(zh?'后端不可用':'Backend unavailable');if(!data.nodes)document.getElementById('status').textContent=zh?'还没有节点':'No nodes yet'}).catch(e=>{document.getElementById('status').textContent=e.message});
+</script>
+</html>

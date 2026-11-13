@@ -1,0 +1,122 @@
+# RSSHub：把没有订阅源的网站变成订阅源。单容器；路由结果缓存在内存里，没有需要持久化的数据。
+services:
+  rsshub:
+    # 上游官方镜像（diygod/rsshub），按清单列表摘要固定（amd64+arm64），标签只给人看。
+    # 不用带 chromium 的变体：要无头浏览器的路由（少数）会如实报错，不为此换大镜像。
+    image: diygod/rsshub:2026-11-11@sha256:c234031574297fcf7e4c3281eccac1726b6c5dfca9c8e5b7e4e8a9895578e210
+    environment:
+      # 单容器内存缓存够用（上游默认就是 memory），不需要 Redis。
+      CACHE_TYPE: memory
+      TZ: ${TZ}
+      # 出网代理：主人在核心里配了代理时，核心注入 WONTON_PROXY_URL（出口容器地址），没配是空串（直连）。
+      # RSSHub 自己的代理设置只认 PROXY_URI（got/playwright 走它）；fetch 部分由核心注入的
+      # HTTP_PROXY + NODE_USE_ENV_PROXY 接管，两条路都指向同一个出口容器。
+      PROXY_URI: ${WONTON_PROXY_URL}
+      # 访问控制：核心生成的订阅密钥。开了它，除首页、/healthz 等少数路径外所有路由都要带 ?key=<密钥>
+      # （上游豁免列表只有 /、/robots.txt、/favicon.ico、/logo.png）。订阅密钥在插件详情页可复制。
+      ACCESS_KEY: ${WONTON_SECRET_ACCESS_KEY}
+      # 要登录的站点的凭据，全部可选、默认空：主人按需在插件密钥里填，格式见 README。
+      WEIBO_COOKIES: ${WONTON_SECRET_WEIBO_COOKIES}
+      ZHIHU_COOKIES: ${WONTON_SECRET_ZHIHU_COOKIES}
+      GITHUB_ACCESS_TOKEN: ${WONTON_SECRET_GITHUB_TOKEN}
+    healthcheck:
+      # 镜像基于 node，没有 curl/wget；/healthz 也在 ACCESS_KEY 的检查范围内，必须带 key。
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:1200/healthz?key=' + process.env.ACCESS_KEY)
+          .then((r) => process.exit(r.ok ? 0 : 1))
+          .catch(() => process.exit(1))
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      start_interval: 2s
+
+x-wonton:
+  # 0.8：密钥的用户填写项（input）和主人可见（show_owner）；
+  # 0.11：provides 第三方能力（能力依赖），旧核心会如实提示升级。
+  spec: "0.11"
+  id: app.rsshub.rsshub
+  version: 0.1.1
+  kind: app
+  title: { zh: 万物订阅源（RSSHub）, en: Feeds for Anything (RSSHub) }
+  description:
+    zh: 把没有订阅源的网站变成订阅源：B 站UP主、微博、知乎、GitHub 的更新，像订报纸一样送进你的阅读器。要和 RSS 阅读器插件（如 Miniflux）配合使用。
+    en: >-
+      Turns sites without feeds into subscriptions: follow Bilibili uploaders, Weibo, Zhihu and GitHub
+      updates like a newspaper, right inside your RSS reader (e.g. Miniflux).
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png]
+  author: { name: Wonton }
+  homepage: https://docs.rsshub.app
+  # 上游应用的许可证；插件包自己的许可证写在仓库的 LICENSE 里（MIT）。
+  license: AGPL-3.0-only
+  tags:
+    zh: [资讯, 阅读]
+    en: [News, Reading]
+  about:
+    zh: |
+      把没有订阅源的网站变成订阅源。在 RSS 阅读器插件里添加订阅地址，这些网站的更新就自动送进来。
+
+      例子：追更 B 站UP主的投稿、看 GitHub 项目的发布和 Release、盯一个微博账号的动静，不用一个个打开网站。RSSHub 有上千条现成的路由，在它的首页可以查。
+
+      有的网站要登录才能看（微博、知乎、B 站的部分内容），在插件的密钥里填上对应账号的 Cookie 才能订；抓不到的订阅会如实报错，不会假装正常。
+
+      RSS 阅读器插件声明依赖本插件的能力（`wants: [x-wonton.rsshub]`）后，就能按云吞内网地址直接订阅，不用走外网（方法见插件 README）。
+    en: |
+      Turns sites without feeds into subscriptions. Add a feed address in your RSS reader plugin and updates arrive on their own.
+
+      Examples: follow a Bilibili uploader's posts, watch GitHub releases, or keep an eye on a Weibo account without opening the sites. RSSHub ships thousands of ready-made routes, browsable from its home page.
+
+      Some sites need login (Weibo, Zhihu, parts of Bilibili): fill in the matching account cookie in this plugin's secrets to subscribe those. Feeds that cannot be fetched report the error instead of pretending.
+
+      An RSS reader plugin that declares this capability (`wants: [x-wonton.rsshub]`) can subscribe over Wonton's internal network instead of the public internet (see the plugin README).
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: rsshub
+    port: 1200
+    # sso: none：RSSHub 没有账号体系，首页是路由文档。网关只给主人放行（"家人能用"默认关），
+    # 家人不该看到这个偏技术的页面，主人可以在这里查路由和示例。
+    sso: none
+  # RSSHub 服务于别的插件（阅读器）：阅读器声明对本能力的依赖后，经核心别名按内网地址订阅。
+  provides:
+    x-wonton.rsshub:
+      service: rsshub
+      port: 1200
+  # 抓取外部网站必须出网（也意味着能访问局域网，安装确认会写明）。
+  permissions: [network.egress]
+  secrets:
+    # 订阅密钥（RSSHub 的 ACCESS_KEY）：show_owner 让主人能复制它，拼进阅读器的订阅地址。
+    access_key:
+      generate: { bytes: 32 }
+      show_owner:
+        label: { zh: 订阅密钥（ACCESS_KEY）, en: Subscription key (ACCESS_KEY), zh-Hant: 訂閱金鑰（ACCESS_KEY）, ja: 購読キー（ACCESS_KEY） }
+    weibo_cookies:
+      input:
+        title: { zh: 微博 Cookie, en: Weibo cookie, zh-Hant: 微博 Cookie, ja: Weibo Cookie }
+        description:
+          zh: 订阅微博路由才需要。浏览器登录微博后，从请求的 Cookie 头整串复制。
+          en: "Only for Weibo routes. Sign in to weibo.com, then copy the whole Cookie request header."
+        required: false
+    zhihu_cookies:
+      input:
+        title: { zh: 知乎 Cookie, en: Zhihu cookie, zh-Hant: 知乎 Cookie, ja: Zhihu Cookie }
+        description:
+          zh: 订阅知乎路由才需要。浏览器登录知乎后，从请求的 Cookie 头整串复制。
+          en: "Only for Zhihu routes. Sign in to zhihu.com, then copy the whole Cookie request header."
+        required: false
+    github_token:
+      input:
+        title: { zh: GitHub 访问令牌, en: GitHub access token, zh-Hant: GitHub 存取權杖, ja: GitHub アクセストークン }
+        description:
+          zh: 不填也能订 GitHub 路由，但容易被限流；填了更稳定。
+          en: "Optional; without it GitHub routes hit rate limits sooner."
+        url: https://github.com/settings/tokens
+        required: false
+  # 上游没写最低内存；按本机空闲实测取整。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 256M
