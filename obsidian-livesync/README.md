@@ -31,6 +31,10 @@
 - `network.clients`：允许主人在 Wonton 里打开 HTTPS 客户端入口，给手机和其他第三方客户端使用。
 - `owner.identity`：按主人的用户名创建 CouchDB 客户端账号，密码由核心生成。
 
+## 图标
+
+原创线条图标，未使用上游标志；来源和许可见 [NOTICE](NOTICE)。
+
 ## 许可证和商标
 
 - 插件包：MIT，见 [LICENSE](LICENSE)；素材声明见 [NOTICE](NOTICE)。
