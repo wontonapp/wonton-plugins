@@ -1,0 +1,118 @@
+# Razzia：Kahoot 式抢答游戏，一人出题当主持，大家用手机加入房间抢答。
+# 上游官方镜像（MIT）：一个容器里 nginx 监听 3000（网页、/api、/ws），node 游戏服务只听容器内
+# 回环的 3001，由 nginx 转发——对外只有 3000 一个口，全部经核心网关进来，不用另开局域网端口。
+services:
+  razzia:
+    image: ralex91/razzia:4.0.2@sha256:e880097d232d42cba882391831ea4cad617f5a9c82947e2fc96595d0d9d5b11d
+    environment:
+      # 主持界面的口令：核心生成，主人在插件详情页查看（x-wonton.secrets.manager_password）。
+      MANAGER_PASSWORD: ${WONTON_SECRET_MANAGER_PASSWORD}
+      # 会话令牌的签名密钥：固定下来，重启后主持和玩家的会话不失效（上游要求至少 32 字符）。
+      JWT_SECRET: ${WONTON_SECRET_JWT_SECRET}
+      TZ: ${TZ}
+    volumes:
+      # 题库（quizz/）、成绩（results/）、上传的媒体（media/）都在数据目录里，上游首次启动自动建。
+      - ${WONTON_APP_DATA}:/app/config
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      # /api/health 的应答要经过容器里的 nginx 转到 node 服务：两个进程都得活着才算健康。
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+  # 一次性服务：首次启动前把预置的中文题库复制进数据目录，已存在就不覆盖（幂等；
+  # 核心每次重建容器都会重新运行它）。用同一个官方镜像（alpine，自带 sh）。
+  init:
+    image: ralex91/razzia:4.0.2@sha256:e880097d232d42cba882391831ea4cad617f5a9c82947e2fc96595d0d9d5b11d
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        mkdir -p /data/quizz &&
+        for f in /seed/*.json; do
+          test -e "/data/quizz/$${f##*/}" || cp "$$f" /data/quizz/;
+        done
+    volumes:
+      - ${WONTON_APP_DATA}:/data
+    configs:
+      - source: quiz_changshi
+        target: /seed/changshi.json
+      - source: quiz_chengyu
+        target: /seed/chengyu.json
+    network_mode: none
+    restart: "no"
+
+configs:
+  quiz_changshi:
+    file: quizzes/changshi.json
+  quiz_chengyu:
+    file: quizzes/chengyu.json
+
+x-wonton:
+  # setup 是 0.11 的字段、show_owner 是 0.8 的；未用 0.12 的 settings，声明 0.11。
+  spec: "0.11"
+  id: game.razzia.app
+  version: 0.1.0
+  kind: app
+  title: { zh: 抢答游戏（Razzia）, en: Quiz Game (Razzia) }
+  description:
+    zh: 像 Kahoot 的家庭抢答：一人出题当主持，大家用手机加入房间抢答，看谁答得又快又对。
+    en: A Kahoot-style quiz for the household — one person hosts, everyone joins on their phone, the fastest right answer wins.
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/join.png, screenshots/manager.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/Ralex91/Razzia
+  # 应用（Razzia）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: MIT
+  tags:
+    zh: [游戏, 聚会]
+    en: [Games, Party]
+  about:
+    zh: |
+      家庭聚会、复习功课的抢答游戏：主持人放题，大家用手机加入房间，每题限时抢答，答对越快分越高，最后上排行榜和领奖台。
+
+      主持人打开插件网页，输入主持口令（口令在 App 的插件详情页里查看）就能选题开局，屏幕上会给出 6 位房间码和二维码；玩家打开这个插件，输入房间码和昵称就加入。自带两套中文题（家庭常识赛、成语大会），主持界面里也能自己出题、给题目配图片。
+
+      游戏界面跟着手机系统的语言走，上游还没有中文界面（有英、日、德、法、意、西、波兰、土耳其、越南语），显示的是英文；自己出的题、预置的中文题都不受影响。
+    en: |
+      A quiz party game for families and study groups: the host puts questions on screen, everyone joins from their phone, each question is timed, faster correct answers score more, and the game ends with a leaderboard and podium.
+
+      The host opens the plugin page and unlocks the manager screen with the manager password (view it on the plugin's detail page in the app), picks a quiz or writes one, and starts — the screen shows a 6-digit room code and a QR code. Players open this plugin, type the code and a nickname, and play. Two Chinese quizzes ship preloaded (general knowledge and idioms), and you can write your own with pictures in the manager screen.
+
+      The interface follows the phone's system language; upstream has no Chinese yet (English, Japanese, German, French, Italian, Spanish, Polish, Turkish and Vietnamese), so it falls back to English. Quiz content is unaffected.
+  release_notes:
+    zh: 首个版本：预置两套中文示例题（家庭常识赛、成语大会）。
+    en: "First release: two Chinese starter quizzes (general knowledge and idioms) ship preloaded."
+  setup:
+    zh: 主持前在 App 的插件详情页点开“主持口令”查看口令，主持时输入它。
+    en: Before hosting, open “Manager password” on the plugin's detail page in the app and enter it on the manager screen.
+  webui:
+    service: razzia
+    port: 3000
+    # 主持靠口令，玩家不用账号：游戏在核心网关后面，只有登录了云吞的家人打得开。
+    sso: none
+  # 侧边栏直达抢答房间：平时用它加入或主持。
+  tabs:
+    - id: play
+      title: { zh: 抢答, en: Play }
+      icon: tabs/play.svg
+      icon_selected: tabs/play-fill.svg
+      path: /
+  permissions: []
+  # 上游没写最低内存；空闲实测约 64M，取 128M。镜像 amd64 和 arm64 都有（Docker Hub 清单列表）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 128M
+  secrets:
+    # 主持口令：核心生成随机值，主人随时能在插件详情页查看（主持必须用它解锁）。
+    manager_password:
+      generate: { bytes: 24 }
+      show_owner: { label: { zh: 主持口令, en: Manager password } }
+    # 会话签名密钥：核心生成 64 位十六进制，满足上游 ≥32 字符的要求；不设的话上游每次重启换新，会话全失效。
+    jwt_secret:
+      generate: { bytes: 32 }
