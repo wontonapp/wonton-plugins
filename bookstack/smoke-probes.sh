@@ -61,7 +61,7 @@ data_write() {
   page="$(dweb /create-book)" || { echo "读取 BookStack 新建书籍页面失败"; return 1; }
   token="$(bookstack_csrf <<<"$page")"
   [[ -n "$token" ]] || { echo "BookStack 新建书籍页面没有 CSRF 令牌"; return 1; }
-  response="$(dweb /create-book -L --data-urlencode "_token=$token" \
+  response="$(dweb /books -L --data-urlencode "_token=$token" \
     --data-urlencode "name=wonton-smoke-$marker" \
     --data-urlencode "description_html=$marker")" || {
     echo "BookStack 创建持久化书籍失败" >&2
