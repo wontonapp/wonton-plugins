@@ -81,6 +81,7 @@ data_check() {
     return 1
   }
   marker="$(cat "$SMOKE_STATE")"
+  bookstack_login || return 1
   books="$(dweb /books)" || { echo "读取 BookStack 书籍列表失败：$books"; return 1; }
   grep -qF "wonton-smoke-$marker" <<<"$books" || {
     echo "BookStack 书籍列表里找不到 $marker：$(head -c 400 <<<"$books")"
