@@ -11,7 +11,7 @@ name: komga
 
 services:
   komga:
-    image: gotson/komga:1.30.0@sha256:3ae42f88511211e0ec2637d88f3df1b709d07cfb093427e58444ae200a62608e
+    image: gotson/komga:1.30.1@sha256:d43bb3b57aeeafd274ea805214f5da71ff9306accf012fb14cc13dedc3307212
     # 上游镜像可按任意 uid 运行（官方文档用 user: "1000:1000"）。
     user: "${PUID}:${PGID}"
     environment:
@@ -40,7 +40,7 @@ services:
   # 首次装好（库为空）时认领服务器：用主人的邮箱建管理员，密码是核心生成的随机值，
   # 之后 OIDC 按邮箱匹配到这个账号。已认领（重装保留数据、升级重建容器）就直接退出。
   init:
-    image: gotson/komga:1.30.0@sha256:3ae42f88511211e0ec2637d88f3df1b709d07cfb093427e58444ae200a62608e
+    image: gotson/komga:1.30.1@sha256:d43bb3b57aeeafd274ea805214f5da71ff9306accf012fb14cc13dedc3307212
     depends_on:
       komga:
         condition: service_healthy
