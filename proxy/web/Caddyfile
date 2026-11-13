@@ -1,0 +1,27 @@
+{
+	admin off
+	auto_https off
+}
+:8080 {
+	@unauthenticated not header Authorization "Bearer {$CONTROLLER_SECRET}"
+	respond @unauthenticated "Gateway credentials required" 403
+
+	handle / {
+		root * /wonton
+		rewrite * /index.html
+		file_server
+	}
+	handle /subscription {
+		redir /subscription/ 308
+	}
+	handle /subscription/* {
+		reverse_proxy subscription:8080
+	}
+	handle_path /dashboard/* {
+		root * /srv
+		file_server
+	}
+	handle {
+		reverse_proxy proxy:9090
+	}
+}

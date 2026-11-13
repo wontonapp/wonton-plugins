@@ -1,0 +1,155 @@
+services:
+  init:
+    image: docker.io/library/python:3.16.0a1-alpine3.23@sha256:ed7cee59921abbacb4df7c4ea8a93e657199af922d45158ebfa1285865c0e303
+    user: "${PUID}:${PGID}"
+    command: [python, /wonton/subscription.py, init]
+    environment:
+      CONTROLLER_SECRET: ${WONTON_SECRET_CONTROLLER}
+      LAN_USER: ${WONTON_OWNER_NAME}
+      LAN_PASSWORD: ${WONTON_SECRET_LAN_PASSWORD}
+      APP_URL: ${WONTON_APP_URL}
+    volumes:
+      - ${WONTON_APP_DATA}/proxy:/data
+    configs:
+      - source: subscription
+        target: /wonton/subscription.py
+    restart: "no"
+  proxy:
+    image: docker.io/metacubex/mihomo:v1.19.33@sha256:9211361a3ed85305383288d38c05e85862d6d5a590c10007c37fc059cca82e9c
+    user: "${PUID}:${PGID}"
+    entrypoint: [/bin/sh, -ec]
+    command: ['umask 077; exec /mihomo -d /data -f /data/config.json']
+    volumes:
+      - ${WONTON_APP_DATA}/proxy:/data
+    # Shadow the upstream VOLUME to avoid an untracked anonymous volume; this path is not used.
+    tmpfs: [/root/.config/mihomo]
+    environment:
+      CONTROLLER_SECRET: ${WONTON_SECRET_CONTROLLER}
+      # This service is the upstream proxy itself; using the platform relay would create a loop.
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+    depends_on:
+      init: { condition: service_completed_successfully }
+      subscription: { condition: service_healthy }
+    healthcheck:
+      test: [CMD-SHELL, 'wget -q -O /dev/null --header="Authorization: Bearer $$CONTROLLER_SECRET" http://127.0.0.1:9090/version']
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+  subscription:
+    image: docker.io/library/python:3.16.0a1-alpine3.23@sha256:ed7cee59921abbacb4df7c4ea8a93e657199af922d45158ebfa1285865c0e303
+    user: "${PUID}:${PGID}"
+    command: [python, /wonton/subscription.py]
+    environment:
+      CONTROLLER_SECRET: ${WONTON_SECRET_CONTROLLER}
+      LAN_USER: ${WONTON_OWNER_NAME}
+      LAN_PASSWORD: ${WONTON_SECRET_LAN_PASSWORD}
+      APP_URL: ${WONTON_APP_URL}
+      # Subscription bootstrap must not depend on the proxy this plugin is creating.
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+    volumes:
+      - ${WONTON_APP_DATA}/proxy:/data
+    configs:
+      - source: subscription
+        target: /wonton/subscription.py
+      - source: subscription-page
+        target: /wonton/subscription.html
+    depends_on:
+      init: { condition: service_completed_successfully }
+    healthcheck:
+      test: [CMD, python, -c, 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/healthz", timeout=3)']
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+  web:
+    image: ghcr.io/zephyruso/zashboard:v3.30.0@sha256:a80a1b734f075734f04f1638c86a3a5b635b8273750bd5b877608672febf1029
+    user: "${PUID}:${PGID}"
+    command: [caddy, run, --config, /wonton/Caddyfile, --adapter, caddyfile]
+    environment:
+      CONTROLLER_SECRET: ${WONTON_SECRET_CONTROLLER}
+      XDG_CONFIG_HOME: /tmp/caddy-config
+      XDG_DATA_HOME: /tmp/caddy-data
+    configs:
+      - source: site
+        target: /wonton/Caddyfile
+      - source: page
+        target: /wonton/index.html
+    depends_on:
+      proxy: { condition: service_healthy }
+    healthcheck:
+      test: [CMD-SHELL, 'wget -q -O /dev/null --header="Authorization: Bearer $$CONTROLLER_SECRET" http://127.0.0.1:8080/version && wget -q -O /dev/null --header="Authorization: Bearer $$CONTROLLER_SECRET" http://127.0.0.1:8080/dashboard/index.html']
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+configs:
+  site: { file: web/Caddyfile }
+  page: { file: web/index.html }
+  subscription: { file: web/subscription.py }
+  subscription-page: { file: web/subscription.html }
+
+x-wonton:
+  spec: "0.7"
+  id: app.wonton.proxy
+  version: 0.1.3
+  kind: app
+  title: { zh: 上网代理（Mihomo）, en: Internet Proxy (Mihomo) }
+  description:
+    zh: 填一次你的代理订阅，家里服务器上的其他应用上网就走你挑的线路：网页里切线路、看流量，也能打开给家里其他设备用。
+    en: "Add your proxy subscription once and the other apps on your home server go online through the route you pick: switch routes and watch traffic in the browser, and optionally share it with other devices at home."
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/subscription.png]
+  author: { name: Wonton, url: https://github.com/geraldpeng6 }
+  homepage: https://wiki.metacubex.one
+  license: GPL-3.0-only
+  tags:
+    zh: [网络]
+    en: [Network]
+  about:
+    zh: |
+      保存一个 Clash / Mihomo 格式的订阅，在 zashboard 里管理节点、流量和连接。订阅每小时更新，节点选择随插件数据保存。
+
+      订阅链接保存后不会回显。未配置或没有节点时会如实提示，流量不会自动改走直连。
+
+      可以在云吞里选择它作为插件的出网代理。给家里其他设备用的 HTTP / SOCKS 端口默认关闭；打开后从插件详情复制地址和账号。
+    en: |
+      Save a Clash / Mihomo subscription and manage nodes, traffic and connections in zashboard. Subscriptions refresh hourly; node selection persists with plugin data.
+
+      Saved subscription URLs are never displayed. Missing subscriptions and empty node lists are shown honestly; traffic never silently falls back to a direct connection.
+
+      Select it in Wonton as the egress proxy for plugins. LAN HTTP / SOCKS access is off by default; enable it and copy the address and credentials from plugin details.
+  release_notes:
+    zh: 清单声明 spec 0.7（用到 provides.egress_proxy 和 egress.proxy 权限项）；订阅脚本的基础镜像升到 Python 3.16.0a1（alpha）。
+    en: Declares spec 0.7 for provides.egress_proxy and the egress.proxy permission; the subscription helper's base image moves to Python 3.16.0a1 (alpha).
+  webui:
+    service: web
+    port: 8080
+    sso: proxy
+    proxy:
+      headers:
+        Authorization: "Bearer {secret:controller}"
+  provides:
+    egress_proxy: { service: proxy, port: 7890 }
+  # The proxy needs the same username shown by lan.client, which requires owner.identity for interpolation.
+  permissions: [network.egress, egress.proxy, network.lan, owner.identity]
+  lan:
+    ports:
+      - { service: proxy, port: 7890 }
+    client:
+      address: "http://{host}:7890"
+      username: "{user}"
+      password: "{secret:lan_password}"
+  secrets:
+    controller: { generate: { bytes: 32 } }
+    lan_password: { generate: { bytes: 24 } }
+  requirements:
+    arch: [amd64, arm64]

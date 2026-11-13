@@ -1,0 +1,18 @@
+青龙面板（qinglong）
+====================
+
+`icon.svg` 取自青龙面板的官方图标（favicon）：
+https://qn.whyour.cn/favicon.svg ，仅去掉了 DOCTYPE、空的 style 块和 width/height
+属性，并补上白色底；图形未做修改。
+
+版权与许可
+----------
+
+青龙面板的代码以 Apache License 2.0 分发：
+https://github.com/whyour/qinglong/blob/develop/LICENSE
+本插件包中的图标按同一许可证分发。
+
+商标
+----
+
+"青龙"、"qinglong" 及其标志是 whyour 的商标。本插件是上游应用的打包，与上游作者没有隶属或背书关系。

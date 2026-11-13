@@ -1,0 +1,153 @@
+# 日历通讯录（Radicale）：手机自带的日历、通讯录同步到自己家，数据不经过 iCloud、Google。
+# 网页管理页（/.web/）走核心网关代登录（sso: proxy，网关注入 X-Remote-User）；
+# 手机等第三方客户端用账号密码（HTTP Basic）直连局域网端口。
+#
+# 上游一个 Radicale 实例的 [auth] type 只能配一种（见 radicale.org/v3.html 的 auth.type 取值列表，
+# 没有多认证或按来源区分的选项），所以按官方镜像跑两个进程、共用同一份存储：
+#   web：http_x_remote_user，只接核心网关，认网关注入的头；
+#   dav：htpasswd（bcrypt），经 lan.ports 开给手机客户端，认 Basic。
+# 存储锁是存储目录里的 .Radicale.lock，fcntl.flock 实现（镜像内 radicale/pathutils.py RwLock.acquire、
+# radicale/storage/multifilesystem/lock.py），同一台 Docker 上两个容器挂同一个目录时互相协调；
+# 实测：跨进程读写一致，两进程并发写 20 个事件全部成功（验证记录见仓库 PR）。
+# 网页里登录的用户和客户端的用户名是同一个，网页上建的日历手机上看得到。
+#
+# 上游 GPL-3.0-only，独立容器运行；镜像按清单列表（index）的摘要固定，amd64 和 arm64（docker buildx imagetools inspect）。
+services:
+  # 网页管理页：只接核心网关，不开局域网端口。Radicale 没有“信任的代理地址”选项，认任何来源的
+  # X-Remote-User 头，靠网络隔离兜底：没申请 network.egress，插件网络是内部网络，能连到这个服务的
+  # 只有核心和本插件的服务（宿主、局域网、其他插件都连不进来），网关转发前还会删掉客户端伪造的同名头。
+  web:
+    image: ghcr.io/kozea/radicale:3.9.1@sha256:e5e53d3f77566a8b4ca3e307d950e75c9b82b38d11e953c0394a342e3aa25c90
+    # 镜像固定以 uid 1000（radicale 用户）运行，数据目录按这个属主交给容器。
+    user: "1000:1000"
+    # 覆盖镜像 CMD 时带上原默认的 --hosts（默认配置只听 127.0.0.1，见 radicale.org/v3.html 的 Addresses）。
+    # prefer_browser_login：内置管理页探测登录状态时默认 fetch 不带 Cookie（credentials: 'omit'，
+    # 镜像内 web/internal_data/js/scenes/LoginScene.js），在靠会话 Cookie 认证的网关后面会一直停在登录页；
+    # 设 true 让它带 Cookie 发探测，网关注入 X-Remote-User 后管理页自动登录（镜像内 web/internal.py 动态
+    # 生成的 config.js 读这个配置）。
+    command: ["--hosts", "0.0.0.0:5232,[::]:5232", "--auth-type", "http_x_remote_user", "--web-prefer-browser-login", "True"]
+    volumes:
+      # 存储默认路径就是 /var/lib/radicale/collections，不用另写配置。
+      - ${WONTON_APP_DATA}/collections:/var/lib/radicale/collections
+    # 镜像里没有 curl、wget（python:alpine 基础镜像），用自带的 python 探 /.web/。
+    healthcheck:
+      test: ["CMD", "/app/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5232/.web/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      start_interval: 1s
+
+  # 手机客户端入口：HTTP Basic 认证，账号由一次性服务按核心生成的密码写好（见 init）。
+  # iOS 日历/通讯录、Android DAVx⁵、Thunderbird 都连这个端口。
+  dav:
+    image: ghcr.io/kozea/radicale:3.9.1@sha256:e5e53d3f77566a8b4ca3e307d950e75c9b82b38d11e953c0394a342e3aa25c90
+    user: "1000:1000"
+    command:
+      - --hosts
+      - 0.0.0.0:5232,[::]:5232
+      - --auth-type
+      - htpasswd
+      - --auth-htpasswd-filename
+      - /var/lib/radicale/auth/users
+      - --auth-htpasswd-encryption
+      - bcrypt
+    volumes:
+      - ${WONTON_APP_DATA}/collections:/var/lib/radicale/collections
+      - ${WONTON_APP_DATA}/auth:/var/lib/radicale/auth
+    # htpasswd 模块在启动时读账号文件，文件没准备好会启动失败，等 init 写完再起。
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/app/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5232/.web/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      start_interval: 1s
+
+  # 一次性服务：把 lan.client 的密码（核心生成的 client_password，注入为 WONTON_SECRET_CLIENT_PASSWORD）
+  # 按 bcrypt 写进 htpasswd。镜像里有 python 和 bcrypt 模块（openssl passwd 不会 bcrypt），不用另拉镜像。
+  # 每次容器重建都重跑：同一把密钥算出的哈希等价，先写临时文件再改名，dav 运行中读到的一直是完整文件
+  #（htpasswd 模块按文件 mtime 自动重读）。
+  init:
+    image: ghcr.io/kozea/radicale:3.9.1@sha256:e5e53d3f77566a8b4ca3e307d950e75c9b82b38d11e953c0394a342e3aa25c90
+    user: "1000:1000"
+    entrypoint: ["/bin/sh", "/tmp/create-users.sh"]
+    environment:
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME:?核心没有注入用户名}
+      WONTON_SECRET_CLIENT_PASSWORD: ${WONTON_SECRET_CLIENT_PASSWORD}
+    volumes:
+      - ${WONTON_APP_DATA}/auth:/var/lib/radicale/auth
+    configs:
+      - source: create-users
+        target: /tmp/create-users.sh
+    restart: "no"
+
+configs:
+  create-users:
+    file: create-users.sh
+
+x-wonton:
+  spec: "0.4"
+  id: org.radicale.radicale
+  version: 0.1.1
+  kind: app
+  title: { zh: 日历通讯录（Radicale）, en: Calendar & Contacts (Radicale) }
+  description:
+    zh: 把家里人的手机日历和通讯录同步到自己家：手机自带的日历、联系人应用直接连上就能用，不用 iCloud、Google 这类外面的账号。
+    en: "Sync your family's phone calendars and contacts to your own home: the built-in Calendar and Contacts apps connect directly, no iCloud or Google account needed."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/web.png]
+  author: { name: geraldpeng6 }
+  homepage: https://radicale.org
+  # 上游应用的许可证；插件包自己的许可证在仓库的 LICENSE（MIT）里。
+  license: GPL-3.0-only
+  tags:
+    zh: [日历, 通讯录, 同步]
+    en: [Calendar, Contacts, Sync]
+  about:
+    zh: |
+      像 iCloud 日历一样，但数据在自己家里：在网页上建日历和通讯录、导入导出，手机自带的日历、联系人应用自动同步。
+
+      家里每个人有自己的账号，各看各的日历，互不干扰。日历和通讯录是普通文件，备份整个数据目录就够。
+
+      手机连接方法：在插件详情里打开“在局域网开放”，把显示的地址、账号和密码填进手机自带的账号设置（iOS）或 DAVx⁵（Android），见 README。
+    en: |
+      Like iCloud Calendar, but the data stays at home: create calendars and address books on the web page, import and export, and the built-in Calendar and Contacts apps on your phone stay in sync.
+
+      Everyone in the family has their own account and their own calendars.
+
+      To connect a phone, turn on the LAN switch in the plugin details and enter the address, account and password shown there into the phone's account settings (iOS) or DAVx⁵ (Android); see the README.
+  release_notes: { zh: 日历/通讯录应用镜像随上游升到 3.9.1。, en: "The calendar & contacts app image moves to 3.9.1 upstream." }
+  webui:
+    service: web
+    port: 5232
+    # Radicale 自带的管理页在 /.web/，浏览器访问根路径会被重定向过去，直接指到那。
+    path: /.web/
+    sso: proxy
+    proxy:
+      headers:
+        # http_x_remote_user 认这个头（镜像内 radicale/auth/http_x_remote_user.py）。
+        X-Remote-User: "{user}"
+  # 手机客户端直连的端口；详情页的开关打开后显示地址和账号。同一份存储，网页建的日历手机上看得到。
+  lan:
+    ports:
+      - { service: dav, port: 5232 }
+    client:
+      address: "http://{host}:5232"
+      username: "{user}"
+      password: "{secret:client_password}"
+  secrets:
+    # 核心生成的同步密码：手机客户端填它，init 服务按它写 htpasswd。48 位十六进制，复制粘贴用。
+    client_password:
+      generate: { bytes: 24 }
+  permissions:
+    # 在局域网上开 dav 的端口，给手机直连。
+    - network.lan
+    # 知道用户名：htpasswd 账号按注入的用户名建，和网页里网关注入的用户名同一个。
+    - owner.identity
+  # 镜像有 amd64 和 arm64（清单列表）；两个进程空闲实测各约 31M，取 128M。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 128M

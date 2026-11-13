@@ -1,0 +1,17 @@
+图标
+====
+
+`icon.svg` 是 RomM 的官方标志（isotipo），原样取自上游仓库
+[rommapp/romm](https://github.com/rommapp/romm) 的 `frontend/assets/isotipo.svg`
+（5.4.1），未改色、未变形、未拼接。
+
+RomM 名称和标志是 The RomM Project 的商标。按其
+[品牌指南](https://docs.romm.app/latest/about/brand-guidelines/)，在表明"集成了
+RomM"的场合可以使用；本插件与 The RomM Project 无关，未获其背书。
+
+许可证
+------
+
+RomM 上游应用采用 AGPL-3.0-only（清单 `license` 字段），以官方镜像
+`rommapp/romm` 独立容器运行。本插件包（compose 清单、探针脚本、文档）不包含
+其源码，按仓库根目录的 LICENSE（MIT）分发。

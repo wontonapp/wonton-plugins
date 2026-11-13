@@ -1,0 +1,149 @@
+# Radarr：电影自动下载，网页经云吞网关访问（应用是 External 认证模式，自己不做认证，交给网关）；
+# 元数据和图片要出网（network.egress）；下载完的电影从共享文件夹 downloads 导入共享文件夹 media；
+# 配了 torrent_client 能力（qBittorrent Web API）时，一次性服务把它登记成下载客户端；
+# 一次性服务还把 Email 通知接到核心的内部邮箱（notify），应用发的信转进收件人的 Wonton 私聊。
+services:
+  radarr:
+    # LinuxServer.io 的 Radarr 镜像，上游安装文档指定的镜像（lscr.io/linuxserver/radarr 的 Docker Hub 名），
+    # amd64 和 arm64，按清单列表（index）的摘要固定；上游 GPL-3.0-only。
+    image: linuxserver/radarr:6.4.4@sha256:51a9ac2a9eb47afc833541e5fd6c11b86eb9f810694c22fa2429e3078e9194b2
+    # 镜像以 root 启动再降到 PUID:PGID（LSIO 约定），数据目录由核心按默认交给 PUID:PGID。
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      # External 是官方的反代认证模式：应用自己不做任何认证，全靠网关挡着；API 仍要求 X-Api-Key。
+      RADARR__AUTH__METHOD: External
+      # API key 由核心生成、随清单 secrets 注入：一次性脚本和将来的能力使用方用同一把，不用去设置页抄。
+      RADARR__AUTH__APIKEY: ${WONTON_SECRET_API_KEY}
+    volumes:
+      - ${WONTON_APP_DATA}/config:/config
+      # 和 qbittorrent 插件同名同路径，Radarr 才能从 /downloads 导入它下好的文件。
+      - ${WONTON_SHARE_DOWNLOADS}:/downloads
+      # 和 jellyfin 插件同名同路径，Radarr 整理好的电影 Jellyfin 直接能扫到。
+      - ${WONTON_SHARE_MEDIA}:/media
+    healthcheck:
+      # /ping 免鉴权，且会真查一次数据库，能发现应用起没起来。
+      test: ["CMD", "curl", "--noproxy", "*", "--fail", "--silent", "--show-error", "http://127.0.0.1:7878/ping"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+    stop_grace_period: 30s
+
+  # 一次性服务：建电影根目录 /media/movies（以 PUID:PGID 运行，目录归用户的用户），
+  # 再登记成 Radarr 的根目录，加片时下拉框里直接有。目录或登记已存在就不动。
+  rootfolder:
+    image: linuxserver/radarr:6.4.4@sha256:51a9ac2a9eb47afc833541e5fd6c11b86eb9f810694c22fa2429e3078e9194b2
+    user: "${PUID}:${PGID}"
+    entrypoint: ["/bin/sh", "/rootfolder.sh"]
+    environment:
+      WONTON_SECRET_API_KEY: ${WONTON_SECRET_API_KEY}
+    volumes:
+      - ${WONTON_SHARE_MEDIA}:/media
+    configs:
+      - source: rootfolder
+        target: /rootfolder.sh
+    depends_on:
+      radarr:
+        condition: service_healthy
+    restart: "no"
+
+  # 一次性服务：把 torrent_client 能力（qBittorrent Web API v2）登记成 Radarr 的下载客户端。
+  # 能力没接线时（wants 没有提供方）如实说明并跳过，其他功能照常。
+  torrentclient:
+    image: linuxserver/radarr:6.4.4@sha256:51a9ac2a9eb47afc833541e5fd6c11b86eb9f810694c22fa2429e3078e9194b2
+    entrypoint: ["/bin/sh", "/torrentclient.sh"]
+    environment:
+      WONTON_TORRENT_CLIENT_URL: ${WONTON_TORRENT_CLIENT_URL:-}
+      WONTON_SECRET_API_KEY: ${WONTON_SECRET_API_KEY}
+    configs:
+      - source: torrentclient
+        target: /torrentclient.sh
+    depends_on:
+      radarr:
+        condition: service_healthy
+    restart: "no"
+
+  # 一次性服务：把 Email 通知接到核心的内部邮箱，收件人是主人的内部邮箱，信转进收件人的 Wonton 私聊。
+  mail:
+    image: linuxserver/radarr:6.4.4@sha256:51a9ac2a9eb47afc833541e5fd6c11b86eb9f810694c22fa2429e3078e9194b2
+    entrypoint: ["/bin/sh", "/mail.sh"]
+    environment:
+      # 缺了就装不上：notify 没给 SMTP 三件套、owner.identity 没给收件地址，都要如实报错。
+      WONTON_SMTP_HOST: ${WONTON_SMTP_HOST:?核心没有注入发信服务器}
+      WONTON_SMTP_PORT: ${WONTON_SMTP_PORT:?核心没有注入发信端口}
+      WONTON_MAIL_FROM: ${WONTON_MAIL_FROM:?核心没有注入发件地址}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?核心没有注入主人邮箱}
+      WONTON_SECRET_API_KEY: ${WONTON_SECRET_API_KEY}
+    configs:
+      - source: mail
+        target: /mail.sh
+    depends_on:
+      radarr:
+        condition: service_healthy
+    restart: "no"
+
+configs:
+  rootfolder:
+    file: scripts/rootfolder.sh
+  torrentclient:
+    file: scripts/torrentclient.sh
+  mail:
+    file: scripts/mail.sh
+
+x-wonton:
+  spec: "0.12"
+  id: video.radarr.radarr
+  version: 0.1.1
+  kind: app
+  title: { zh: 电影下载（Radarr）, en: Movie Downloads (Radarr) }
+  description:
+    zh: 把想看的电影加进片单，自动搜索、下载、整理好，在 Jellyfin 里直接看
+    en: Add movies to your watchlist and Radarr searches, downloads and organizes them for your media library
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/library.png, screenshots/movie.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://radarr.video
+  # 应用（Radarr）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: GPL-3.0-only
+  tags:
+    zh: [下载, 视频]
+    en: [Downloads, Video]
+  about:
+    zh: |
+      Radarr 帮你追电影：把想看的加进片单，它会盯着资源，一有就自动下载、按电影名整理进媒体库，配合 Jellyfin 打开就能看，不用自己到处找种子、改名、挪文件。
+
+      配了 qBittorrent 插件后下载自动进它的队列；配了 Prowlarr 后索引站一处添加、自动同步过来。电影保存在家的共享文件夹里，重装不丢。搜索和下载需要能访问外网。应用的通知（电影下好了、健康问题）出现在收件人的 Wonton 私聊里；收件人只能是家里人，改成外部邮箱会发送失败。
+    en: |
+      Radarr keeps an eye on the movies you want: add them to your watchlist and it automatically searches, downloads and renames them into your media library, ready to play in Jellyfin — no more hunting for torrents, renaming files or moving them by hand.
+
+      With the qBittorrent plugin installed, downloads go straight into its queue; with Prowlarr, index sites are added in one place and synced over automatically. Movies live in your home shared folder and survive reinstalls. Searching and downloading need internet access. App notifications (movie downloaded, health issues) land in the recipient's Wonton chat; recipients must be household members — sending to an external address fails.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: radarr
+    port: 7878
+    # 应用是 External 认证模式，打开网页不再有应用的登录页，身份由网关把关。
+    sso: none
+  # API key 由核心生成、保管：应用和一次性脚本经环境变量拿到同一把。
+  secrets:
+    api_key:
+      generate: { bytes: 32 }
+  # torrent_client 是软依赖：有 qBittorrent 就接上，没有也能管理片单和资料。
+  wants: [torrent_client]
+  provides:
+    # Prowlarr 往这里同步索引器、Seerr 往这里发求片时经核心转发到这个端口。
+    x-wonton.radarr: { service: radarr, port: 7878 }
+  permissions:
+    # 元数据来自 Radarr 的 api.radarr.video 和 TMDB 图片，要出网。
+    - network.egress
+    # 下载完的电影从 downloads 共享文件夹导入 media 共享文件夹。
+    - storage.share.downloads:write
+    - storage.share.media:write
+    # 应用发的信经核心的内部 SMTP 转进收件人的 Wonton 私聊。
+    - notify
+    # 通知的收件地址用主人的内部邮箱（WONTON_OWNER_EMAIL）。
+    - owner.identity
+  requirements:
+    arch: [amd64, arm64]

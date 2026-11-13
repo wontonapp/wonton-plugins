@@ -1,0 +1,189 @@
+# 云吞插件：Samba。镜像用上游 dockurr/samba，按清单列表（index）的摘要固定；选型和没选的镜像见 PR 描述。
+name: samba
+services:
+  samba:
+    # dockurr/samba 不含发现服务（WS-Discovery/mDNS），入口脚本按 USER/UID/GID 建唯一的 SMB 账号，
+    # 密码从 /run/secrets/pass 读（见它的 samba.sh），不进容器环境。
+    image: dockurr/samba:4.23.10@sha256:2a0452a12b7a244a22f18d0f233101bb8d4952b5500ae263905e3b9dad3bf2ae
+    environment:
+      USER: ${WONTON_OWNER_NAME}
+      UID: "${PUID}"
+      GID: "${PGID}"
+      # 镜像自带 PASS=secret；清空后密码只认 /run/secrets/pass，文件为空时账号建为禁用密码，不落到弱口令。
+      PASS: ""
+    volumes:
+      - ${WONTON_SHARE_PHOTOS}:/shares/photos
+      - ${WONTON_SHARE_DOCUMENTS}:/shares/documents
+      - ${WONTON_SHARE_MUSIC}:/shares/music
+      - ${WONTON_SHARE_DOWNLOADS}:/shares/downloads
+      - ${WONTON_SHARE_TRANSFERS}:/shares/transfers
+    configs:
+      - source: smb-conf
+        target: /etc/samba/smb.conf
+      - source: samba-pass
+        target: /run/secrets/pass
+        mode: 0400
+    healthcheck:
+      # 用真实凭据列出共享：SMB 协商、账号和共享都可用才算健康。
+      test: ["CMD-SHELL", "smbclient --configfile=/etc/samba/smb.conf -L //127.0.0.1 -U \"$$USER%$$(cat /run/secrets/pass)\" -m SMB3 | grep -q transfers"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      start_interval: 1s
+
+  web:
+    # 连接信息页：stdlib 的 http.server，无框架（web/serve.py）。
+    image: python:3.15-alpine3.23@sha256:8d77d813a53e534dec9e1e5182cbd5b651b70d63b27e4ea7c1f616b37cf9aad2
+    user: "${PUID}:${PGID}"
+    command: ["python3", "/app/serve.py"]
+    environment:
+      WONTON_LAN_ADDRESSES: ${WONTON_LAN_ADDRESSES}
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME}
+      # 网关代登录的密钥（清单 webui.proxy.headers 引用的 web_key），serve.py 启动时核对它。
+      WONTON_WEB_KEY: ${WONTON_SECRET_WEB_KEY}
+    configs:
+      - source: serve-py
+        target: /app/serve.py
+      - source: web-pass
+        target: /run/wonton/samba-pass
+        mode: 0444
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+configs:
+  smb-conf:
+    content: |
+      [global]
+          server string = wonton
+          server role = standalone server
+          # 最低 SMB3；关 NetBIOS（137-139），只听 445。
+          server min protocol = SMB3
+          server signing = required
+          # 能协商加密就加密（SMB3 encryption），对吞吐的影响见 PR 实测。
+          smb encrypt = desired
+          # 只认 passdb 里唯一的账号，拒绝 guest 和匿名，含匿名枚举。
+          map to guest = never
+          restrict anonymous = 2
+          disable netbios = yes
+          smb ports = 445
+          load printers = no
+          printing = bsd
+          printcap name = /dev/null
+          disable spoolss = yes
+          dns proxy = no
+          local master = no
+          log level = 1
+          unix charset = UTF-8
+          mangled names = no
+          # macOS 客户端兼容：文件名编码与扩展属性。
+          vfs objects = catia fruit streams_xattr
+          fruit:metadata = stream
+          fruit:model = MacSamba
+
+      [photos]
+          path = /shares/photos
+          read only = no
+          guest ok = no
+          browseable = yes
+          force user = ${WONTON_OWNER_NAME}
+          force group = smb
+
+      [documents]
+          path = /shares/documents
+          read only = no
+          guest ok = no
+          browseable = yes
+          force user = ${WONTON_OWNER_NAME}
+          force group = smb
+
+      [music]
+          path = /shares/music
+          read only = no
+          guest ok = no
+          browseable = yes
+          force user = ${WONTON_OWNER_NAME}
+          force group = smb
+
+      [downloads]
+          path = /shares/downloads
+          read only = no
+          guest ok = no
+          browseable = yes
+          force user = ${WONTON_OWNER_NAME}
+          force group = smb
+
+      [transfers]
+          path = /shares/transfers
+          read only = no
+          guest ok = no
+          browseable = yes
+          force user = ${WONTON_OWNER_NAME}
+          force group = smb
+  samba-pass:
+    content: "${WONTON_SECRET_SAMBA_PASSWORD}"
+  serve-py:
+    file: web/serve.py
+  web-pass:
+    content: "${WONTON_SECRET_SAMBA_PASSWORD}"
+
+x-wonton:
+  spec: "0.4"
+  id: org.samba.samba
+  version: 0.1.3
+  kind: app
+  title: { zh: 电脑共享盘（Samba）, en: Network Drive (Samba) }
+  description: { zh: 让家里的电脑像打开 U 盘一样打开共享文件夹：在 Windows 资源管理器、Mac 访达里直接用，不用装软件。只在家里的网络能用，出门连不上。, en: "Open the shared folders from your computer's own file manager, like a USB drive: works in Windows File Explorer and Mac Finder with nothing to install. Only works on your home network." }
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/web.png, screenshots/web-dark.png]
+  author: { name: geraldpeng6 }
+  homepage: https://www.samba.org
+  license: GPL-3.0-or-later
+  tags:
+    zh: [文件, 网络]
+    en: [Files, Network]
+  about:
+    zh: |
+      让局域网里的电脑直接打开家里的共享文件夹：macOS 在 Finder 的“连接服务器”里输 smb://地址，Windows 在资源管理器输 \\地址。
+
+      插件网页给出地址、用户名和密码，点一下就能复制。只在局域网开放，不通互联网。
+    en: |
+      Open your shared folders from a computer on your network: use smb://address in macOS Finder's Connect to Server, or \\address in Windows Explorer.
+
+      The plugin page shows the address, user name and password, each with one-tap copy. It only opens on your network, never to the internet.
+  release_notes: { zh: 连接信息页的运行时镜像升到 Python 3.15。, en: "The connection-info page's runtime image moves to Python 3.15." }
+  webui:
+    service: web
+    port: 8080
+    # 连接信息页上有 SMB 密码，而插件网络不是信任边界：别的出网插件经用户代理也能连到这个端口。
+    # 网关代登录声明 X-Wonton-Web-Key（值是核心生成的密钥），serve.py 收到的请求没有这个头或值
+    # 不对就 403（/healthz 除外）。页面显示的用户名来自核心注入的 WONTON_OWNER_NAME，不认
+    # Remote-User 这类客户端可带的身份头。
+    sso: proxy
+    proxy:
+      headers:
+        X-Wonton-Web-Key: "{secret:web_key}"
+  secrets:
+    samba_password:
+      generate: { bytes: 32 }
+    web_key:
+      generate: { bytes: 32 }
+  lan:
+    ports:
+      - { service: samba, port: 445 }
+  permissions:
+    - network.lan
+    - storage.share.photos:write
+    - storage.share.documents:write
+    - storage.share.music:write
+    - storage.share.downloads:write
+    - storage.share.transfers:write
+    - owner.identity
+  # 上游没写最低内存；本机空闲实测约 24M，取 64M。镜像支持 amd64 和 arm64（docker manifest inspect）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 64M
