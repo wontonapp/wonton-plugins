@@ -10,9 +10,9 @@
   它自己的目录里。套件按 `WONTON_PLUGIN=<id>` 指到插件目录运行。
 - 并发工作时只改自己的 `<id>/`；要改 `scripts/`、工作流或 `.leak-allow` 的，单独一个 PR 先合——这些改动
   会触发全部插件的检查。
-- 不要在本仓库跑 `scripts/dev.sh kit-update`：套件从这里复制出去的仓库按它更新没问题，但本仓库的
-  `check.yml` 和 `publish.sh` 已按多插件布局分叉（按路径分作业、`<id>/v<版本>` 的 tag），kit-update 会用
-  模板仓库的单插件版本覆盖它们。
+- `scripts/dev.sh kit-update` 按模板仓库的套件版本更新 `scripts/`；本仓库是"一个仓库多家插件"的布局
+  （仓库根没有 docker-compose.yml），套件会保留本仓库自己的 `check.yml` 和 `publish.sh` 不覆盖——检查
+  工作流按子目录分作业、发布按 `<目录名>/v<版本>` 打 tag，都是仓库自己写的。
 
 ## 插件包
 
