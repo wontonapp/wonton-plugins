@@ -1,0 +1,80 @@
+services:
+  neko:
+    # Firefox flavor is the upstream multi-architecture image. WebRTC uses one
+    # UDP mux port so Wonton's tunnel can map it without exposing a port range.
+    image: ghcr.io/m1k1o/neko/firefox:3.2.0@sha256:415730ef9e3c35d850fdbbb95aa150cb9eda0b9c260c61d1974fb3af39cb71c3
+    shm_size: 2g
+    environment:
+      NEKO_DESKTOP_SCREEN: 1920x1080@30
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: ${WONTON_SECRET_USER_PASSWORD}
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: ${WONTON_SECRET_ADMIN_PASSWORD}
+      NEKO_WEBRTC_UDPMUX: "59000"
+      NEKO_WEBRTC_ICELITE: "true"
+      # The mapped device port is the loopback candidate on the device, not the
+      # container loopback address.
+      NEKO_WEBRTC_NAT1TO1: 127.0.0.1
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+      start_interval: 2s
+    restart: unless-stopped
+
+x-wonton:
+  spec: "0.14"
+  id: app.neko.browser
+  version: 0.1.0
+  kind: app
+  title: { zh: 云端浏览器（Neko）, en: Virtual Browser (Neko) }
+  description:
+    zh: 在家里的服务器上打开一个浏览器，手机上就能远程看和操作。
+    en: Open a browser on your home server and view and control it from your phone.
+  icon: icon.png
+  notices: [NOTICE]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://neko.m1k1o.net
+  license: Apache-2.0
+  license_url: https://www.apache.org/licenses/LICENSE-2.0
+  tags:
+    zh: [浏览器, 远程访问]
+    en: [Browser, Remote Access]
+  about:
+    zh: |
+      像把一台浏览器放在家里：网页在服务器上打开，手机只传回画面和操作，不把浏览记录留在手机浏览器里。
+
+      适合临时查资料、打开家里网络才能访问的网页，或和家人一起看同一个页面。它用 WebRTC 传画面和声音，操作比逐张截图更顺滑。
+
+      第一次打开时，用插件详情页显示的普通用户密码登录 Neko；管理员密码只给需要管理房间的人。映射到手机本机的端口只在插件页面可见时自动开启，离开页面就释放。
+    en: |
+      Put a browser at home: pages open on the server, while your phone receives the view and sends back controls instead of keeping the browsing session in its local browser.
+
+      Use it to reach pages available only from home or to look at the same page together. WebRTC carries the video and audio for smoother interaction than a sequence of screenshots.
+
+      On first open, sign in to Neko with the regular-user password shown in the plugin details. The admin password is for room administration. The device mapping is enabled while the plugin page is visible and released when you leave it.
+  release_notes:
+    zh: 首次提供 Neko v3.2.0 虚拟浏览器，使用单 UDP 端口复用以支持云吞隧道映射。
+    en: Initial Neko v3.2.0 virtual browser with a single UDP mux port for Wonton tunnel mapping.
+  setup:
+    zh: 打开插件详情页查看普通用户密码，然后在 Neko 页面登录；需要管理房间时使用管理员密码。
+    en: Open the plugin details to view the regular-user password, then sign in on the Neko page; use the admin password to manage the room.
+  webui:
+    service: neko
+    port: 8080
+    sso: none
+  tunnel:
+    ports:
+      - { service: neko, port: 59000, protocol: udp }
+  secrets:
+    user_password:
+      generate: { bytes: 32 }
+      show_owner: { label: { zh: 普通用户密码, en: Regular-user password } }
+    admin_password:
+      generate: { bytes: 32 }
+      show_owner: { label: { zh: 管理员密码, en: Admin password } }
+  permissions:
+    - network.egress
+  requirements:
+    arch: [amd64, arm64]
+    memory: 2G
