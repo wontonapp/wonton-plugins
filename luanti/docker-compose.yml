@@ -1,0 +1,130 @@
+# 云吞插件：Luanti（原 Minetest）体素沙盒游戏服务器。家人用 Luanti 客户端连上来一起玩。
+# 上游 https://github.com/luanti-org/luanti（引擎 LGPL-2.1-or-later，美术资源 CC BY-SA 3.0），
+# 官方镜像 ghcr.io/luanti-org/luanti，镜像按清单列表（index）的摘要固定。
+# 没有网页（无 webui）：客户端直连 30000/udp，账号是游戏自己的（第一次登录自己设密码）。
+services:
+  # 一次性服务：引擎不自带游戏，从 ContentDB 下载设置里选中的游戏，已存在就跳过（幂等）。
+  game-download:
+    image: ghcr.io/luanti-org/luanti:5.18.0@sha256:4ebdcd28bbaeead82030e8edcadb89dfe1fad21a74e1672d5ff415a9257e8683
+    # 镜像默认以 uid 30000（minetest）运行；引擎不挑 uid，按插件惯例覆盖成 PUID:PGID，
+    # 两个服务都写同样的 user，数据目录属主一致。
+    user: "${PUID}:${PGID}"
+    entrypoint: ["/bin/sh", "/download-game.sh"]
+    environment:
+      # 核心不支持 settings（规范 v0.12）时不注入设置变量，:- 默认值与清单默认一致；
+      # 静态检查也不认 WONTON_SETTING_*（见 PR 的底座问题），行为以后不变。
+      WONTON_SETTING_GAME: ${WONTON_SETTING_GAME:-mineclonia}
+    volumes:
+      - ${WONTON_APP_DATA}:/var/lib/minetest
+    configs:
+      - source: download-game
+        target: /download-game.sh
+    restart: "no"
+
+  server:
+    image: ghcr.io/luanti-org/luanti:5.18.0@sha256:4ebdcd28bbaeead82030e8edcadb89dfe1fad21a74e1672d5ff415a9257e8683
+    user: "${PUID}:${PGID}"
+    # 引擎在 path_user 下找 games/ 和 worlds/（LUANTI_USER_PATH 指到数据卷）。
+    # 世界按游戏名分目录：换「游戏」设置会另开一个新世界，旧世界和数据都在。
+    # 设置变量 :- 清单默认：核心不支持 settings 时不注入，装出来就是默认配置。
+    command:
+      - "--config"
+      - "/config/minetest.conf"
+      - "--gameid"
+      - "${WONTON_SETTING_GAME:-mineclonia}"
+      - "--world"
+      - "/var/lib/minetest/worlds/${WONTON_SETTING_GAME:-mineclonia}"
+    environment:
+      LUANTI_USER_PATH: /var/lib/minetest
+      # 镜像默认用户（uid 30000）的 HOME 来自 /etc/passwd；按 PUID 覆盖后容器里没有这个用户，
+      # 引擎起不来（实测 5.18.0 报 Cannot create user data directory），显式指到数据卷。
+      HOME: /var/lib/minetest
+    volumes:
+      - ${WONTON_APP_DATA}:/var/lib/minetest
+    configs:
+      - source: minetest-conf
+        target: /config/minetest.conf
+    depends_on:
+      game-download:
+        condition: service_completed_successfully
+    healthcheck:
+      # 引擎没有 HTTP 接口，健康检查发一个最小的 Luanti 握手包：协议号 0x4f457403 +
+      # 新建连接的控制包（peer_id 0，CONTROL/PING）。5.18.0 的连接层对未知来源、
+      # peer_id 为 0 的包会建 peer 并回 SET_PEER_ID 应答，所以收到含协议号的应答
+      # 就是 30000/udp 真能答；探测产生的临时 peer 约 7 秒后被服务器静默清理（info 级日志）。
+      test:
+        - CMD-SHELL
+        - printf '\x4f\x45\x74\x03\x00\x00\x00\x00\x02' | timeout 5 nc -u -w 2 127.0.0.1 30000 | od -An -tx1 | tr -d ' \n' | grep -q 4f457403
+      interval: 30s
+      # busybox 的 nc -u 收到应答也不退出（等满 -w，实测还会双倍）；外层 timeout 兜底。
+      # 世界生成期和整机高负载下应答会慢（实测约 2-4s），超时判失败靠 start_period 内多次重试。
+      timeout: 8s
+      start_period: 5m
+      start_interval: 5s
+
+configs:
+  minetest-conf:
+    content: |
+      # 由云吞按插件设置生成（settings.schema.json）；要改这些值就在插件详情页改设置。
+      # 设置变量 :- 清单默认：核心不支持 settings 时不注入，按默认值装。
+      server_name = ${WONTON_SETTING_SERVER_NAME:-Luanti}
+      default_game = ${WONTON_SETTING_GAME:-mineclonia}
+      creative_mode = ${WONTON_SETTING_CREATIVE_MODE:-true}
+      enable_damage = ${WONTON_SETTING_ENABLE_DAMAGE:-false}
+      max_users = ${WONTON_SETTING_MAX_USERS:-8}
+      # 用这个名字第一个注册的玩家是管理员。
+      name = ${WONTON_SETTING_ADMIN_NAME:-}
+      # 第一次登录自己设密码，不允许空密码。
+      disallow_empty_password = true
+
+  download-game:
+    file: download-game.sh
+
+x-wonton:
+  spec: "0.12"
+  id: org.luanti.luanti
+  version: 0.1.1
+  kind: app
+  title: { zh: 沙盒游戏服务器（Luanti）, en: Luanti server }
+  description: { zh: 自己的体素沙盒游戏服务器，家人用 Luanti 客户端连上来一起玩, en: "Your own voxel sandbox game server, join together from Luanti clients" }
+  icon: icon.png
+  notices: [NOTICE]
+  author: { name: geraldpeng6 }
+  homepage: https://www.luanti.org
+  # 应用（Luanti 引擎）的许可证；美术资源是 CC-BY-SA-3.0，见 NOTICE。插件包自己的许可证在 LICENSE。
+  license: LGPL-2.1-or-later
+  tags:
+    zh: [游戏]
+    en: [Game]
+  about:
+    zh: |
+      像 Minecraft 一样挖矿、盖房子、探险的开源体素沙盒（Luanti，原 Minetest），完全免费。装好就是一个属于自己家的多人服务器，孩子和家人用电脑或手机上的 Luanti 客户端连进来一起玩。
+
+      客户端在 luanti.org 下载（电脑、安卓、iPhone 都有）。加入时在「加入游戏」的地址栏填这台主机的局域网地址（安装确认页写明了端口开放在哪个地址上），端口 30000；在外面时经云吞的隧道连本机端口。第一次进入时自己起名字、设密码，之后用同一名字进入。
+
+      不用网页，设置里的选项都在云吞的插件详情里改：选游戏（默认 Mineclonia，类 Minecraft）、建筑模式、伤害、人数上限。想当管理员，就把「管理员玩家名」填成你进游戏用的名字。换「游戏」会另开一个新世界，原来的世界还在。
+    en: |
+      An open-source voxel sandbox like Minecraft (Luanti, formerly Minetest), completely free. This installs a multiplayer server for your household; family members join from Luanti clients on PC, Android or iPhone.
+
+      Get the client from luanti.org. To join, enter this host's LAN address (shown in the install confirmation) in the client's "Join Game" tab, port 30000; away from home, connect through the Wonton tunnel. The first time you join, pick a name and set your own password.
+
+      There is no web UI; all options live in the plugin details: choose the game (default Mineclonia, a Minecraft-like), creative mode, damage and player limit. To become the admin, set the admin player name to the name you join with. Switching the game starts a fresh world; the old world is kept.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  permissions:
+    # 引擎不自带游戏，一次性服务要从 content.luanti.org 下载选中的游戏。
+    # 规范的出网开关不分服务，主服务用不到出网，见 PR 说明。
+    - network.egress
+    # 客户端从局域网直连 30000/udp。
+    - network.lan
+  settings: settings.schema.json
+  lan:
+    ports:
+      - { service: server, port: 30000, protocol: udp }
+  tunnel:
+    ports:
+      - { service: server, port: 30000, protocol: udp }
+  # 镜像支持 amd64 和 arm64（docker buildx imagetools inspect）。
+  # 内存：mineclonia 空世界世界生成后实测 365M（2026-11-12，5.18.0），留玩家与地图生成余量取 1G。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 1G

@@ -1,0 +1,113 @@
+# Mosquitto：家庭消息服务器，智能设备和其他插件经它互传消息。上游 EPL-2.0 OR BSD-3-Clause，
+# 镜像按清单列表（index）的摘要固定；官方镜像自带 mosquitto_pub/sub/passwd，健康检查和口令初始化都不用另起镜像。
+services:
+  # 一次性服务：先于 broker 生成口令文件（health 是健康检查专用账号，主人账号给局域网设备和详情页显示）。
+  # mosquitto_passwd 不带 -c 时对已有用户改口令、没有的用户新增，重跑幂等。
+  init:
+    image: eclipse-mosquitto:2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98
+    user: "1883:1883"
+    entrypoint: ["/bin/sh", "/init/passwd.sh"]
+    environment:
+      WONTON_SECRET_HEALTH_PASSWORD: ${WONTON_SECRET_HEALTH_PASSWORD}
+      WONTON_SECRET_CLIENT_PASSWORD: ${WONTON_SECRET_CLIENT_PASSWORD}
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME:?核心没有注入用户名}
+    volumes:
+      - ${WONTON_APP_DATA}:/mosquitto/data
+    configs:
+      - source: passwd-init
+        target: /init/passwd.sh
+    network_mode: none
+    restart: "no"
+
+  mosquitto:
+    image: eclipse-mosquitto:2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98
+    # 官方镜像内置 1883:1883 的 mosquitto 用户；数据目录由核心按这个属主交给容器，直接以它写持久化。
+    user: "1883:1883"
+    read_only: true
+    # 日志走 stdout；镜像声明了 VOLUME /mosquitto/log，用 tmpfs 顶住，避免每次重建留下匿名卷。
+    # mosquitto_passwd 改口令文件时在 /tmp 建临时文件（mpw_tmpfile），只读根文件系统要给它一块可写的 /tmp。
+    tmpfs:
+      - /mosquitto/log
+      - /tmp
+    environment:
+      # 健康检查在容器内用 health 账号订阅 $SYS；口令不进配置文件，也不进镜像。
+      WONTON_SECRET_HEALTH_PASSWORD: ${WONTON_SECRET_HEALTH_PASSWORD}
+    volumes:
+      - ${WONTON_APP_DATA}:/mosquitto/data
+    configs:
+      - source: mosquitto-conf
+        target: /mosquitto/config/mosquitto.conf
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      # $SYS/broker/uptime 是保留消息（retain），订阅立即收到一条；-W 限时退出。
+      test: ["CMD-SHELL", "mosquitto_sub -h 127.0.0.1 -p 1883 -u health -P \"$$WONTON_SECRET_HEALTH_PASSWORD\" -t '$$SYS/broker/uptime' -C 1 -W 8"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      start_interval: 1s
+
+configs:
+  mosquitto-conf:
+    file: mosquitto.conf
+  passwd-init:
+    file: passwd-init.sh
+
+x-wonton:
+  spec: "0.11"
+  id: org.eclipse.mosquitto
+  version: 0.1.1
+  kind: app
+  title: { zh: 设备消息中心（Mosquitto）, en: Device Message Hub (Mosquitto) }
+  description:
+    zh: 像家里的邮局，把智能设备发来的消息送到各个软件，再把指令送回设备。
+    en: A post office for your smart home — it relays messages from devices to your apps and sends commands back.
+  icon: icon.svg
+  notices: [NOTICE]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://mosquitto.org
+  # 上游应用的许可证；插件包自己的许可证在仓库 LICENSE 里（MIT）。
+  license: EPL-2.0 OR BSD-3-Clause
+  tags:
+    zh: [智能家居, 工具]
+    en: [Home, Tools]
+  about:
+    zh: |
+      智能设备（ESP 开发板、网关）和 Zigbee2MQTT、ESPHome、Home Assistant、Node-RED 这类软件之间互传消息，都经过它。
+
+      装好就能用：它没有自己的网页，由别的软件和设备来连。
+
+      要连家里的设备：在插件详情里打开“在局域网开放”，把显示的地址和账号填进设备。
+    en: |
+      Smart devices (ESP boards, gateways) and apps like Zigbee2MQTT, ESPHome, Home Assistant and Node-RED all exchange messages through it.
+
+      Ready to use out of the box: there is no web page of its own — other apps and devices connect to it.
+
+      To connect devices in your home: turn on "Open on LAN" in the plugin details and enter the address and account shown there into the device.
+  setup:
+    zh: 要连家里的智能设备：打开本插件详情，把“在局域网开放”打开，再把显示的地址和账号填进设备。
+    en: "To connect smart devices: open this plugin's details, turn on \"Open on LAN\", then enter the address and account shown there into the device."
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  # 局域网设备（ESP 开发板、网关）直连 1883；账号在详情页显示，默认不开。
+  lan:
+    ports:
+      - { service: mosquitto, port: 1883 }
+    client:
+      address: "mqtt://{host}:1883"
+      username: "{user}"
+      password: "{secret:client_password}"
+  secrets:
+    client_password:
+      generate: { bytes: 32 }
+    health_password:
+      generate: { bytes: 32 }
+  permissions:
+    # 在局域网上开放 1883 端口。
+    - network.lan
+    # 主人账号按注入的用户名建。
+    - owner.identity
+  # 上游没写最低内存；镜像 amd64 和 arm64 都有（docker-library/official-images 的 eclipse-mosquitto 条目）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 64M

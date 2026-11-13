@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "x-wonton-order": ["game", "server_name", "admin_name", "creative_mode", "enable_damage", "max_users"],
+  "properties": {
+    "game": {
+      "type": "string",
+      "enum": ["mineclonia", "mineclone2", "minetest_game"],
+      "default": "mineclonia",
+      "x-wonton-title": { "zh": "游戏", "en": "Game", "zh-Hant": "遊戲", "ja": "ゲーム" },
+      "x-wonton-description": {
+        "zh": "装进服务器的游戏（引擎本身不带游戏，从 ContentDB 下载）。换了以后服务器另开一个新世界，原来的世界还在。",
+        "en": "The game to install on the server (the engine ships none; it is downloaded from ContentDB). Switching starts a new world and keeps the old one.",
+        "zh-Hant": "裝進伺服器的遊戲（引擎本身不帶遊戲，從 ContentDB 下載）。換了以後伺服器另開一個新世界，原來的世界還在。",
+        "ja": "サーバーに入れるゲーム（エンジンにゲームは付属しないため ContentDB から取得）。変更すると新しいワールドが作られ、古いワールドも残ります。"
+      },
+      "x-wonton-enum-titles": {
+        "mineclonia": { "zh": "Mineclonia（类 Minecraft）", "en": "Mineclonia (Minecraft-like)", "zh-Hant": "Mineclonia（類 Minecraft）", "ja": "Mineclonia（Minecraft 風）" },
+        "mineclone2": { "zh": "VoxeLibre（类 Minecraft）", "en": "VoxeLibre (Minecraft-like)", "zh-Hant": "VoxeLibre（類 Minecraft）", "ja": "VoxeLibre（Minecraft 風）" },
+        "minetest_game": { "zh": "Minetest Game（官方原版）", "en": "Minetest Game (vanilla)", "zh-Hant": "Minetest Game（官方原版）", "ja": "Minetest Game（バニラ）" }
+      }
+    },
+    "server_name": {
+      "type": "string",
+      "default": "Luanti",
+      "maxLength": 64,
+      "pattern": "^[a-zA-Z0-9 .,:!()&+'_-]*$",
+      "x-wonton-title": { "zh": "服务器名称", "en": "Server name", "zh-Hant": "伺服器名稱", "ja": "サーバー名" },
+      "x-wonton-description": {
+        "zh": "客户端服务器列表里显示的名字",
+        "en": "Name shown in the client's server list",
+        "zh-Hant": "用戶端伺服器清單裡顯示的名字",
+        "ja": "クライアントのサーバー一覧に表示される名前"
+      }
+    },
+    "admin_name": {
+      "type": "string",
+      "default": "",
+      "maxLength": 20,
+      "pattern": "^[a-zA-Z0-9_-]*$",
+      "x-wonton-title": { "zh": "管理员玩家名", "en": "Admin player name", "zh-Hant": "管理員玩家名", "ja": "管理者プレイヤー名" },
+      "x-wonton-description": {
+        "zh": "第一个用这个名字注册的玩家是管理员，能发 /grant 等命令；留空就是没有管理员",
+        "en": "The first player to register with this name becomes the admin (can run /grant etc.); leave empty for no admin",
+        "zh-Hant": "第一個用這個名字註冊的玩家是管理員，能發 /grant 等命令；留空就是沒有管理員",
+        "ja": "この名前で最初に登録したプレイヤーが管理者になり、/grant などを使えます。空欄なら管理者なし"
+      }
+    },
+    "creative_mode": {
+      "type": "boolean",
+      "default": true,
+      "x-wonton-title": { "zh": "建筑模式", "en": "Creative mode", "zh-Hant": "建築模式", "ja": "クリエイティブモード" },
+      "x-wonton-description": {
+        "zh": "打开后物品无限、可以飞，适合小孩子自由搭建",
+        "en": "Unlimited items and flying, good for free building with kids",
+        "zh-Hant": "打開後物品無限、可以飛，適合小孩子自由搭建",
+        "ja": "無限のアイテムと飛行が使えるようになり、自由な建築に向きます"
+      }
+    },
+    "enable_damage": {
+      "type": "boolean",
+      "default": false,
+      "x-wonton-title": { "zh": "伤害", "en": "Damage", "zh-Hant": "傷害", "ja": "ダメージ" },
+      "x-wonton-description": {
+        "zh": "打开后玩家会受伤、会死；给小孩子玩建议关着",
+        "en": "Players can get hurt and die; keep it off for young kids",
+        "zh-Hant": "打開後玩家會受傷、會死；給小孩子玩建議關著",
+        "ja": "オンにするとプレイヤーが負傷・死亡します。小さい子にはオフを推奨"
+      }
+    },
+    "max_users": {
+      "type": "integer",
+      "default": 8,
+      "minimum": 1,
+      "maximum": 255,
+      "x-wonton-title": { "zh": "人数上限", "en": "Player limit", "zh-Hant": "人數上限", "ja": "最大プレイヤー数" }
+    }
+  }
+}

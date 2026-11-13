@@ -1,0 +1,193 @@
+# LibrePhotos 相册插件：网页登录走核心的 OIDC（LibrePhotos 免费开源版自带，1.1.0 起），
+# 照片库就是共享文件夹 photos（读写：网页上传写进库里的 uploads/，应用也能按上游默认改照片文件），
+# 缩略图、识别模型、日志、静态资源缓存等派生数据放插件自己的数据目录，数据库同插件。
+#
+# 用上游的 unified 镜像：Django 一个容器跑 API、前端和全部识别 sidecar（人脸、语义搜索、
+# 看图说话等），外挂一个 PostgreSQL；上游没有独立 worker 容器，队列用数据库做 broker。
+#
+# 首次安装时上游入口脚本按注入的用户名建管理员（不设密码，密码登录没有可用口令）；
+# bootstrap 再把库目录指到共享文件夹，并按 OIDC 变量核对重建认证源（SocialApp）。
+# 用户名就是 OIDC 的 sub，装上以后不变；SSO 登录按已验证邮箱链到这个账号（Hydra 对填了
+# 邮箱的用户发 email_verified=true）。
+services:
+  backend:
+    # 上游官方镜像（reallibrephotos/librephotos-unified，license: MIT）。
+    image: reallibrephotos/librephotos-unified:1.6.0@sha256:bed9b3ebfa949d1f7d462fd4a02ee3890550de90ca1927120299896405f673e3
+    # 以用户身份运行：共享文件夹里写下的照片归用户，数据目录也按 PUID:PGID 交给它。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      # Django 以 PUID 运行，HOME 指到数据目录里可写的缓存卷（torch/HuggingFace 等按 $HOME 缓存）。
+      HOME: /cache
+      PYTHONDONTWRITEBYTECODE: "1"
+      # 静态资源 collectstatic 要写 /code/static，镜像里这个目录是 root 的，用数据目录卷代替。
+      SERVE_FRONTEND: "true"
+      # 网页的公开地址，应用生成 OIDC 回调地址等外链时用（核心注入，不带末尾 /）。
+      FRONTEND_BASE_URL: ${WONTON_APP_URL}
+      # django-admin 的 CSRF 白名单；相册网页本身走 JWT/SSO，不受它影响（上游文档）。
+      CSRF_TRUSTED_ORIGINS: ${WONTON_APP_URL}
+      DB_BACKEND: postgresql
+      DB_NAME: librephotos
+      DB_USER: ${WONTON_SECRET_DB_USERNAME}
+      DB_PASS: ${WONTON_SECRET_DB_PASSWORD}
+      DB_HOST: database
+      DB_PORT: "5432"
+      # 首次启动建管理员：用户名是云吞用户，邮箱强制填（SSO 靠已验证邮箱认人）；
+      # 不设 ADMIN_PASSWORD——账号没有可用口令，密码登录只剩 SSO 一条路。
+      ADMIN_USERNAME: ${WONTON_OWNER_NAME:?核心没有注入用户名字}
+      ADMIN_EMAIL: ${WONTON_OWNER_EMAIL:?核心没有注入用户邮箱}
+    volumes:
+      # 照片库 = 共享文件夹 photos，读写（上游默认允许上传，写进 /data/uploads/）。
+      - ${WONTON_SHARE_PHOTOS}:/data
+      # 派生数据：缩略图、识别模型、secret.key、相似度索引。
+      - ${WONTON_APP_DATA}/protected_media:/protected_media
+      - ${WONTON_APP_DATA}/logs:/logs
+      - ${WONTON_APP_DATA}/cache:/cache
+      - ${WONTON_APP_DATA}/static:/code/static
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      # 镜像里没有 curl/wget，用自带的 python。/api/healthz/ready/ 只有在数据库和任务队列
+      # 都可用时回 200；启动页在就绪前对它回 503，不会误判。
+      test: ["CMD", "python3", "-c", "import urllib.request,sys;r=urllib.request.urlopen('http://127.0.0.1:8001/api/healthz/ready/',timeout=5);sys.exit(0 if r.status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 5m
+      start_interval: 5s
+
+  # 一次性服务：每次创建容器（安装、升级、重建）都跑。上游入口脚本已经建好管理员，
+  # 这里补它不管的四件事：把库目录指到共享文件夹、同步能变的邮箱、按注入的 SMTP
+  # 变量把发信配到云吞内部邮箱（notify 权限，应用把它存数据库，没有别的注入口）、
+  # 按注入的 OIDC 变量核对重建认证源（核心重装后客户端密钥是新的，不能“已存在就跳过”）。
+  bootstrap:
+    image: reallibrephotos/librephotos-unified:1.6.0@sha256:bed9b3ebfa949d1f7d462fd4a02ee3890550de90ca1927120299896405f673e3
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      PYTHONDONTWRITEBYTECODE: "1"
+      DJANGO_SETTINGS_MODULE: librephotos.settings.production_noproxy
+      DB_BACKEND: postgresql
+      DB_NAME: librephotos
+      DB_USER: ${WONTON_SECRET_DB_USERNAME}
+      DB_PASS: ${WONTON_SECRET_DB_PASSWORD}
+      DB_HOST: database
+      DB_PORT: "5432"
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME:?核心没有注入用户名字}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?核心没有注入用户邮箱}
+      # 发信走云吞内部邮箱（notify 权限）：bootstrap 把这三个值写进应用的邮件配置。
+      WONTON_SMTP_HOST: ${WONTON_SMTP_HOST:?核心没有注入邮件服务器}
+      WONTON_SMTP_PORT: ${WONTON_SMTP_PORT:?核心没有注入邮件端口}
+      WONTON_MAIL_FROM: ${WONTON_MAIL_FROM:?核心没有注入发件地址}
+      WONTON_OIDC_ISSUER: ${WONTON_OIDC_ISSUER}
+      WONTON_OIDC_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      WONTON_OIDC_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+    configs:
+      - source: bootstrap
+        target: /bootstrap.py
+    # settings 加载时要建 /logs 并读/建 protected_media 里的 secret.key（以 PUID 运行，
+    # 没有这两个挂载会 Permission denied），数据库表和模型都在数据目录里照常访问。
+    volumes:
+      - ${WONTON_APP_DATA}/logs:/logs
+      - ${WONTON_APP_DATA}/protected_media:/protected_media
+    command: ["sh", "-c", "python manage.py shell < /bootstrap.py"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: "no"
+
+  database:
+    # 上游 unified 部署文档推荐的外部数据库镜像（带跨大版本自动升级），amd64 和 arm64 都有；
+    # LibrePhotos 1.5.0 起（Django 6.1）要求 PostgreSQL 15+，上游 compose 跑 18。
+    image: pgautoupgrade/pgautoupgrade:18-debian@sha256:7d72c17113bd91fd25274c210770a0f5cafbbdb05c2fbc5f7e0789516b46902e
+    environment:
+      POSTGRES_USER: ${WONTON_SECRET_DB_USERNAME}
+      POSTGRES_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      POSTGRES_DB: librephotos
+    volumes:
+      # 数据库是派生数据，放插件数据目录；PostgreSQL 18 起数据在 /var/lib/postgresql。
+      - ${WONTON_APP_DATA}/postgres:/var/lib/postgresql
+    shm_size: 128mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d librephotos -q"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+      start_interval: 2s
+
+configs:
+  bootstrap:
+    file: bootstrap.py
+
+x-wonton:
+  spec: "0.11"
+  id: app.librephotos.librephotos
+  version: 0.1.2
+  kind: app
+  title: { zh: 智能相册（LibrePhotos）, en: Smart Photo Album (LibrePhotos) }
+  description:
+    zh: 会认人、认地点的相册：把共享文件夹里的照片按人物、地点、事件整理好，搜画面内容甚至照片里的字都能找到，网页里也能直接传新照片。适合想按人和地点翻旧照片的人。
+    en: "An album that recognizes people and places: it organizes the photos in your shared folder by who, where and when, finds them by what's in the picture or even text inside it, and lets you upload new ones from the browser. For digging through old photos by person or place."
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/timeline.jpg, screenshots/detail.png, screenshots/search.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://docs.librephotos.com
+  # 上游应用的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: MIT
+  tags:
+    zh: [相册, AI]
+    en: [Photos, AI]
+  about:
+    zh: |
+      把共享文件夹 photos 变成自己的相册：时间线、人物、地点、事件都整理好，按人脸、画面内容和照片里的文字搜索。认人脸、认文字用的 AI 在首次扫描时自动下载，之后都在家里运行。
+
+      网页登录走云吞的身份，打开就是自己的账号，不用再注册；首次扫描在网页里点一下开始。
+
+      应用发的信（找回密码）会出现在收件人的 Wonton 私聊里；只发给家里人，外部邮箱发不出。
+
+      手机浏览器即开即用，也可以把网页加到主屏当应用。
+    en: |
+      Turn the photos shared folder into your own library: timeline, people, places and events are organized for you; search by face, what's in the picture and text inside photos. The AI for face and text recognition downloads on the first scan and runs at home afterwards.
+
+      Sign-in goes through Wonton's identity, so the page opens as your own account; the first scan starts with one click.
+
+      Emails the app sends (password resets) arrive in the recipient's Wonton chat; only household members can receive them.
+
+      Works in the phone browser as is, and can be added to the home screen as an app.
+  release_notes:
+    zh: 接上云吞的内部邮箱：找回密码的邮件发到收件人的 Wonton 私聊里。
+    en: "Outgoing email now goes through Wonton's internal mailbox: password-reset emails arrive in the recipient's Wonton chat."
+  webui:
+    service: backend
+    port: 8001
+    # 打开网页直达 OIDC 起点（GET 即跳转核心身份方），不再看到应用自己的登录页；
+    # 登录完成应用回跳到首页。回调路径登记给核心的 OIDC 客户端。
+    path: /api/accounts/oidc/wonton/login/
+    sso: oidc
+    oidc:
+      redirect_paths: [/api/accounts/oidc/wonton/login/callback/]
+      # 应用按已验证邮箱把云吞身份链到管理员账号，主人的身份必须有邮箱。
+      # django-allauth 的 OIDC 适配器发现 Hydra 同时支持 basic/post 时默认用 post
+      # （65.x 的 basic_auth 逻辑），登记也用 post，两边一致。
+      token_endpoint_auth_method: client_secret_post
+  permissions:
+    # 照片库读写：上传、删除和把标题等元数据写回文件（上游默认行为）。
+    - storage.share.photos:write
+    # 识别模型首次下载（Hugging Face 等）、地图瓦片。
+    - network.egress
+    # 发信走云吞内部邮箱：找回密码等邮件由核心收下，转进收件人的 Wonton 私聊。
+    - notify
+    # 建管理员要用用户名和邮箱；SSO 按已验证邮箱把云吞身份链到应用账号。
+    - owner.identity
+  secrets:
+    db_username:
+      generate: { bytes: 8 }
+    db_password:
+      generate: { bytes: 32 }
+  # 多架构镜像；上游要求最低 4 GB 内存（https://docs.librephotos.com，机器学习特性建议 8 GB+）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 4G

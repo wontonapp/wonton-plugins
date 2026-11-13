@@ -1,0 +1,79 @@
+# Music Assistant（全屋音乐）：一个曲库（本地音乐 + 各种流媒体）推送到家里所有音箱，多房间同步播放。
+# 上游官方要求宿主网络（network_mode: host）：发现和推流靠 mDNS/SSDP 这类本地组播，AirPlay、Chromecast、
+# DLNA、Sonos 还要直接在局域网上开随机端口，桥接网络属于上游明确不支持的形态。
+# 宿主网络的服务连不到插件网络，网页经核心的中继容器（relay-webui）进网关；出网走宿主自己的路由，
+# 不经出口容器，也不声明 network.egress（核心对宿主网络出网的定论）。
+# 容器内挂 SMB/NFS 才需要的 SYS_ADMIN、DAC_READ_SEARCH、apparmor:unconfined 一律不申请：
+# 本地音乐用共享文件夹 music 只读挂载，正是官方推荐的更安全做法。
+services:
+  server:
+    image: ghcr.io/music-assistant/server:2.10.9@sha256:4ac0d5844363fbbefd6a61251df09d96cd546e05e01b8c1cc1a28803f0935e07
+    network_mode: host
+    # 镜像按非 root 运行设计（上游 Dockerfile：/app 与 /tmp 对所有用户可写）；数据目录由核心按 user 交给 PUID:PGID。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ${WONTON_APP_DATA}:/data
+      # 本地音乐文件夹（storage.share.music:read），用户在应用里加"本地文件夹"音乐源时路径填 /music。
+      - ${WONTON_SHARE_MUSIC}:/music:ro
+    healthcheck:
+      # /info 是 webserver 的公开端点（无需登录、初始设置前也可用），返回服务器信息 JSON：
+      # 检查的是网页端口真的在应答，不只是进程活着。镜像里只有 wget，没有 curl。
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8095/info"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.12"
+  id: io.music-assistant.server
+  version: 0.1.1
+  kind: app
+  title: { zh: 全屋音乐（Music Assistant）, en: Music Assistant }
+  description:
+    zh: 把家里的音箱连成一个音响系统：本地音乐和各种流媒体合成一个曲库，推到每个房间的音箱播放，还能多房间同步
+    en: "Turn your speakers into one sound system: local music and streaming services in a single library, played on speakers in every room, in sync"
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/setup.png, screenshots/library.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://www.music-assistant.io
+  # 上游应用的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: Apache-2.0
+  tags:
+    zh: [音乐, 智能家居]
+    en: [Music, Home]
+  about:
+    zh: |
+      把本地音乐和各种流媒体合成一个曲库，推送到家里的音箱上播放：AirPlay、Chromecast、Sonos、DLNA 这类音箱装好就会被自动找到，几个房间可以同步放同一首歌，也可以各放各的。
+
+      第一次打开要先设管理员账号和密码（务必记牢，忘了没有找回的办法，只能清空数据重来），然后在设置里添加音乐源：本地文件夹的路径填 /music（共享文件夹 music 里的内容，只读，不会被改动），流媒体服务也在同一页登录添加。
+
+      这个插件需要宿主网络这一最高级别的网络权限：发现音箱和推流要直接待在局域网上。因此它的网页端口 8095 也会直接开在本机网卡上，局域网里的设备可以绕过云吞网关直接打开——应用自带的登录会挡住陌生人，介意的话可以在路由器或本机防火墙上拦掉 8095。封面和元数据要连外网，走宿主自己的网络出去，不经云吞的出口代理。
+    en: |
+      Combine local music and streaming services into one library and play it on the speakers around your home: AirPlay, Chromecast, Sonos and DLNA speakers are found automatically, several rooms can play the same song in sync, or each its own.
+
+      On first open, set the administrator account and password (remember them: there is no recovery, a wipe is the only reset), then add music sources in the settings: for the local folder provider enter the path /music (the music shared folder, read-only, never modified); streaming services are added on the same page.
+
+      This plugin needs host networking, the highest-level network permission: player discovery and streaming require sitting directly on the LAN. Its web port 8095 is therefore also open on the host's own network interfaces, and devices on the LAN can reach it without going through the Wonton gateway — the app's own login keeps strangers out, and you can block 8095 in your router or host firewall if you prefer. Artwork and metadata are fetched from the internet via the host's own routing, not through the Wonton egress proxy.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  setup:
+    zh: 打开网页先设管理员账号和密码，再到「设置 → 音乐源」添加"本地文件夹"，路径填 /music
+    en: Open the page, set the admin account first, then add a "Local filesystem" music source with the path /music
+  webui:
+    service: server
+    port: 8095
+    # 2.10 起应用自带用户认证：首次打开由用户自己注册管理员，符合"应用自带的登录"。
+    sso: none
+  permissions:
+    # 宿主网络（很高）：mDNS/SSDP 组播发现音箱、给 AirPlay/Chromecast/DLNA/Sonos 推流，上游要求 network_mode: host。
+    - network.host
+    # 本地音乐文件夹，只读挂载。
+    - storage.share.music:read
+  requirements:
+    # 上游官方支持 aarch64（树莓派 4 及以上），镜像有 amd64 和 arm64。
+    arch: [amd64, arm64]
+    # 上游官方最低要求：设备或容器 2GB 内存。
+    memory: 2G

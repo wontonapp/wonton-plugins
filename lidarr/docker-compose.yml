@@ -1,0 +1,132 @@
+# Lidarr 音乐库自动化：关注的歌手出了新专辑，自动搜索、下载并整理进共享文件夹 music（Navidrome 直接能放）。
+# 下载交给 torrent_client 能力提供的 qBittorrent（经核心别名访问）；网页经云吞网关访问（sso: none，
+# 第一次打开应用会要求设置管理员账号密码）；应用的通知经内部邮箱转进收件人的 Wonton 私聊。
+services:
+  lidarr:
+    # LinuxServer.io 的 Lidarr 镜像，上游安装文档指定的镜像（lscr.io/linuxserver/lidarr 的 Docker Hub 名），
+    # amd64 和 arm64，按清单列表（index）的摘要固定；上游 GPL-3.0-only。
+    image: linuxserver/lidarr:3.1.6@sha256:a91ef0642c15c9bd7c4260fee98fa99972c61601e37c8a96411d6a9cf0e9ad40
+    # 镜像以 root 启动再降到 PUID:PGID（LSIO 约定），数据目录由核心按默认交给 PUID:PGID。
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      # API key 由核心生成并保管（x-wonton.secrets）， Lidarr 支持经环境变量覆盖 config.xml 的 ApiKey
+      # （.NET 配置把 LIDARR__AUTH__APIKEY 绑到 Lidarr:Auth:ApiKey）。一次性服务拿同一把注入值调 API。
+      LIDARR__AUTH__APIKEY: ${WONTON_SECRET_API_KEY}
+    volumes:
+      - ${WONTON_APP_DATA}/config:/config
+      # 媒体库写进 music 共享文件夹，和 Navidrome 的挂法一致，两边路径才对得上。
+      - ${WONTON_SHARE_MUSIC}:/music
+      # 下载区在 downloads 共享文件夹，和 qBittorrent 的挂法一致；Lidarr 导入时优先硬链接。
+      - ${WONTON_SHARE_DOWNLOADS}:/downloads
+    healthcheck:
+      # /ping 免鉴权，且会真查一次数据库，能发现应用起没起来。
+      test: ["CMD", "curl", "--noproxy", "*", "--fail", "--silent", "--show-error", "http://127.0.0.1:8686/ping"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+    stop_grace_period: 30s
+
+  # 一次性服务：把 torrent_client 能力（qBittorrent Web API v2）登记成 Lidarr 的下载客户端。
+  # WONTON_TORRENT_CLIENT_URL 没注入时如实说明并跳过登记（provision.sh 同样），装得上、其他功能照常。
+  provision:
+    image: linuxserver/lidarr:3.1.6@sha256:a91ef0642c15c9bd7c4260fee98fa99972c61601e37c8a96411d6a9cf0e9ad40
+    entrypoint: ["/bin/sh", "/provision.sh"]
+    environment:
+      WONTON_TORRENT_CLIENT_URL: ${WONTON_TORRENT_CLIENT_URL:-}
+      WONTON_SECRET_API_KEY: ${WONTON_SECRET_API_KEY}
+    volumes:
+      - ${WONTON_APP_DATA}/config:/config:ro
+    configs:
+      - source: provision
+        target: /provision.sh
+    depends_on:
+      lidarr:
+        condition: service_healthy
+    restart: "no"
+
+  # 一次性服务：把 Email 通知接到核心的内部邮箱，收件人是主人的内部邮箱，信转进收件人的 Wonton 私聊。
+  mail:
+    image: linuxserver/lidarr:3.1.6@sha256:a91ef0642c15c9bd7c4260fee98fa99972c61601e37c8a96411d6a9cf0e9ad40
+    entrypoint: ["/bin/sh", "/mail.sh"]
+    environment:
+      # 缺了就装不上：notify 没给 SMTP 三件套、owner.identity 没给收件地址，都要如实报错。
+      WONTON_SMTP_HOST: ${WONTON_SMTP_HOST:?}
+      WONTON_SMTP_PORT: ${WONTON_SMTP_PORT:?}
+      WONTON_MAIL_FROM: ${WONTON_MAIL_FROM:?}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?}
+      WONTON_SECRET_API_KEY: ${WONTON_SECRET_API_KEY}
+    volumes:
+      - ${WONTON_APP_DATA}/config:/config:ro
+    configs:
+      - source: mail
+        target: /mail.sh
+    depends_on:
+      lidarr:
+        condition: service_healthy
+    restart: "no"
+
+configs:
+  provision:
+    file: provision.sh
+  mail:
+    file: mail.sh
+
+x-wonton:
+  spec: "0.13"
+  id: com.lidarr.lidarr
+  version: 0.1.1
+  kind: app
+  title: { zh: 音乐雷达（Lidarr）, en: Lidarr }
+  description:
+    zh: 你关注的歌手出了新专辑，自动帮你下载到家里的曲库，用音乐播放应用直接听
+    en: "When artists you follow release new music, it is downloaded to your home library and ready to play"
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://lidarr.audio
+  # 应用（Lidarr）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: GPL-3.0-only
+  tags:
+    zh: [音乐, 下载]
+    en: [Music, Downloads]
+  about:
+    zh: |
+      像帮你追专辑的助手：把你喜欢的歌手加进来，出新专辑、有新歌单时它自动搜索并下载，整理好文件名和封面，放进家里共享的音乐文件夹，手机上的音乐应用直接就能听到。
+
+      第一次打开时应用会要求设置管理员账号和密码（自己定，之后在应用的 设置 → 通用 → 安全 里改）；网页始终在云吞网关的登录后面。歌手名单和已下载的音乐都保存在家里，重装不丢。搜索和元数据需要能访问外网。配上 qBittorrent 插件后，下载自动进它的队列；下载完成和健康问题会出现在收件人的 Wonton 私聊里。
+    en: |
+      Like an assistant that follows albums for you: add the artists you like, and new releases are searched for and downloaded automatically, with names and covers tidied up into the shared music folder, ready in the music app on your phone.
+
+      On first open the app asks you to set an admin username and password (your choice, change later under Settings → General → Security); the web stays behind the Wonton gateway login. Your artist list and downloaded music live at home and survive reinstalls. Search and metadata need internet access. With the qBittorrent plugin installed, downloads go straight into its queue; completed imports and health issues land in the recipient's Wonton chat.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: lidarr
+    port: 8686
+  # 别的插件（以及以后的 Agent）经 x-wonton.lidarr 能力访问 Lidarr 的 REST API（/api/v1）。
+  provides:
+    x-wonton.lidarr: { service: lidarr, port: 8686 }
+  # 下载要 torrent_client 能力提供的 qBittorrent。提供能力的插件不能 requires 别的能力，
+  # 只能 wants：有提供方就接上登记成下载客户端，没有时 Lidarr 照常装（手动管理仍可用）。
+  wants: [torrent_client]
+  permissions:
+    # 元数据来自上游的元数据服务（MusicBrainz 的代理）和歌词、封面等外部源，要出网。
+    - network.egress
+    # 应用发的信经核心的内部 SMTP 转进收件人的 Wonton 私聊。
+    - notify
+    # 通知的收件地址用主人的内部邮箱（WONTON_OWNER_EMAIL）。
+    - owner.identity
+    # 媒体库写 music（和 Navidrome 一致），下载区写 downloads（和 qBittorrent 一致）。
+    - storage.share.music:write
+    - storage.share.downloads:write
+  secrets:
+    api_key:
+      # Lidarr 的 API key：核心生成、经 LIDARR__AUTH__APIKEY 注入应用，一次性服务拿同一把调 API。
+      generate: { bytes: 32 }
+  requirements:
+    arch: [amd64, arm64]
+    # 上游没写最低内存；按本机空闲实测取整（见 PR 验证记录）。
+    memory: 512M
