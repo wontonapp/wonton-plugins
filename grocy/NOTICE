@@ -1,0 +1,18 @@
+# 图标
+
+`icon.png` 来自 grocy 官方标志
+[grocy/grocy 仓库 `public/img/icon-1024.png`](https://github.com/grocy/grocy/blob/v4.7.1/public/img/icon-1024.png)
+（grocy，MIT License，Copyright (c) Bernd Bestel）。原图为 854×1024 透明底，按插件规范等比缩放并置于
+白色正方形底上，未改色、未变形。
+
+grocy 和 grocy 标志是 grocy 项目（Bernd Bestel 及社区）的商标；本插件是独立开发的第三方插件，
+与 grocy 上游没有从属或背书关系。
+
+# 镜像
+
+`lscr.io/linuxserver/grocy` 由 LinuxServer.io 打包（[docker-grocy](https://github.com/linuxserver/docker-grocy)），
+内含未改动的 grocy v4.7.1 上游代码。LinuxServer.io 的构建脚本按 GPL-3.0 许可发布；应用本身为 MIT（见上）。
+
+# 插件包自身的文件
+
+本仓库其余文件（清单、探针、标签页图标）按本仓库 LICENSE（MIT）分发。

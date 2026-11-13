@@ -1,0 +1,35 @@
+图标
+====
+
+`icon.png` 是 Baby Buddy 上游项目的官方应用图标，原样使用，未做修改。
+
+来源：https://github.com/babybuddy/babybuddy （仓库内 `babybuddy/static_src/logo/icon.png`）
+
+Baby Buddy 以 BSD-2-Clause 许可证发布（版权所有者见上游 LICENSE 文件）。Baby Buddy 名称和图标
+是其各自所有者的商标；本插件与其无隶属或背书关系。插件容器使用的镜像由 LinuxServer.io 打包
+（https://github.com/linuxserver/docker-babybuddy ），内含未修改的上游代码。
+
+许可证
+------
+
+MIT License
+
+Copyright (c) 2026 Wonton plugin authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
