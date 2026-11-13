@@ -27,6 +27,11 @@ services:
       MEMOS_CONFIG_USER_NAME: "users/${WONTON_OWNER_NAME}"
       MEMOS_CONFIG_LINKED_NAME: "users/${WONTON_OWNER_NAME}/linkedIdentities/wonton"
       WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL}
+      # 通知邮件的 SMTP：声明式配置引用 HOST 和 MAIL_FROM；PORT 是 proto 整数字段，${env:} 只能替换成
+      # 字符串，配置里写死 25（核心约定的端口）。
+      WONTON_SMTP_HOST: ${WONTON_SMTP_HOST}
+      WONTON_SMTP_PORT: ${WONTON_SMTP_PORT}
+      WONTON_MAIL_FROM: ${WONTON_MAIL_FROM}
       WONTON_OIDC_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
       WONTON_OIDC_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
       WONTON_OIDC_AUTH_URL: ${WONTON_OIDC_AUTH_URL}
@@ -67,7 +72,7 @@ services:
 
   # MCP 的入口：核心的 MCP 总线不带凭据，这里替它加上用户账号的令牌。
   mcp:
-    image: nginx:1.30.6-alpine@sha256:0e52bd054126cdc040b1276c0af347aeb02a41b9cfe305d6094767ac30e97949
+    image: nginx:1.31.8-alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
     user: "${PUID}:${PGID}"
     read_only: true
     # 只读根文件系统下还要有地方写 pid 和请求体临时文件：run 目录归运行用户，临时文件放 /dev/shm（1777 的 tmpfs，
@@ -93,14 +98,14 @@ configs:
     file: config/init.sh
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: com.usememos.memos
-  version: 0.1.3
+  version: 0.1.5
   kind: app
-  title: { en: Memos }
+  title: { zh: 速记本（Memos）, en: Quick Notes (Memos) }
   description:
-    zh: 随手记笔记、写日记、列待办，都能全文搜索
-    en: Jot down notes, journal and todos, all searchable
+    zh: 像给自己发朋友圈：想到什么随手记一条，笔记、日记、待办都行，打个标签，以后一搜就到。最轻巧，不用想放哪个文件夹。
+    en: "Like posting to a private feed: jot down a thought, diary entry or to-do in seconds, tag it, and search finds it later. The lightest note app — no folders to think about."
   icon: icon.png
   notices: [NOTICE]
   screenshots:
@@ -121,19 +126,30 @@ x-wonton:
       Bot 也能搜、能新建和追加笔记，看到的就是你自己看得到的。
 
       需要访问外网：Webhook 推送、链接预览和 AI 语音转写都得出网才能用，笔记本身不受影响。
+
+      核心升级后，插件容器会按新的签发方自动重建，打开照常，不用重装。
+
+      有人评论、提及你时，Memos 的通知信会出现在你的 Wonton 私聊里；信只能发给家里的人。
     en: |
       Jot down notes, keep a journal, list todos, tag them and search everything later. Notes stay private by default; you can make one public or share it by link.
 
       The bot can search, create and append notes, and sees exactly what you see.
 
       Needs internet access: webhooks, link previews and AI speech-to-text all reach the network; notes work offline.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+
+      After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
+
+      Notification emails for comments and mentions arrive in your Wonton chat; mail only reaches people in your household.
+  release_notes: { zh: "修复自动重新登录：会话过期后打开速记本，现在能自己登录回来，不再停在报错页。", en: "Fixed automatic re-login: when a session expires, Memos signs you back in by itself instead of stopping at an error page." }
   webui:
     service: memos
     port: 5230
     sso: oidc
     oidc:
       redirect_paths: [/auth/callback]
+      # 上游换令牌用 golang.org/x/oauth2 的 AuthStyleAutoDetect：先试 client_secret_basic，出错改用
+      # client_secret_post 重试。经核心网关转发时 basic 那一跳会失败，登记成 post 才能让上游的重试被签发方接受。
+      token_endpoint_auth_method: client_secret_post
   mcp:
     service: mcp
     port: 8080
@@ -143,6 +159,10 @@ x-wonton:
       generate: { bytes: 32 }
   permissions:
     - owner.identity
+    # MCP 工具（PAT 侧车）经核心总线暴露给 Bot；规范 0.11 起只有声明 tools 权限的插件才注入 WONTON_MCP_URL。
+    - tools
+    # 收件箱通知邮件（评论、提及）经核心的内部邮箱发信。
+    - notify
     # Webhook 推送、链接预览、AI 语音转写都要从容器里访问外网；插件内部互访核心已放进 NO_PROXY。
     - network.egress
   # 上游没写最低内存；本机空闲实测约 49M，取 128M。镜像支持 amd64 和 arm64（docker manifest inspect）。
