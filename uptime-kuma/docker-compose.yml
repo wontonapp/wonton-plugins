@@ -56,7 +56,7 @@ configs:
 x-wonton:
   spec: "0.4"
   id: fyi.kuma.uptime-kuma
-  version: 0.2.0
+  version: 0.2.1
   kind: app
   title: { en: Uptime Kuma }
   description: { zh: 盯着你的网站和服务，掉线时提醒你, en: Watch your sites and services and get alerted when they go down }
@@ -79,8 +79,8 @@ x-wonton:
 
       Open and use it straight away — no app sign-in: an administrator account is pre-created and the app's own login is off, because the page is only reachable through the Wonton gateway, which already authenticates you. External push heartbeats are blocked, and status pages are only visible to you through the gateway.
   release_notes:
-    zh: 装好打开直接可用：不用选数据库、注册管理员，也不用记应用密码（网页只经云吞网关进来）。
-    en: Opens ready to use after install — no database picker, admin signup or app password (the page is only reachable through the Wonton gateway).
+    zh: 插件包迁入官方插件合仓，内容与上一版相同。
+    en: "Package moved into the official Wonton plugin monorepo; same content as the previous release."
   webui:
     service: kuma
     port: 3001

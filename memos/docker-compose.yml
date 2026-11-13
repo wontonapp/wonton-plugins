@@ -95,7 +95,7 @@ configs:
 x-wonton:
   spec: "0.4"
   id: com.usememos.memos
-  version: 0.1.2
+  version: 0.1.3
   kind: app
   title: { en: Memos }
   description:
@@ -127,7 +127,7 @@ x-wonton:
       The bot can search, create and append notes, and sees exactly what you see.
 
       Needs internet access: webhooks, link previews and AI speech-to-text all reach the network; notes work offline.
-  release_notes: { zh: "加了出网权限：Webhook 推送、链接预览和 AI 语音转写都要访问外网。", en: "Added network access permission: webhooks, link previews and AI speech-to-text need it." }
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
   webui:
     service: memos
     port: 5230

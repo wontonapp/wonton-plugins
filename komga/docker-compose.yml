@@ -69,7 +69,7 @@ services:
 x-wonton:
   spec: "0.6"
   id: app.komga.komga
-  version: 0.1.0
+  version: 0.1.1
   kind: app
   title: { en: Komga }
   description:
@@ -97,7 +97,7 @@ x-wonton:
       Multiple libraries, series organization, reading history and metadata editing; family members sign in as regular users and only see the libraries shared with them.
 
       The library lives in the media shared folder, mounted read-only; metadata changes are stored in the plugin's own database.
-  release_notes: { zh: 首个版本。, en: Initial release. }
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
   webui:
     service: komga
     port: 25600

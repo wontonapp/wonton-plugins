@@ -33,7 +33,7 @@ services:
 x-wonton:
   spec: "0.6"
   id: info.grocy.grocy
-  version: 0.1.0
+  version: 0.1.1
   kind: app
   title: { zh: 家庭库存（grocy）, en: Home Inventory (grocy) }
   description:
@@ -66,7 +66,7 @@ x-wonton:
       Looking up unknown barcodes online doesn't work here (it would send barcodes to Open Food Facts; this plugin has no internet access). Scanning barcodes still works — just fill in the product details yourself.
 
       The app ships a built-in account named admin; under this sign-in method it cannot be logged into and has no password entrance. It can stay untouched.
-  release_notes: { zh: 首个版本。, en: First release. }
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
   webui:
     service: grocy
     port: 80

@@ -71,7 +71,7 @@ configs:
 x-wonton:
   spec: "0.11"
   id: net.mayswind.ezbookkeeping
-  version: 0.1.0
+  version: 0.1.1
   kind: app
   title: { zh: 家庭记账（ezBookkeeping）, en: Home Bookkeeping (ezBookkeeping) }
   description:
@@ -107,7 +107,7 @@ x-wonton:
       The assistant (bot) can record and look up transactions for you right after install, seeing your books; if you revoke the MCP token in the app, a container rebuild re-issues it.
 
       Exchange rates and AI recognition need internet access; without a model gateway the AI features report as unavailable in the app.
-  release_notes: { zh: 首个版本：ezBookkeeping 2.1.1。, en: "Initial release: ezBookkeeping 2.1.1." }
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
   # 主人的账号是装好时按云吞用户名预建的（登录方式见 about）；初始密码在这里查看。
   setup:
     zh: 打开应用，用云吞的用户名登录；初始密码在插件设置里查看。
