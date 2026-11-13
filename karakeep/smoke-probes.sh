@@ -111,13 +111,13 @@ kmail_app_log_tail() { # 诊断用（负责人要求）：应用容器日志最�
   echo "===== 容器日志完 =====" >&2
 }
 
+kmail_api_path() { printf '/%s/%s' api "$1"; }
 kmail_login() { # 分两步把两个会话都建好（2026-11-07 e2e 逐轮实测的结论）：
   # 1) 核心会话：token POST 返回 303 但不发 cookie（jar 为空，同 jar GET 插件域 401），
   #    必须走 dev.sh 的表单登录回退——用 dweb，并把它写会话的 jar 指到 SMOKE_JAR
   #    （WONTON_DEV_JAR 是 dev.sh 的公开入口，session_jar 读它）。
   # 2) 应用会话：自动跳转是客户端 JS（signIn.social），curl 触发不了，
   #    手动 POST 应用的社交登录端点拿 provider 地址，带 jar 走 Hydra → 回调建会话。
-kmail_api_path() { printf '/%s/%s' api "$1"; }
   kmail_init || return 1
   export WONTON_DEV_JAR="$SMOKE_JAR"
   local try resp oauth_url app_cookie
