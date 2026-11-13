@@ -71,7 +71,7 @@ configs:
 x-wonton:
   spec: "0.11"
   id: app.seerr.seerr
-  version: 0.1.1
+  version: 0.2.0
   kind: app
   title: { zh: 求片点播（Seerr）, en: Movie & TV Requests (Seerr) }
   description:

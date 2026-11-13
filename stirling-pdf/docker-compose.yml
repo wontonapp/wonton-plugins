@@ -79,7 +79,7 @@ services:
 x-wonton:
   spec: "0.11"
   id: com.stirlingtools.stirling-pdf
-  version: 0.1.2
+  version: 0.2.0
   kind: app
   title: { zh: PDF 工具箱（Stirling-PDF）, en: PDF Toolbox (Stirling-PDF) }
   description:

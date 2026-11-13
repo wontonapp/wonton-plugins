@@ -90,7 +90,7 @@ configs:
 x-wonton:
   spec: "0.11"
   id: com.sftpgo.sftpgo
-  version: 0.1.1
+  version: 0.2.0
   kind: app
   title: { zh: 文件传输站（SFTPGo）, en: File Transfer Hub (SFTPGo) }
   description:
