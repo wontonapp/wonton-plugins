@@ -1,0 +1,117 @@
+# Halo：个人博客与建站。家人把日记、游记写成文章发在这里；Bot 经 Halo 官方 MCP 插件查询和管理文章。
+#
+# 单容器加内置 H2 数据库（上游官方 compose 的 H2 写法），全部数据在 /root/.halo2。
+# 网页走 Halo 自己的登录（sso: none）；管理员账号由 init 一次性服务调上游的初始化接口建好，
+# 密码由核心生成、主人在 App 插件详情里查看，第一次打开不用再走初始化向导。
+# MCP：Halo 自带 MCP 服务端插件（halo 2.26+ 内置，默认启用）；init 确保它开着并建好访问密钥。
+name: halo
+
+services:
+  halo:
+    image: halohub/halo:2.27.2@sha256:a804c41779c9ee8b19465dda57081d58ae0bc4d3e49bece7f50cf42cf0366958
+    # 外部访问地址必填：主题里的文章链接、RSS 和通知都拿它拼绝对地址。
+    command: ["--halo.external-url=${WONTON_APP_URL:?核心没有注入插件网页地址}"]
+    environment:
+      # 上游 compose 示例的写法（-Xmx256m -Xms256m）；根文件系统要写工作目录以外的临时文件，不设 read_only。
+      JVM_OPTS: "-Xms256m -Xmx256m"
+      TZ: ${TZ}
+    volumes:
+      # 工作目录：H2 数据库、附件、主题、插件都在里面；镜像默认 HALO_WORK_DIR=/root/.halo2。
+      - ${WONTON_APP_DATA:?核心没有注入插件数据目录}/halo2:/root/.halo2
+    healthcheck:
+      # 上游 compose 同款：readiness 在应用就绪后才变 UP，不只是进程活着。
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8090/actuator/health/readiness"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      start_interval: 2s
+
+  # 一次性服务：建管理员、同步站点标题、装 Halo 官方 MCP 插件、发访问密钥。
+  # 每次创建容器都会重新运行，脚本幂等（见 init.sh）。
+  init:
+    image: halohub/halo:2.27.2@sha256:a804c41779c9ee8b19465dda57081d58ae0bc4d3e49bece7f50cf42cf0366958
+    # 复用主镜像：curl、grep、sed 都有，不用再拉一个工具镜像，也不启动 JVM。
+    entrypoint: ["/bin/sh", "/app/init.sh"]
+    environment:
+      HALO_URL: http://halo:8090
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME:?核心没有注入用户名}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?核心没有注入邮箱}
+      WONTON_APP_URL: ${WONTON_APP_URL:?核心没有注入插件网页地址}
+      # 密钥的注入名带敏感词，交给 init 时改用短名字，脚本里不用碰这个长名字。
+      PASSWORD: ${WONTON_SECRET_ADMIN_KEY:?核心没有注入管理员密码}
+    configs:
+      - source: init_script
+        target: /app/init.sh
+    depends_on:
+      halo:
+        condition: service_healthy
+    restart: "no"
+
+configs:
+  init_script:
+    file: init.sh
+
+x-wonton:
+  spec: "0.11"
+  id: run.halo.halo
+  version: 0.1.1
+  kind: app
+  title: { zh: 个人博客（Halo）, en: Blog (Halo) }
+  description:
+    zh: 像写日记一样写博客，把文章、游记和照片发成自己的网站
+    en: Write posts like a diary and publish them as your own blog
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png]
+  author: { name: geraldpeng6 }
+  homepage: https://www.halo.run
+  license: GPL-3.0-only
+  tags:
+    zh: [博客]
+    en: [Blog]
+  about:
+    zh: |
+      家里的博客：写日记、记游记、发照片，读者打开就是一页排好版的文章。
+
+      写文章在后台完成，家人从网页就能看；Bot 也能帮你查文章、发文章。
+
+      博客只有家里人能看：读者必须是能打开你家云吞的人，外网的陌生人进不来。
+
+      管理员账号已建好：用户名是你的云吞用户名（下划线写成连字符），密码在插件详情页的“管理员密码”里查看。想改博客标题、外观，用这个账号登录后台，在“系统 - 设置”里改。
+    en: |
+      A blog for the household: write diary entries, travel notes and posts, and readers open a clean, typeset page.
+
+      Writing happens in the console, family reads it on the web, and the bot can look up or publish posts for you.
+
+      Only your household can read the blog: readers must be able to open your Wonton; strangers from the public internet cannot get in.
+
+      The admin account is ready: the username is your Wonton username (underscores become hyphens), and the password is under “Admin password” in the plugin details. Sign in with it to edit the site under System - Settings in the console.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: halo
+    port: 8090
+    # Halo 自带账号体系，网页用 Halo 自己的登录；博客页面家人打开就能看。
+    sso: none
+  mcp:
+    service: halo
+    port: 8090
+    path: /mcp
+    transport: streamable-http
+    headers:
+      Authorization: "Bearer {secret:mcp_token}"
+  secrets:
+    admin_key:
+      generate: { bytes: 32 }
+      show_owner:
+        label:
+          zh: 管理员密码
+          en: Admin password
+    mcp_token:
+      # Halo 自己签发的 MCP 访问密钥，init 写在 /run/halo-mcp-token，交给核心保管。
+      collect: { service: init, path: /run/halo-mcp-token }
+  permissions:
+    # 管理员账号按注入的用户名和邮箱建立。
+    - owner.identity
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

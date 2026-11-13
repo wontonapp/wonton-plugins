@@ -1,0 +1,36 @@
+图标
+====
+
+`icon.png` 是 Grist 的官方图标，取自上游仓库 gristlabs/grist-core（v1.7.22 的
+`static/icons/grist.png`），按规范把透明四角补成标志自带的深灰底色 #42494b，
+其余原样未动。Grist 和 Grist 图标是 Grist Labs 的商标；
+本插件与 Grist Labs 无关，也不代表 Grist Labs 推荐。
+
+gristlabs/grist-core 以 Apache License 2.0 发布（https://github.com/gristlabs/grist-core），
+图标随该仓库分发，版权（c）Grist Labs。Apache License 2.0 全文见
+https://www.apache.org/licenses/LICENSE-2.0 。
+
+许可证
+------
+
+MIT License
+
+Copyright (c) 2026 Wonton plugin authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

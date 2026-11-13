@@ -1,0 +1,14 @@
+Halo 标志
+=========
+
+图标：icon.png
+来源：https://github.com/halo-dev/halo （仓库内 application/src/main/resources/static/images/logo.png，与 https://www.halo.run/upload/logo.png 同图）
+版权：Halo 项目（halo-dev）
+处理：官方 256×256 PNG 原样粘贴在按标志自身边缘取色的蓝色渐变底上（上 rgb(11,136,252) 到下 rgb(0,81,182)），填满四角的透明缺口，不改标志的图形、颜色和比例。
+
+Halo 是 halo-dev 的商标，本插件与其没有 affiliation 或背书关系。Halo 上游采用 GPL-3.0 许可证（本清单 license 字段即上游许可证），未随分发附全文，源码见 https://github.com/halo-dev/halo 。
+
+插件包自身
+==========
+
+除上述第三方素材外，本插件包以 MIT 许可证分发，全文见仓库 LICENSE。
