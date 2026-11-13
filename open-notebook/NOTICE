@@ -1,0 +1,8 @@
+图标和来源
+----------
+
+`icon.png` 来自上游 [lfnovo/open-notebook](https://github.com/lfnovo/open-notebook) 仓库根目录的 `logo.png`
+（v1.15.1，2026-11-08 快照 a6b572e），等比缩到 512×512，未改色、未变形。
+
+Copyright (c) 2024 Luis Novo，按上游仓库的 [MIT 许可证](https://github.com/lfnovo/open-notebook/blob/main/LICENSE)
+使用。"Open Notebook" 名称与其标志是 Luis Novo 的商标；本插件与其无隶属或背书关系。

@@ -1,0 +1,111 @@
+# Open Notebook：把资料（网址、文件、视频）丢进笔记本，问它问题、生成摘要和播客。
+#
+# 上游单容器镜像内含 SurrealDB、API、后台 worker 和网页（镜像的 supervisord.conf）；
+# 网页的 /api/* 由 Next.js 反代到容器内的 5055（上游 next.config.ts 的 rewrites），
+# 所以只需经网关暴露 8502，5055 不对外。数据库口令是镜像里写死的 root/root
+# （上游单容器文档），容器不发布 8000 端口，插件网络外连不到。
+services:
+  notebook:
+    # 上游官方镜像，按清单列表（index）摘要固定；标签写上游版本（Docker Hub 上的版本标签不带 v 前缀）。
+    image: lfnovo/open_notebook:1.15.1-single@sha256:0763d151f90ca5ddf5ac12a729b5f9ea472ff9e79dbba600840ed8f4349e9b5c
+    environment:
+      # 存进数据库的服务商凭据用它在库里加密；丢了它，已存的凭据解不开（上游单容器文档）。
+      OPEN_NOTEBOOK_ENCRYPTION_KEY: ${WONTON_SECRET_ENCRYPTION_KEY}
+      # 应用自己的登录口令：网页和 REST API 都验它（上游 api/auth.py）。
+      OPEN_NOTEBOOK_PASSWORD: ${WONTON_SECRET_APP_PASSWORD}
+      # 单容器内嵌 SurrealDB 监听 8000、账号写死 root/root（上游 supervisord.surrealdb.conf），
+      # 这几个值照上游单容器文档写，改了反而连不上。
+      SURREAL_URL: ws://localhost:8000/rpc
+      SURREAL_USER: root
+      SURREAL_PASSWORD: root
+      SURREAL_NAMESPACE: open_notebook
+      SURREAL_DATABASE: open_notebook
+      # 模型走云吞的模型网关（OpenAI 兼容）：设置里「OpenAI Compatible」服务商发现和调用模型时，
+      # 数据库里没有凭据就回退读这两个环境变量（上游 open_notebook/ai/key_provider.py）。
+      # 没接上网关时是空串：发现不到模型，应用如实显示不可用。
+      OPENAI_COMPATIBLE_BASE_URL: ${WONTON_MODEL_BASE_URL}
+      OPENAI_COMPATIBLE_API_KEY: ${WONTON_MODEL_API_KEY}
+      # 网页只经网关暴露 8502，浏览器连不到 5055；上游 /config 这时会算出「主机:5055」的 API 地址，
+      # 浏览器全部请求失败。上游单容器文档的做法是设 API_URL 指向公开地址（supervisord 会传给网页进程），
+      # 浏览器就用同源路径走 Next 的 /api 反代。
+      API_URL: ${WONTON_APP_URL}
+    volumes:
+      # 上传的资料、抽取缓存；/app/data 是上游挂载的应用数据目录。
+      - ${WONTON_APP_DATA}/data:/app/data
+      # 内嵌 SurrealDB 的数据库文件；不挂出来每次重建容器数据就没了（上游单容器文档）。
+      - ${WONTON_APP_DATA}/database:/mydata
+    # /api/config 不需要口令（上游排除名单），里面带真实查询数据库的 dbStatus，
+    # 网页 8502 能出登录页才算整份应用起来了。首次请求会顺带查上游新版本，最多再等 10 秒。
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:5055/health && curl -fsS http://127.0.0.1:5055/api/config | grep -q '\"dbStatus\":\"online\"' && curl -fsS -o /dev/null http://127.0.0.1:8502/"]
+      interval: 30s
+      timeout: 15s
+      start_period: 120s
+      start_interval: 3s
+      retries: 3
+
+x-wonton:
+  spec: "0.11"
+  id: com.github.lfnovo.opennotebook
+  version: 0.1.1
+  kind: app
+  title: { zh: AI 资料笔记本（Open Notebook）, en: AI Notebook (Open Notebook) }
+  description:
+    zh: 把网址、文件丢进去，AI 读完帮你答题、写摘要，还能把资料做成一档播客。
+    en: >-
+      Add links and files, and the AI reads them to answer questions, write summaries, and turn your material into a podcast.
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/notebooks.png, screenshots/notebook.png, screenshots/models.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/lfnovo/open-notebook
+  # 上游应用（lfnovo/open-notebook）的许可证；插件包自己的许可证在 LICENSE。
+  license: MIT
+  tags:
+    zh: [AI, 笔记]
+    en: [AI, Notes]
+  about:
+    zh: |
+      把网址、文件、视频链接丢进一本本"笔记本"，AI 读完这些资料后帮你：回答提问（只按你给的资料答）、写摘要和笔记，
+      还能把一本笔记本做成一档播客节目（两个人聊你资料里的内容）。
+
+      可以拿来追更（丢进去一组 YouTube 链接，让它总结每一期）、整理课程或论文。所有资料和记录都留在这台机器上。
+
+      问问题和生成播客要用大模型：默认走云吞的模型网关，装好后在上游设置的 Models 页把网关里的模型加进来并设为默认
+      （对话和嵌入；嵌入模型是把资料存进笔记本时用的）。网关里没有语音合成模型时播客做不了，应用会如实报错。
+      应用没有账号体系，家里谁打开都是同一份笔记本，进去时输入应用密码（装好后在这里的"装好后要做的一步"里说去哪看）。
+    en: |
+      Add links, files and videos to notebooks; the AI reads them and answers questions (grounded in your sources), writes summaries and notes, and can turn a notebook into a podcast episode (two hosts discussing your material).
+
+      Use it to follow YouTube channels, or to organize courses and papers. Everything stays on this machine.
+
+      Chat and podcasts need large models: they go through Wonton's model gateway by default. After installing, add the gateway's models on the upstream Models settings page and pick defaults (chat and embedding; the embedding model is what stores your sources). Without a speech-synthesis model on the gateway, podcast generation fails with a clear error.
+      The app has no accounts: everyone in the family shares the same notebooks, and signing in takes the app password (see "setup" below for where to find it).
+  setup:
+    zh: 打开应用后，在登录页输入应用密码：在云吞 App 这个插件的详情页点开「应用密码」查看。
+    en: >-
+      After opening the app, enter the app password on the sign-in page: view it under "App password"
+      on this plugin's detail page in the Wonton app.
+  release_notes: { zh: 插件包迁入官方插件合仓，功能与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; functionality is unchanged." }
+  webui:
+    service: notebook
+    port: 8502
+    # 应用自带口令登录（单口令、无多用户），网关照常先验云吞登录。
+    sso: none
+  permissions:
+    # 问问题、生成摘要和播客都用大模型，只走模型网关。
+    # Models go through the model gateway only.
+    - models
+    # 添加网址资料要抓取网页和视频字幕，应用还会查上游有没有新版本。
+    # Adding web sources crawls pages and video subtitles; the app also checks for new upstream versions.
+    - network.egress
+  secrets:
+    app_password:
+      generate: { bytes: 24 }
+      show_owner: { label: { zh: 应用密码, en: App password } }
+    encryption_key:
+      generate: { bytes: 32 }
+  # 上游没写最低内存；开发环境实测空载约 570M（docker stats，含 SurrealDB/API/worker/网页），取 1G。镜像支持 amd64 和 arm64（清单列表，buildx imagetools inspect）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 1G
