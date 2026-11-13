@@ -22,7 +22,7 @@ bookstack_csrf() {
 
 bookstack_login() {
   local page token password response
-  page="$(dweb /login)" || { echo "读取 BookStack 登录页失败" >&2; return 1; }
+  page="$(dweb /login -L)" || { echo "读取 BookStack 登录页失败" >&2; return 1; }
   token="$(bookstack_csrf <<<"$page")"
   [[ -n "$token" ]] || { echo "BookStack 登录页没有 CSRF 令牌" >&2; return 1; }
   password="$(bookstack_password)"
