@@ -1,0 +1,19 @@
+插件包
+======
+
+本插件包（docker-compose.yml、couchdb.ini、init.sh、smoke-probes.sh、README）为原创内容，
+按本仓库 LICENSE（MIT）分发。
+
+图标
+====
+
+`icon.svg` 为本仓库原创，按插件规范的线条风格手写，未用图片模型生成。
+
+上游应用
+========
+
+本插件不修改、不分发上游软件，只使用官方镜像：
+
+- 服务端 Apache CouchDB：Apache License 2.0（https://github.com/apache/couchdb）。
+- 客户端为 Obsidian 社区插件 Self-hosted LiveSync（https://github.com/vrtmrz/obsidian-livesync），
+  MIT License。Obsidian 是 Dynalist Inc. 的商标；LiveSync 各自归其作者所有，本插件与二者无从属或背书关系。
