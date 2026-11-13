@@ -69,7 +69,7 @@ services:
       start_interval: 5s
 
   db:
-    image: mariadb:11.8.9@sha256:c4124d1afa875e47f2892edf26b482fa54f796e2f342d3717a04ca091a22a9bd
+    image: mariadb:12.3.2@sha256:a02fe89cb597d4375812b2eac90cf9d0775d4686daa7f7cc750ebbcad7525bbc
     environment:
       MARIADB_ROOT_PASSWORD: ${WONTON_SECRET_DB_ROOT_PASSWORD}
       MARIADB_DATABASE: romm
