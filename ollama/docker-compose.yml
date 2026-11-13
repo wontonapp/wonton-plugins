@@ -1,0 +1,82 @@
+# Ollama：本地模型服务。模型经 magpie 模型网关用起来（本地模型插件装好后，
+# 在“模型设置”里把 Ollama 注册为 provider），网关的容器到不了插件网络，唯一通的路是把 API 端口
+# 开在局域网地址上（Ollama 的 API 本来就是给局域网设备用的，没有鉴权，核心不拦）。
+services:
+  ollama:
+    image: ollama/ollama:0.40.15@sha256:0e59999e0e8f9fd4e704bd788a89b7e4cad399367fb1365f8c102ac662288761
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      # 服务的 API 也在本机被 ollama CLI（健康检查）访问：核心注入的代理变量（和共用 Docker 的客户端代理）
+      # 不豁免 0.0.0.0 这个主机名，会把本机请求送进代理，ollama ls 因此失败。只豁免本机地址，
+      # 拉模型的 registry.ollama.ai 照常走代理。
+      NO_PROXY: localhost,127.0.0.1,0.0.0.0
+      no_proxy: localhost,127.0.0.1,0.0.0.0
+    # 模型和身份密钥都在上游默认的 /root/.ollama；镜像默认以 root 运行，数据目录也就归 root。
+    volumes:
+      - ${WONTON_APP_DATA}/.ollama:/root/.ollama
+    # 查的是 API 真的能答话（ollama CLI 走本地 API），不只是进程活着。
+    healthcheck:
+      test: ["CMD", "ollama", "ls"]
+      interval: 30s
+      timeout: 10s
+      start_period: 1m
+      start_interval: 5s
+
+x-wonton:
+  spec: "0.4"
+  # 反向域名：上游是 ollama.com。
+  id: com.ollama.ollama
+  version: 0.1.2
+  kind: app
+  title: { zh: 本地 AI 模型（Ollama）, en: Local AI Models (Ollama) }
+  description:
+    zh: 在家里的服务器上运行开源 AI 模型，给 Bot 和其他应用当“大脑”，聊的内容不出家门。有没有显卡都能跑、换模型方便，家用首选。
+    en: Run open-source AI models on your home server as the brain for your bots and apps, with nothing leaving home. Works with or without a graphics card and makes switching models easy — the go-to choice for most homes.
+  icon: icon.svg
+  notices: [NOTICE]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://ollama.com
+  # 上游 Ollama 的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: MIT
+  tags:
+    zh: [AI]
+    en: [AI]
+  about:
+    zh: |
+      把 Ollama 装在自己家里，用本机的算力跑开源大模型，数据不出门。
+
+      有显卡就自动用显卡（NVIDIA、AMD、Intel），没有就退回 CPU。装好后打开
+      “模型设置”（模型网关），把 http://<主机的局域网地址>:11434 填成 Ollama 的
+      provider，网关里的应用和 Bot 就能用本地模型了；局域网里的电脑和手机也能直接连这个地址。
+
+      模型的下载和删除用 Ollama 自己的命令行（docker exec 进容器跑 ollama pull / ollama rm）。
+    en: |
+      Run Ollama on your own hardware at home and use open models locally, keeping data on your
+      machine.
+
+      It uses your GPU (NVIDIA, AMD, Intel) when there is one and falls back to CPU otherwise.
+      After installing, open “Models” (the model gateway) and add
+      http://<your-host-LAN-address>:11434 as an Ollama provider; apps and bots behind the
+      gateway can then use local models, and so can computers and phones on your LAN.
+
+      Pull and remove models with Ollama's own command line (docker exec into the container:
+      ollama pull / ollama rm).
+  release_notes: { zh: 插件包迁入官方插件合仓，并更新名称和说明。, en: "Moved into the official Wonton plugin monorepo with updated name and description." }
+  # 出网：拉模型要走 registry.ollama.ai。
+  # 局域网：网关要够得着 Ollama 才能把它注册成 provider，局域网设备直连也靠它。
+  permissions:
+    - devices.gpu
+    - network.egress
+    - network.lan
+  # 显卡给 ollama 服务；optional：没显卡照常装，退回 CPU（显卡路径未实测，见 PR）。
+  gpu:
+    services: [ollama]
+  lan:
+    ports:
+      - { service: ollama, port: 11434 }
+  requirements:
+    arch: [amd64, arm64]
+    # 上游没写最低内存；本机实测空闲约 20MiB，跑起来加小模型的余量取 256M。
+    memory: 256M
+    gpu: { need: optional }

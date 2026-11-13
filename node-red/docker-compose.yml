@@ -1,0 +1,114 @@
+# Node-RED：浏览器里拖方块、连线的流程自动化。流程、设置和已装的节点都存在应用数据目录里。
+#
+# 登录：应用自带账号（sso: none）。config/settings.js 用 adminAuth 声明一个 admin 用户，密码是
+# 核心生成的密钥 WONTON_SECRET_ADMIN_PASSWORD，启动时用镜像自带的 bcryptjs 现算哈希——
+# settings.js 里不落明文，换密码只换密钥、重启即生效。flows.json 里凭据的加密密钥（credentialSecret）
+# 同样用核心生成的密钥，保留数据重装后仍能解开旧凭据。
+services:
+  seed-config:
+    # 首次启动把 settings.js 和 .npmrc 复制进数据目录，已存在就不覆盖，保住用户改动。
+    # settings.js 不能经 configs 直接放进 /data：目标路径和挂载点重叠，规范不允许，走一次性服务。
+    image: nodered/node-red:4.1.12@sha256:c81912d66cb3639170484395ada550c94dfe0a56289cfaec3c8e6dec31f0d164
+    user: "${PUID}:${PGID}" # 数据目录按 PUID:PGID 交给插件，复制进程同属主才写得进
+    volumes:
+      - ${WONTON_APP_DATA}:/data
+    configs:
+      - source: settings
+        target: /seed/settings.js
+      - source: npmrc
+        target: /seed/npmrc
+    entrypoint: ["/bin/sh", "-c", "test -f /data/settings.js || cp /seed/settings.js /data/settings.js; test -f /data/.npmrc || cp /seed/npmrc /data/.npmrc"]
+    network_mode: none
+    restart: "no"
+
+  nodered:
+    image: nodered/node-red:4.1.12@sha256:c81912d66cb3639170484395ada550c94dfe0a56289cfaec3c8e6dec31f0d164
+    # 镜像默认以 uid 1000（node-red 用户）运行；显式写 user 让任意 PUID 的主机都跑得起来。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      # npm 的缓存和用户配置都落在数据目录：非镜像默认 uid 运行时原 $HOME 不可写。
+      HOME: /data
+      WONTON_SECRET_ADMIN_PASSWORD: ${WONTON_SECRET_ADMIN_PASSWORD}
+      WONTON_SECRET_CREDENTIAL_SECRET: ${WONTON_SECRET_CREDENTIAL_SECRET}
+    volumes:
+      - ${WONTON_APP_DATA}:/data
+    depends_on:
+      seed-config:
+        condition: service_completed_successfully
+    healthcheck:
+      # 检查真实可用：POST /auth/token 用 admin 账号换访问令牌，服务器、adminAuth 配置和
+      # 密码哈希都对上了才算健康。密码经环境变量取，不进容器配置的命令串。
+      test: ["CMD-SHELL", "curl -fsS --noproxy '*' -m 5 -X POST -H 'Content-Type: application/x-www-form-urlencoded' --data 'grant_type=password&client_id=node-red-editor&scope=*&username=admin&password='$${WONTON_SECRET_ADMIN_PASSWORD} http://127.0.0.1:1880/auth/token"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      start_interval: 3s
+
+configs:
+  settings:
+    file: config/settings.js
+  npmrc:
+    file: config/npmrc
+
+x-wonton:
+  spec: "0.11"
+  id: org.nodered.node-red
+  version: 0.1.1
+  kind: app
+  title: { zh: 流程自动化（Node-RED）, en: Flow Automation (Node-RED) }
+  description:
+    zh: 像拼积木一样拖方块、连上线，把家里的设备和消息串成自动流程。比如：门铃一响就给手机发消息，定时把温度记下来。
+    en: "Snap blocks together and wire them up to automate your home: ring the doorbell, get a message; log the temperature on a schedule."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/01-editor.png, screenshots/02-flow.png, screenshots/03-deploy.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://nodered.org
+  # Node-RED 本体的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: Apache-2.0
+  tags:
+    zh: [自动化, 智能家居, 效率]
+    en: [Automation, Home, Productivity]
+  about:
+    zh: |
+      像拼积木一样，拖几个方块、连上线，就能搭出自动流程。
+
+      比如：门铃一响就给手机发条消息、太阳落山自动开灯、定时把温度记录下来。流程存在这台机器上，浏览器里随时打开改。
+
+      常用来做智能家居联动、消息提醒和定时任务。
+
+      注意：流程里的「函数」方块能运行自定义代码，请只安装自己信得过的流程。
+    en: |
+      Snap blocks together, wire them up, and your home runs itself.
+
+      For example: send a phone message when the doorbell rings, turn the lights on at sunset, log the temperature on a schedule. Flows are stored on this machine and open in the browser whenever you want to change them.
+
+      Commonly used for smart-home scenes, notifications and scheduled jobs.
+
+      Note: the "function" block runs custom code, so only install flows you trust.
+  release_notes: { zh: 插件包迁入官方插件合仓，功能与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; functionality is unchanged." }
+  setup:
+    zh: 打开网页，用户名 admin，密码在插件的详情页里查看。
+    en: Open the web page and sign in as admin; the password is on the plugin's detail page.
+  webui:
+    service: nodered
+    port: 1880
+    # Node-RED 用自己的登录页（adminAuth）；网关照样拦在前面，先过云吞的登录才到得了这里。
+    sso: none
+  permissions:
+    # 安装新的节点（palette）要访问 npm 镜像源；流程里的 HTTP 节点要访问外部服务。
+    # Palette installs need the npm mirror; HTTP nodes talk to external services.
+    - network.egress
+  secrets:
+    admin_password:
+      generate: { bytes: 24 }
+      show_owner:
+        label: { zh: 管理员密码, en: Admin password, zh-Hant: 管理員密碼, ja: 管理者パスワード }
+    credential_secret:
+      generate: { bytes: 32 }
+  # 上游镜像支持 amd64 和 arm64（nodered/node-red 多架构清单）；上游没写最低内存，
+  # 按空闲实测（RSS 约 100M，Node.js v20）留出流程和节点的余量。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 256M

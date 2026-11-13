@@ -1,0 +1,173 @@
+services:
+  frontend:
+    image: penpotapp/frontend:2.19.0@sha256:20d98bed840ba947af25f0c634c1cf0913ca3d02e27eb9cb7f7f6569b65e2b78
+    # 上游三个服务使用 uid/gid 1001；共享素材目录必须使用同一属主。
+    user: "1001:1001"
+    environment:
+      PENPOT_PUBLIC_URI: ${WONTON_APP_URL}
+      PENPOT_FLAGS: >-
+        enable-login-with-oidc enable-oidc-registration
+        disable-registration disable-login-with-password disable-email-verification
+        disable-telemetry disable-onboarding disable-admin-console
+      PENPOT_BACKEND_URI: http://backend:6060
+      PENPOT_EXPORTER_URI: http://exporter:6061
+      # 2.19 默认启用管理台；本包沿用不部署管理台的配置。
+      PENPOT_ADMIN_CONSOLE_URI: ""
+      PENPOT_OIDC_NAME: Wonton
+    volumes:
+      - ${WONTON_APP_DATA}/assets:/opt/data/assets:ro
+    depends_on:
+      backend: { condition: service_healthy }
+      exporter: { condition: service_healthy }
+    # 官方 frontend 没有 curl/wget；请求 /readyz 经 nginx 到后端实际查库。
+    healthcheck:
+      test:
+        - CMD
+        - /bin/bash
+        - -ec
+        - "exec 3<>/dev/tcp/127.0.0.1/8080; printf 'GET /readyz HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3; read -r status <&3; [[ $$status == *' 200 '* ]]"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+  backend:
+    image: penpotapp/backend:2.19.0@sha256:b2dc4f516de4aab825f1804211e4124f93bafd40bb848822ab303f162cb3b187
+    user: "1001:1001"
+    # Penpot 的 SSRF 配置只收 host；核心注入完整 issuer，用镜像自带的 URI 解析器取 host。
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        export PENPOT_SSRF_ALLOWED_HOSTS="$$(python3 -c 'import os, urllib.parse; host = urllib.parse.urlsplit(os.environ["PENPOT_OIDC_BASE_URI"]).hostname; print("[" + host + "]" if ":" in host else host)')"
+        exec /bin/bash run.sh
+    environment:
+      PENPOT_PUBLIC_URI: ${WONTON_APP_URL}
+      PENPOT_FLAGS: >-
+        enable-login-with-oidc enable-oidc-registration
+        disable-registration disable-login-with-password disable-email-verification
+        disable-telemetry disable-onboarding disable-admin-console
+      PENPOT_ADMIN_CONSOLE_URI: ""
+      PENPOT_SECRET_KEY: ${WONTON_SECRET_SECRET_KEY}
+      PENPOT_DATABASE_URI: postgresql://postgres/penpot
+      PENPOT_DATABASE_USERNAME: penpot
+      PENPOT_DATABASE_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      PENPOT_REDIS_URI: redis://valkey/0
+      PENPOT_OBJECTS_STORAGE_BACKEND: fs
+      PENPOT_OBJECTS_STORAGE_FS_DIRECTORY: /opt/data/assets
+      PENPOT_OIDC_BASE_URI: ${WONTON_OIDC_ISSUER}
+      PENPOT_OIDC_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      PENPOT_OIDC_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      PENPOT_OIDC_SCOPES: openid profile email
+      PENPOT_TELEMETRY_ENABLED: "false"
+      # 为家庭单用户留出 exporter/数据库内存，避免 JVM 按整台宿主内存扩堆。
+      JVM_OPTS: -Xms128m -Xmx1024m
+    volumes:
+      - ${WONTON_APP_DATA}/assets:/opt/data/assets
+    depends_on:
+      postgres: { condition: service_healthy }
+      valkey: { condition: service_healthy }
+    # /readyz 只查库；OIDC 初始化失败不会阻止后端启动，另探测授权起点。
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS http://127.0.0.1:6060/readyz && curl -fsS -X POST 'http://127.0.0.1:6060/api/auth/oidc?provider=oidc' -o /dev/null"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      start_interval: 2s
+
+  exporter:
+    image: penpotapp/exporter:2.19.0@sha256:63b9f5d23c80f3b952f5d7feba71a45ac8bb05281e877071f6bba625bb51db66
+    user: "1001:1001"
+    environment:
+      PENPOT_PUBLIC_URI: ${WONTON_APP_URL}
+      PENPOT_INTERNAL_URI: http://frontend:8080
+      PENPOT_SECRET_KEY: ${WONTON_SECRET_SECRET_KEY}
+      PENPOT_REDIS_URI: redis://valkey/0
+    depends_on:
+      valkey: { condition: service_healthy }
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const Redis = require('ioredis'); (async () => { const r = await fetch('http://127.0.0.1:6061/readyz'); if (!r.ok) throw new Error('exporter not ready'); const redis = new Redis(process.env.PENPOT_REDIS_URI, {retryStrategy: null}); try { if (await redis.ping() !== 'PONG') throw new Error('Valkey not ready'); } finally { redis.disconnect(); } })().catch(e => { console.error(e); process.exit(1); });"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+  postgres:
+    image: postgres:15@sha256:1aac5b49cefd627f02816141ca4ad012d6cc19460dfe02a9b5168a105be3fc53
+    # 官方 Debian 镜像的 postgres 是 999:999，核心据此准备数据库目录。
+    user: "999:999"
+    environment:
+      POSTGRES_DB: penpot
+      POSTGRES_USER: penpot
+      POSTGRES_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: --data-checksums
+    volumes:
+      - ${WONTON_APP_DATA}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, penpot, -d, penpot]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+  valkey:
+    image: valkey/valkey:9.1@sha256:3add1a336a920ea54770a001ab6feb3da5fceea96a40373a3a2cd469b815f0b7
+    user: "999:999"
+    # Valkey 只协调通知和导出任务；设计数据在 PostgreSQL 和 assets，不保存瞬时队列。
+    command: [valkey-server, --save, "", --appendonly, "no", --maxmemory, 128mb, --maxmemory-policy, volatile-lfu]
+    tmpfs: [/data]
+    healthcheck:
+      test: [CMD-SHELL, "test \"$$(valkey-cli ping)\" = PONG"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.4"
+  id: app.penpot.penpot
+  version: 0.1.1
+  kind: app
+  title: { zh: 界面设计（Penpot）, en: Design Studio (Penpot) }
+  description:
+    zh: 像网页版的 Figma：画 App 和网站的界面、做能点着看的演示稿，导出成图片或 PDF。适合做设计的人。
+    en: "Like Figma in your browser: design app and website screens, build clickable mock-ups, and export images or PDFs. For people who do design work."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png]
+  author: { name: Gerald Peng, url: "https://github.com/geraldpeng6" }
+  homepage: https://penpot.app
+  license: MPL-2.0
+  tags:
+    zh: [设计, 效率]
+    en: [Design, Productivity]
+  about:
+    zh: |
+      在自己家里做设计：画界面、画图形、做能点击演示的界面稿；用项目整理设计文件，导出 PNG、SVG 或 PDF。
+
+      使用 Wonton 身份登录，界面跟随浏览器语言，支持简体中文。首次登录需要确认 Penpot 的姓名表单。
+    en: |
+      Design at home: draw interfaces and graphics, build clickable mock-ups, organize files in projects and export PNG, SVG, or PDF.
+
+      Sign in with your Wonton identity. The interface follows your browser language, including Simplified Chinese. First sign-in requires confirming Penpot's name form.
+  release_notes: { zh: 插件包迁入官方插件合仓，并将 Penpot 三个服务同步升级至 2.19.0，保留不部署管理台的配置。, en: "Moved into the official Wonton plugin monorepo and upgraded all three Penpot services to 2.19.0 while keeping the Admin Console disabled." }
+  webui:
+    service: frontend
+    port: 8080
+    sso: oidc
+    oidc:
+      redirect_paths: [/api/auth/oidc/callback]
+      token_endpoint_auth_method: client_secret_post
+  # 上游模板和 Google 字体由 frontend 代理获取；不关闭原有功能来规避出网权限。
+  permissions: [network.egress]
+  secrets:
+    db_password: { generate: { bytes: 32 } }
+    secret_key: { generate: { bytes: 64, encoding: base64 } }
+  requirements:
+    arch: [amd64, arm64]
+    # 上游 Elestio 指南给小团队 2GB 配置；包括五个服务，不是只算 frontend。
+    memory: 2G

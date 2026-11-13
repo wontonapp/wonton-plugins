@@ -1,0 +1,126 @@
+# n8n 工作流自动化：单容器，SQLite 存在数据目录里，经核心网关对外。
+# 模型网关的凭据由一次性服务在应用启动前写进数据库（import:credentials），
+# 没接上网关时不预置；核心接上网关后重建容器会重跑本服务，到时再写。
+services:
+  seed-credentials:
+    image: n8nio/n8n:2.48.1@sha256:5e022f23ef9eaac3f51467e021610c218ed7eb5b41a05edb388ef1c8e00e009f
+    # 镜像固定以 uid 1000（node）运行，任意 uid 会写不了数据目录（上游不认 PUID/PGID）。
+    user: "1000:1000"
+    # HOME 是数据目录挂载点：n8n 的用户数据（.n8n）和 npm 缓存（社区节点安装）都落在里面。
+    entrypoint: ["node", "/seed/seed-credentials.js"]
+    environment:
+      N8N_ENCRYPTION_KEY: ${WONTON_SECRET_ENCRYPTION_KEY}
+      WONTON_MODEL_BASE_URL: ${WONTON_MODEL_BASE_URL}
+      WONTON_MODEL_API_KEY: ${WONTON_MODEL_API_KEY}
+    volumes:
+      - ${WONTON_APP_DATA}:/home/node
+    configs:
+      - source: seed-credentials
+        target: /seed/seed-credentials.js
+    # 只写本地数据库；import/export 命令会自己建库、跑迁移，然后退出。
+    network_mode: none
+    restart: "no"
+
+  n8n:
+    image: n8nio/n8n:2.48.1@sha256:5e022f23ef9eaac3f51467e021610c218ed7eb5b41a05edb388ef1c8e00e009f
+    user: "1000:1000"
+    depends_on:
+      seed-credentials:
+        condition: service_completed_successfully
+    environment:
+      # 凭据加密密钥由核心生成保管：换了解不开库里的凭据，保留数据重装沿用同一个值。
+      N8N_ENCRYPTION_KEY: ${WONTON_SECRET_ENCRYPTION_KEY}
+      # 网关反代：webhook、编辑器和回调地址都用公开入口；前面只有网关一层。
+      # N8N_HOST 不用设：设了 WEBHOOK 和 EDITOR_BASE_URL 后它只是兜底（UrlService 的回退链）。
+      N8N_WEBHOOK_URL: ${WONTON_APP_URL}/
+      N8N_EDITOR_BASE_URL: ${WONTON_APP_URL}
+      N8N_PROXY_HOPS: "1"
+      # 网关按明文 http 转给插件（生产时用户侧 https 由网关终结），Secure cookie 会登录不上。
+      N8N_SECURE_COOKIE: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      GENERIC_TIMEZONE: ${TZ}
+      TZ: ${TZ}
+      # 关掉外联的遥测、版本提示、注册问卷和招聘横幅；工作流模板保留（api.n8n.io，出网已有）。
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_HIRING_BANNER_ENABLED: "false"
+      # 流程里连云吞工具总线：MCP Client Tool 节点的 Endpoint URL 填 {{ $env.WONTON_MCP_URL }}。
+      WONTON_MCP_URL: ${WONTON_MCP_URL}
+    volumes:
+      - ${WONTON_APP_DATA}:/home/node
+    healthcheck:
+      # readiness 确认数据库连上、迁移完成，不只是进程活着。
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5678/healthz/readiness"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      start_interval: 2s
+
+configs:
+  seed-credentials:
+    file: configs/seed-credentials.js
+
+x-wonton:
+  spec: "0.11"
+  id: io.n8n.n8n
+  version: 0.1.2
+  kind: app
+  title: { zh: 工作流自动化（n8n）, en: Workflow Automation (n8n) }
+  description:
+    zh: 像手机的“快捷指令”：把到点抓取、整理、通知这些重复的事串成自动流程，AI 也能参与。自带几百种常用服务的积木，照模板就能搭。n8n 用的是 Sustainable Use License，个人和公司内部免费。
+    en: "Like Shortcuts on your phone: chain repetitive jobs into automatic flows, with AI in the loop. Hundreds of ready-made blocks; start from a template. n8n uses the Sustainable Use License — free for personal and internal company use."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/overview.png, screenshots/workflow-editor.png, screenshots/model-gateway-credential.png]
+  author: { name: geraldpeng6 }
+  homepage: https://n8n.io
+  # 应用（n8n）的许可证：Sustainable Use License（fair-code，非 OSI），SPDX 短标识 SUL-1.0。
+  license: SUL-1.0
+  tags:
+    zh: [AI, 效率, 自动化]
+    en: [AI, Productivity, Automation]
+  about:
+    zh: |
+      像手机的“快捷指令”：把重复的事串成自动流程，到点自动跑。比如每天早上把天气和日程发给你，收到邮件附件自动存下来，监控的网页一有变化就提醒你。
+
+      打开就是搭流程的画布：左边挑积木（几百种常用服务的现成连接），连起来就是一条流程，照现成模板改改就能用。AI 也能加进流程里干活。
+
+      家里已经在用的能力：流程里的 AI 步骤默认走云吞的模型网关（凭据里已备好“Wonton model gateway”）；流程也能用家里其他应用提供的功能，接法见 README。
+
+      提醒：n8n 能按流程访问外网、运行代码、调用任何网站和服务，相当于交出管理员权限；装它之前请确认家里人都知道它是干什么的。外部服务要主动回调流程时需要公网地址，网关后面的部署收不到这类回调；手动执行、编辑器里的测试和浏览器主动访问不受影响。找回密码的邮件只有注册时填了真实邮箱才收得到。
+    en: |
+      Like Shortcuts on your phone: chain repetitive jobs into automatic flows that run on schedule. Morning weather and calendar in one message, attachments saved as they arrive, a nudge the moment a watched page changes.
+
+      You get a visual canvas: pick blocks on the left (ready-made connections to hundreds of services), wire them into a flow, or start from a template. AI can work inside your flows too.
+
+      What the home already provides: AI steps go through Wonton's model gateway by default (a "Wonton model gateway" credential is prepared for you); flows can also use features your other home apps provide — see the README for how to wire that up.
+
+      Please note: n8n runs your code and reaches any website or service, which is admin-level power; make sure everyone at home knows what it does. External services that must call your flows need a public address, which a deployment behind the gateway cannot offer; manual runs, editor test runs and browser access are unaffected. password-reset mail only arrives if you registered with a real mailbox.
+  release_notes: { zh: 插件包迁入官方插件合仓，功能与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; functionality is unchanged." }
+  setup:
+    zh: 第一次打开时创建管理员账号：填一个邮箱和自己定的密码（至少 8 位，含数字和大写字母）。
+    en: "On first open, create the admin account: any email plus a password you choose (at least 8 characters, with a digit and an uppercase letter)."
+  webui:
+    service: n8n
+    port: 5678
+    # 社区版没有 SSO（OIDC/SAML 是企业版功能），第一次打开自己注册管理员。
+    sso: none
+  permissions:
+    # 出网：调用流程里的外部服务、安装社区节点、拉取工作流模板。
+    # Egress: call external services in flows, install community nodes, fetch workflow templates.
+    - network.egress
+    # 流程里的 AI 步骤走模型网关（OpenAI 兼容接口）。
+    # AI steps in flows go through the model gateway (OpenAI-compatible API).
+    - models
+    # MCP Client Tool 节点经云吞工具总线调用家里其他应用的能力。
+    # The MCP Client Tool node reaches other home apps through the Wonton tool bus.
+    - tools
+  secrets:
+    # n8n 用它加密数据库里的凭据；核心生成保管，保留数据重装沿用。
+    encryption_key:
+      generate: { bytes: 32 }
+  # 镜像支持 amd64 和 arm64（docker buildx imagetools inspect）。上游没写最低内存；本机空闲实测约 xxxM，取 1G。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 1G
