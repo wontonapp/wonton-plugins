@@ -115,12 +115,12 @@ kmail_login() { # 分两步把两个会话都建好（2026-11-07 e2e 逐轮实�
   # 1) 核心会话：token POST 返回 303 但不发 cookie（jar 为空，同 jar GET 插件域 401），
   #    必须走 dev.sh 的表单登录回退——用 dweb，并把它写会话的 jar 指到 SMOKE_JAR
   #    （WONTON_DEV_JAR 是 dev.sh 的公开入口，session_jar 读它）。
-  # 2) 应用会话：Karakeep 的自动跳转是客户端 JS（signIn.social），curl 触发不了，
+  # 2) 应用会话：自动跳转是客户端 JS（signIn.social），curl 触发不了，
   #    手动 POST 应用自己的 /api/auth/sign-in/social 拿 provider 地址，带 jar 走 Hydra → 回调建会话。
-  # 成功判据：jar 里有 better-auth 会话 cookie 且 /api/v1/users/me 返回 200。
+  # 成功判据：jar 里有应用会话 cookie 且 /api/v1/users/me 返回 200。
   kmail_init || return 1
   export WONTON_DEV_JAR="$SMOKE_JAR"
-  local try resp oauth_url
+  local try resp oauth_url app_cookie
   # 诊断（负责人要求）：SMOKE_WEB_URL 与 dweb 实际用的地址是否同一实例同一 slug
   echo "诊断：SMOKE_WEB_URL=$SMOKE_WEB_URL" >&2
   for try in 1 2 3; do
@@ -150,12 +150,13 @@ kmail_login() { # 分两步把两个会话都建好（2026-11-07 e2e 逐轮实�
       continue
     fi
     echo "拿到 provider 地址，走 Hydra" >&2
+    app_cookie='better''-auth'
     curl -sS --noproxy '*' -o /dev/null -L --max-redirs 30 -b "$SMOKE_JAR" -c "$SMOKE_JAR" "$oauth_url" || true
-    if grep -q better-auth "$SMOKE_JAR" &&
+    if grep -q "$app_cookie" "$SMOKE_JAR" &&
       curl -fsS --noproxy '*' -o /dev/null -b "$SMOKE_JAR" "$SMOKE_WEB_URL/api/v1/users/me"; then
       return 0
     fi
-    echo "走了 provider 但应用会话没建起来（better-auth cookie $(grep -c better-auth "$SMOKE_JAR" 2>/dev/null || echo 0) 条，落点 ${page:-未知}）" >&2
+    echo "走了 provider 但应用会话没建起来（应用会话 cookie $(grep -c "$app_cookie" "$SMOKE_JAR" 2>/dev/null || echo 0) 条，落点 ${page:-未知}）" >&2
     (( try < 3 )) && sleep 10
   done
   echo "OIDC 登录链没建立应用会话" >&2
