@@ -6,14 +6,16 @@ services:
     image: n8nio/n8n:2.48.1@sha256:5e022f23ef9eaac3f51467e021610c218ed7eb5b41a05edb388ef1c8e00e009f
     # 镜像固定以 uid 1000（node）运行，任意 uid 会写不了数据目录（上游不认 PUID/PGID）。
     user: "1000:1000"
-    # HOME 是数据目录挂载点：n8n 的用户数据（.n8n）和 npm 缓存（社区节点安装）都落在里面。
+    # HOME 和 N8N_USER_FOLDER 指向数据卷内的 .n8n；社区节点缓存和 n8n 用户数据都落在这里。
     entrypoint: ["node", "/seed/seed-credentials.js"]
     environment:
+      HOME: /data
+      N8N_USER_FOLDER: /data
       N8N_ENCRYPTION_KEY: ${WONTON_SECRET_ENCRYPTION_KEY}
       WONTON_MODEL_BASE_URL: ${WONTON_MODEL_BASE_URL}
       WONTON_MODEL_API_KEY: ${WONTON_MODEL_API_KEY}
     volumes:
-      - ${WONTON_APP_DATA}:/home/node
+      - ${WONTON_APP_DATA}/.n8n:/data
     configs:
       - source: seed-credentials
         target: /seed/seed-credentials.js
@@ -28,6 +30,8 @@ services:
       seed-credentials:
         condition: service_completed_successfully
     environment:
+      HOME: /data
+      N8N_USER_FOLDER: /data
       # 凭据加密密钥由核心生成保管：换了解不开库里的凭据，保留数据重装沿用同一个值。
       N8N_ENCRYPTION_KEY: ${WONTON_SECRET_ENCRYPTION_KEY}
       # 网关反代：webhook、编辑器和回调地址都用公开入口；前面只有网关一层。
@@ -48,7 +52,7 @@ services:
       # 流程里连云吞工具总线：MCP Client Tool 节点的 Endpoint URL 填 {{ $env.WONTON_MCP_URL }}。
       WONTON_MCP_URL: ${WONTON_MCP_URL}
     volumes:
-      - ${WONTON_APP_DATA}:/home/node
+      - ${WONTON_APP_DATA}/.n8n:/data
     healthcheck:
       # readiness 确认数据库连上、迁移完成，不只是进程活着。
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5678/healthz/readiness"]

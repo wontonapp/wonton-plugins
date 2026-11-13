@@ -31,7 +31,7 @@ _n8n_container() { # 本实例里 n8n 服务的容器（按核心打的标签找
 # 探针在容器里跑 CLI：清掉代理变量，数据库路径不读这些，避免 busybox/网络库误走出口代理。
 _n8n_cli() { # <容器> <参数…>；-i 让 data_write 的管道进得了容器（docker exec 默认不接 stdin）
   local container="$1"; shift
-  docker exec -i -e HOME=/home/node -e HTTP_PROXY= -e HTTPS_PROXY= -e http_proxy= -e https_proxy= \
+  docker exec -i -e HOME=/data -e HTTP_PROXY= -e HTTPS_PROXY= -e http_proxy= -e https_proxy= \
     -e ALL_PROXY= -e all_proxy= "$container" "$@"
 }
 
