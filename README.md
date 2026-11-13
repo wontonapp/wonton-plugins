@@ -28,6 +28,17 @@ scripts/dev.sh up           # 起开发环境；install / reinstall / status / w
 scripts/dev.sh smoke        # 端到端冒烟：装得上、网页打得开、身份能用、工具 Bot 调得到、升级保数据
 ```
 
+### 需要显卡的插件
+
+清单声明 `requirements.gpu.need: required`（或申请 `devices.gpu`）时，没有 GPU 的冒烟机不会安装插件，作业会显示“跳过：需要显卡，没跑”，退出码为 `77`。在已配置 Docker GPU runtime 的机器上手动运行：
+
+```bash
+WONTON_PLUGIN=<id> scripts/smoke-gpu.sh <id>
+WONTON_PLUGIN=<id> scripts/dev.sh smoke
+```
+
+不要为此安装系统驱动，也不要修改宿主机服务；手动命令只使用当前 Docker target。
+
 状态放在 `.wonton/<id>/`，几个插件可以同时各起各的。
 
 ## 检查
