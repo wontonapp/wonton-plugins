@@ -1,0 +1,18 @@
+# 素材声明（NOTICE）
+
+本插件包内的第三方素材如下。
+
+## 图标（icon.svg）
+
+- 来源：https://github.com/eclipse-mosquitto/mosquitto 仓库 `logo/mosquitto-logo-only.svg`（官方镜像定义同源：
+  https://github.com/docker-library/official-images/blob/master/library/eclipse-mosquitto ）。
+- 版权：Eclipse Mosquitto 项目的作者与贡献者，见上游仓库 `LICENSE.txt`。
+- 处理方式：原样使用，未改动图形（上游图标本身就是白底满幅的 512×512 SVG）。
+- 许可：EPL-2.0 OR BSD-3-Clause。许可全文见上游仓库
+  https://github.com/eclipse-mosquitto/mosquitto/blob/develop/epl-v20 和
+  https://github.com/eclipse-mosquitto/mosquitto/blob/develop/edl-v10 。
+
+## 商标说明
+
+Mosquitto 名称及其蚊子标志是 Eclipse 基金会旗下 Eclipse Mosquitto 项目的商标。本插件用它们标识上游应用，
+不暗示由 Mosquitto 官方出品，也不代表获得官方背书。

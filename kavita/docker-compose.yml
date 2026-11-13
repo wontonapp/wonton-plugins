@@ -1,0 +1,155 @@
+# Kavita：漫画和电子书阅读服务器。登录经核心单点登录（sso: oidc），不出现第二个登录页。
+services:
+  # Kavita 每次启动从 /kavita/config/appsettings.json 读 OIDC 客户端同步进数据库；
+  # 保留数据重装时客户端密钥会换，所以每次创建容器都重写（幂等，只改 OpenIdConnectSettings）。
+  oidc-config:
+    image: python:3.13-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338ebee283a58d1aeaca
+    command: ["python3", "/seed/seed-oidc.py"]
+    user: "${PUID}:${PGID}"
+    environment:
+      WONTON_OIDC_ISSUER: ${WONTON_OIDC_ISSUER}
+      WONTON_OIDC_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      WONTON_OIDC_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      WONTON_SECRET_JWT_TOKEN: ${WONTON_SECRET_JWT_TOKEN}
+    volumes:
+      - ${WONTON_APP_DATA}/config:/config
+    configs:
+      - source: seed_oidc
+        target: /seed/seed-oidc.py
+    network_mode: none
+    restart: "no"
+
+  kavita:
+    # 上游官方镜像（jvmilazz0 是 Kavita 作者，README 的 Docker 安装指定），按清单列表摘要固定。
+    # 以 PUID:PGID 运行：数据目录归用户的用户；应用只写 /kavita/config 下的文件。
+    image: jvmilazz0/kavita:0.9.1@sha256:31181a32f0dda73cae68721867028a7253d57881b58bea5754cd9e578e75421a
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      # Kavita 在非 Development 模式把 OIDC 回调地址强制改写成 https（OpenIdConnectEventsHelper），
+      # 和核心登记的 http 回调对不上，登录会失败。副作用的 JWT 随机密钥由 oidc-config 写入 TokenKey 补上。
+      ASPNETCORE_ENVIRONMENT: Development
+      # 启动时从 GitHub 下载邮件模板，走核心的出网代理；.NET 的 HttpClient 读这组环境变量。
+      HTTP_PROXY: ${WONTON_PROXY_URL:-}
+      HTTPS_PROXY: ${WONTON_PROXY_URL:-}
+      NO_PROXY: localhost,127.0.0.1
+    volumes:
+      - ${WONTON_APP_DATA}/config:/kavita/config
+      - ${WONTON_SHARE_MEDIA}:/media:ro
+    depends_on:
+      oidc-config:
+        condition: service_completed_successfully
+    healthcheck:
+      # /api/settings/oidc 是匿名接口，读数据库里的 OIDC 配置：进程活着、数据库可用、OIDC 已配置才返回 enabled。
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/api/settings/oidc"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+      start_interval: 5s
+
+  # 第一个注册用户自动是管理员，而 OIDC 预置的用户拿不到管理员角色（默认 DefaultRoles 为空），
+  # 这里用官方接口注册管理员、代填 SMTP（Kavita 只能经设置接口写库）并把账号邮箱对齐到内部地址。
+  # 等 Kavita 健康后跑，重跑幂等。
+  init:
+    image: python:3.13-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338ebee283a58d1aeaca
+    command: ["python3", "/seed/init-owner.py"]
+    user: "${PUID}:${PGID}"
+    environment:
+      # OIDC 按邮箱关联账号，没填邮箱的实例装不了（App 会先让用户填）。
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?}
+      WONTON_SECRET_OWNER_PASSWORD: ${WONTON_SECRET_OWNER_PASSWORD}
+      # Kavita 的 SMTP 只能经设置接口写进数据库，没有环境变量；由这里代填。
+      WONTON_SMTP_HOST: ${WONTON_SMTP_HOST:?}
+      WONTON_SMTP_PORT: ${WONTON_SMTP_PORT:?}
+      WONTON_MAIL_FROM: ${WONTON_MAIL_FROM:?}
+      # Kavita 的 HostName（邮件里的链接地址，也算"邮件已配置"的一项）用插件的公开地址。
+      WONTON_APP_URL: ${WONTON_APP_URL}
+    configs:
+      - source: init_owner
+        target: /seed/init-owner.py
+    depends_on:
+      kavita:
+        condition: service_healthy
+    restart: "no"
+
+configs:
+  seed_oidc:
+    file: config/seed-oidc.py
+  init_owner:
+    file: config/init-owner.py
+
+x-wonton:
+  spec: "0.11"
+  id: com.kavitareader.kavita
+  version: 0.1.1
+  kind: app
+  title: { zh: 漫画电子书架（Kavita）, en: Comics & E-Book Reader (Kavita) }
+  description:
+    zh: 像漫画 App 的书架：漫画和电子书放进去，网页里翻页看，读到哪一页自动记住，换手机接着读。漫画、小说都爱看的人选它。
+    en: "Like a manga app's bookshelf: add comics and e-books, read them in the browser, and it remembers your page so you can pick up on your phone. For people who read both manga and novels."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/library.png, screenshots/series.png, screenshots/reader.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://www.kavitareader.com
+  license: GPL-3.0-only
+  tags:
+    zh: [阅读, 漫画]
+    en: [Reading, Comics]
+  about:
+    zh: |
+      把漫画和电子书整理成书库，网页阅读器翻页、缩放、记住进度，手机接着读。
+
+      登录走云吞的账号，打开就是你的书架；局域网里的书放进共享文件夹就能入库。
+
+      应用发的信（找回密码、邀请、Send To 设备）会出现在收件人的「Wonton」私聊里；发给外部地址
+      （比如 Kindle）会发送失败。
+
+      需要访问外网：检查更新、外部元数据和 Kavita+ 都要连出去，书库本身不受影响。
+
+      云吞升级后会自动重新接好账号。
+    en: |
+      Organize comics and e-books into libraries; the web reader remembers your page so you can pick up on the phone.
+
+      You sign in with your Wonton account and land straight on your shelves. Books in the shared folder get picked up by the scanner.
+
+      Emails the app sends (password resets, invites, Send To) land in the recipient's Wonton chat; external addresses (like Kindle) fail to send.
+
+      Needs internet access: update checks, external metadata and Kavita+ reach the network; your library works offline.
+
+      After a Wonton upgrade, your account is reconnected automatically.
+  release_notes:
+    zh: 接入云吞内部邮箱：找回密码、邀请、Send To 等邮件自动转到收件人的「Wonton」私聊，不用再填 SMTP；发给外部地址（如 Kindle）会失败。
+    en: "Connects to the Wonton internal mailbox: password resets, invites and Send To emails are relayed into the recipient's Wonton chat with no SMTP setup; external addresses (like Kindle) fail to send."
+  webui:
+    service: kavita
+    port: 5000
+    sso: oidc
+    oidc:
+      # Kavita 用 ASP.NET 的 OIDC 处理器，回调路径是固定的。
+      # 登出回跳 /signout-callback-oidc 依赖规范草案的 post_logout_paths，这里没声明，
+      # Kavita 里点登出会被身份提供方拒绝；单点登录的会话由核心管，影响记在 PR 和 platform-gaps。
+      # .NET 的 OIDC 处理器把客户端密钥放在令牌请求体里（client_secret_post），Hydra 默认只收 basic。
+      # Kavita 认人要求 ID 令牌里有 email 声明，靠 seed 的 CustomScopes 要回 email scope。
+      redirect_paths: [/signin-oidc]
+      token_endpoint_auth_method: client_secret_post
+  secrets:
+    owner_password:
+      generate: { bytes: 32 }
+    # Kavita 的 JWT 签名密钥要 >512 位：hex 编码后 96 字符（48 字节）才够 32 字节的 512 位整。
+    jwt_token:
+      generate: { bytes: 48 }
+  permissions:
+    # 用用户名和邮箱注册 Kavita 管理员（OIDC 按邮箱关联账号）。
+    - owner.identity
+    - storage.share.media:read
+    # 发信：把 Kavita 的 SMTP 配到核心内部邮箱，找回密码、邀请、Send To 转进收件人的「Wonton」私聊。
+    - notify
+    # ASPNETCORE_ENVIRONMENT=Development 的 CORS 分支启动时用 8.8.8.8 探测本机 IP（只查路由不发包），
+    # 插件网络没有默认路由会崩，所以要能出网；Kavita 的更新检查和外部元数据也走这里。
+    - network.egress
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

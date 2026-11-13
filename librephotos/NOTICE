@@ -1,0 +1,13 @@
+插件包素材的许可和声明。
+
+## 图标
+
+`icon.png` 来自 LibrePhotos 的官方标志，原样缩放放在白色底上，未改色、未变形。
+
+- 来源：[LibrePhotos/librephotos](https://github.com/LibrePhotos/librephotos) 仓库 `apps/frontend/public/logo.png`（dev 分支）。
+- 版权与许可：LibrePhotos Contributors，[MIT License](https://github.com/LibrePhotos/librephotos/blob/dev/LICENSE)。
+- 商标：LibrePhotos 名称和标志是 LibrePhotos 项目的标识。本插件是独立的第三方集成，由 Wonton 插件作者维护，与 LibrePhotos 官方无隶属或背书关系。
+
+## 插件包
+
+除上述标志外，本插件包（compose、引导脚本、说明文件）由 Wonton 插件作者编写，按仓库根目录的 LICENSE（MIT）分发。
