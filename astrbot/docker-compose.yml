@@ -1,0 +1,115 @@
+# AstrBot：多平台聊天机器人，把 AI 助手接进飞书、钉钉、QQ 官方机器人、Telegram 等。
+#
+# 管理面板的登录密码不落在镜像和配置文件里：由一次性服务在应用首次启动前，把插件密钥
+# （App 里可查看）按上游的存储格式写进 data/cmd_config.json——上游存的是
+# pbkdf2_sha256（600000 轮、16 字节盐）加一份 md5 回退，这里直接调用上游的哈希函数生成，
+# 不自己拼格式。只在配置还没有密码哈希时写入（首次安装、删数据重装），之后不覆盖用户改过的密码。
+# 模型网关和工具总线的连接也是它写的：网关地址、默认模型和总线地址跟着每次注入值走，
+# 只动自己的条目，用户在面板里加的模型服务商、MCP 服务原样保留。
+services:
+  init:
+    image: soulter/astrbot:v4.29.4@sha256:72f341f0ffcf6621ef820277642c5d63955f7beeac3683433ce09cac96379c78
+    # 镜像里有完整的 astrbot 包，直接用上游的哈希函数和配置类写配置，不硬编码字段名。
+    entrypoint: ["python3", "/wonton-init/init.py"]
+    environment:
+      WONTON_SECRET_DASHBOARD_PASSWORD: ${WONTON_SECRET_DASHBOARD_PASSWORD}
+      WONTON_MODEL_BASE_URL: ${WONTON_MODEL_BASE_URL}
+      WONTON_MODEL_API_KEY: ${WONTON_MODEL_API_KEY}
+      WONTON_MODEL_DEFAULT: ${WONTON_MODEL_DEFAULT}
+      WONTON_MCP_URL: ${WONTON_MCP_URL}
+    volumes:
+      - ${WONTON_APP_DATA}:/AstrBot/data
+    configs:
+      - source: init
+        target: /wonton-init/init.py
+    network_mode: none
+    restart: "no"
+
+  astrbot:
+    image: soulter/astrbot:v4.29.4@sha256:72f341f0ffcf6621ef820277642c5d63955f7beeac3683433ce09cac96379c78
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    environment:
+      TZ: ${TZ}
+      # 供应商配置里写的是 $WONTON_MODEL_API_KEY 引用，应用加载时从环境取值，
+      # 网关凭据不落盘；没接上网关时 init 不会写那个供应商。
+      WONTON_MODEL_API_KEY: ${WONTON_MODEL_API_KEY}
+      # 面板密码哈希由 init 写进数据目录，运行时用不到这个密钥；
+      # 放这里是给冒烟探针和排障读取初始登录密码用。
+      WONTON_SECRET_DASHBOARD_PASSWORD: ${WONTON_SECRET_DASHBOARD_PASSWORD}
+    volumes:
+      - ${WONTON_APP_DATA}:/AstrBot/data
+    healthcheck:
+      # 首页返回管理面板页面，setup-status 是面板自己的免登录接口，
+      # 两个都通说明 HTTP 服务、配置加载和鉴权服务都在。
+      test:
+        - CMD-SHELL
+        - curl -fsS -o /dev/null http://127.0.0.1:6185/ && curl -fsS http://127.0.0.1:6185/api/auth/setup-status
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      start_interval: 2s
+
+configs:
+  init:
+    file: web/init.py
+
+x-wonton:
+  spec: "0.12"
+  id: app.astrbot.chatbot
+  version: 0.1.1
+  kind: app
+  title: { zh: AI 聊天机器人（AstrBot）, en: "AI Chatbot (AstrBot)" }
+  description:
+    zh: 把 AI 助手接进飞书、钉钉、QQ、Telegram 等聊天软件，在群里或私聊里帮你回答
+    en: Connect an AI assistant to Feishu, DingTalk, QQ, Telegram and more
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/dashboard.png, screenshots/chat.png, screenshots/providers.png]
+  author: { name: geraldpeng6 }
+  homepage: https://astrbot.app
+  license: AGPL-3.0-only
+  tags:
+    zh: [AI, 通讯]
+    en: [AI, Communication]
+  about:
+    zh: |
+      像给家里请了一个会在聊天软件里说话的 AI 助手：在飞书、钉钉、QQ、Telegram、Discord、Slack 这些聊天软件里 @ 它，它就替你回答、查资料、干活的机器人。
+
+      管理面板里配好聊天软件的机器人凭据就能用；不接聊天软件时，面板自带的聊天页也能直接和它对话。模型默认用云吞的模型网关，不用自己填 key；家里其他应用提供的工具它也能调用。
+
+      注意：机器人能在群聊里替你说话、调用你授予的工具，接好聊天软件前先把面板密码保管好。企业微信等需要对方服务器回调的接入方式，家里的服务器没有公网回调地址，用不了；飞书（长连接）、钉钉（Stream）、QQ 官方机器人、Telegram、Discord、Slack 这类不需要回调的都能用。
+    en: |
+      Like hiring an assistant who can talk in your chat apps: mention it in Feishu, DingTalk, QQ, Telegram, Discord or Slack, and it answers, looks things up and runs tasks for you.
+
+      Set up the bot credentials of your chat app in the admin panel and it works. Without a chat app, the built-in chat page in the panel already talks to it. Models come from Wonton's model gateway by default — no key to fill in — and it can call tools provided by other apps in your Wonton.
+
+      Note: the bot can speak on your behalf in group chats and call the tools you grant it. Keep the panel password safe before you connect a chat app. Platforms that require a public callback URL (e.g. WeCom callback mode) cannot receive callbacks on a home server; long-connection platforms such as Feishu, DingTalk Stream, official QQ bot, Telegram, Discord and Slack all work.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容基于上游 AstrBot v4.29.4。, en: "Moved into the official Wonton plugin monorepo; based on upstream AstrBot v4.29.4." }
+  setup:
+    zh: 打开插件详情页，点开「登录密码」复制密码；打开 AstrBot，用用户名 astrbot 和这个密码登录。
+    en: "Open the plugin details, tap “Login password” to copy it, then sign in to AstrBot as astrbot with that password."
+  webui:
+    service: astrbot
+    port: 6185
+    sso: none
+  permissions:
+    # 模型走模型网关；没接上网关时用户在面板里配自己的模型服务商。
+    # Models go through the model gateway; without one, users configure their own provider in the panel.
+    - models
+    # 经核心的工具总线调用家里其他应用提供的工具。
+    # Calls tools provided by other apps through the core's tool bus.
+    - tools
+    # 连接各聊天软件的平台服务器、拉取插件市场的插件和更新。
+    # Reaches chat platform servers and downloads plugins and updates from the plugin market.
+    - network.egress
+  secrets:
+    dashboard_password:
+      generate: { bytes: 48, encoding: base64 }
+      show_owner:
+        label: { zh: 登录密码, en: Login password, zh-Hant: 登入密碼, ja: ログインパスワード }
+  # 上游没写最低内存；本机空闲实测约 330M，取 512M。镜像支持 amd64 和 arm64（镜像清单列表）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M
