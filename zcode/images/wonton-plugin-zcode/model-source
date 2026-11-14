@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+case "${1:-}" in
+    gateway) ;;
+    zai)
+        /usr/local/bin/zcode-cli login --no-browser
+        /usr/local/lib/wonton-agent/login-status account zai
+        ;;
+    bigmodel)
+        /usr/local/bin/zcode-cli login bigmodel --no-browser
+        /usr/local/lib/wonton-agent/login-status account bigmodel
+        ;;
+    *) echo "用法：model-source gateway|zai|bigmodel" >&2; exit 1 ;;
+esac
+
+umask 077
+directory="${HOME:?需要 HOME}/.zcode"
+mkdir -p "$directory"
+printf '%s\n' "$1" > "$directory/wonton-model-source.tmp"
+mv "$directory/wonton-model-source.tmp" "$directory/wonton-model-source"
+printf '已选择模型来源，Agent 正在重启。\n'

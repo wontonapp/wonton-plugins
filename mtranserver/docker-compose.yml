@@ -1,0 +1,138 @@
+# MTranServer 离线翻译：家里的 CPU 跑本地翻译模型，浏览器翻译扩展连局域网端口，网页经核心网关（代注入 API 令牌）。
+# 上游 xxnuo/MTranServer，Apache-2.0，镜像按清单列表（index）的摘要固定。
+# 镜像默认只跑 CPU（GPU 由上游单独的 compose 提供，不做），以 root 运行，数据目录由核心交给 PUID:PGID。
+services:
+  mtranserver:
+    image: xxnuo/mtranserver:5.1.1@sha256:2f0301ddeda29b8820926e841343252d35f2bef29b45c7fe02260ffbab0c8f2b
+    environment:
+      MT_PORT: "8989"
+      # 配置（records.json 模型索引、UI 保存的 server.json、日志）和模型各自一个目录，换机器都要带走。
+      # server.json 固定写在 homeDir（/root/.config/mtran）而非 MT_CONFIG_DIR，所以挂整个 mtran 目录。
+      MT_CONFIG_DIR: /root/.config/mtran/server
+      MT_MODEL_DIR: /app/models
+      # 保持联网模式：首次翻译一个语言方向时自动下载模型文件，之后同一方向离线可用。
+      MT_OFFLINE: "false"
+      MT_API_TOKEN: ${WONTON_SECRET_API_TOKEN}
+    volumes:
+      - ${WONTON_APP_DATA}/config:/root/.config/mtran
+      - ${WONTON_APP_DATA}/models:/app/models
+    # 镜像没有 curl/wget，用自带的 node 调无鉴权的 /health。
+    # 出网代理开着时核心注入的 NO_PROXY 含回环，检查不会被送去代理。
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8989/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+
+  # OpenAPI→MCP 适配器由合仓 kiwix/images/mcp-openapi-proxy/ 构建，按 kiwix/v0.1.2 发布摘要共用，
+  # 把 mtranserver 的翻译接口包成 MCP 工具给 Bot 用，规范见 mcp/openapi.json。
+  # 上游 mcp-openapi-proxy 0.4.0（MIT），镜像只是 pip 安装上游包，没有改源码。
+  # 翻译、检测都是只读计算（不写任何数据）；spec 里 summary 以查询动词开头，适配器据此给 POST 工具
+  # 标只读（否则总线上每次调用都要用户确认）。
+  mcp:
+    image: ghcr.io/wontonapp/mcp-openapi-proxy:0.1.2@sha256:71fda0bebe5985a5e340b6d14e0451002f41c3b5fed8c21b7fa03e0d62536ce1
+    user: "${PUID}:${PGID}"
+    read_only: true
+    environment:
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "8000"
+      OPENAPI_SPEC_URL: file:///mcp/openapi.json
+      SERVER_URL_OVERRIDE: http://mtranserver:8989
+      # 上游认 Bearer 令牌：适配器对上游发 Authorization: Bearer <API_KEY>，复用插件已有的密钥。
+      API_KEY: ${WONTON_SECRET_API_TOKEN}
+      # 适配器只连插件网络里的上游，不出网：代理变量写空（写成空=这个服务不走代理）。
+      # python 客户端会读这些变量，服务名不在 NO_PROXY 名单里时内网请求会被送去出网代理，报 502。
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+    configs:
+      - source: openapi
+        target: /mcp/openapi.json
+    depends_on:
+      mtranserver:
+        condition: service_healthy
+    healthcheck:
+      # 镜像只有 python（slim 没有 curl/wget），健康检查就用它。
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+configs:
+  openapi:
+    file: mcp/openapi.json
+
+x-wonton:
+  spec: "0.12"
+  id: app.github.xxnuo.mtranserver
+  version: 0.1.2
+  kind: app
+  title: { zh: 离线翻译（MTranServer）, en: Offline Translation (MTranServer) }
+  description:
+    zh: 在自己家里跑的翻译服务，像翻译网站一样好用：浏览器翻译扩展接上它，整页、划词都能翻，文字不出家门。
+    en: "A translation service running at home, like the online ones: browser translate extensions plug into it, and your text never leaves home."
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/history.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/xxnuo/MTranServer
+  # 应用（MTranServer）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: Apache-2.0
+  tags:
+    zh: [工具, 翻译]
+    en: [Tools, Translation]
+  about:
+    zh: |
+      翻译在自己家里的 CPU 上完成，不用显卡：速度取决于电脑配置和文本长度，日常阅读、看懂大意都够快。
+
+      打开网页就能翻译；在浏览器里装沉浸式翻译、简约翻译、划词翻译这类扩展，把翻译服务指到这台服务器上，读外文网页就不用一段段复制了。支持 DeepL、DeepLX、Google 翻译接口的软件也能接。
+
+      网页里的翻译不用任何设置。浏览器扩展要连的地址在安装时的提示和云吞的局域网设置里，令牌在插件详情页的“API 令牌”里查看，照扩展要求填进去就行。第一次翻某个语言方向时会联网下载翻译文件（几十到一百多 MB），之后这个方向就离线可用。
+
+      家里的 AI 助手也能帮你翻译：让它翻一段话，它就用家里的翻译服务来翻，文字不出家门。
+    en: |
+      Translation runs on your home CPU, no graphics card needed: speed depends on the machine and text length, and everyday reading is plenty fast.
+
+      The web page works out of the box; in a browser with an extension like Immersive Translate, KISS Translator or 划词翻译, point the translation service at this server and read foreign pages without copy-pasting. Software that speaks the DeepL, DeepLX or Google Translate APIs works too.
+
+      Translating on the web page needs no setup. The LAN address for your browser extension is shown at install time and in Wonton's LAN settings, and the token is on the plugin details page under "API token". The first translation in a language pair downloads its model files (tens to over a hundred MB); after that the pair works offline.
+
+      The home AI assistant can translate for you too: ask it to translate something and it uses the home translation service — your text never leaves home.
+  release_notes: { zh: 插件包迁入官方插件合仓，翻译工具共用官方发布的适配器镜像。, en: "Moved into the official Wonton plugin monorepo; translation tools share the officially published adapter image." }
+  webui:
+    service: mtranserver
+    port: 8989
+    # 应用不认用户，只认自己的 API 令牌：网关代注入 Authorization: Bearer，网页里的翻译不用用户再填令牌。
+    sso: proxy
+    proxy:
+      headers:
+        Authorization: "Bearer {secret:api_token}"
+  mcp:
+    service: mcp
+    port: 8000
+    transport: streamable-http
+  # 浏览器翻译扩展连这个端口。8989 同时是网页端口，但代注入只用 {secret:…}、不代用户身份，
+  # 核心判定不需要 lan_webui 开关：端口装好就开（实测确认）。
+  # 应用只有令牌、没有用户名；令牌用 show_owner 给主人看。
+  lan:
+    ports:
+      - { service: mtranserver, port: 8989 }
+  secrets:
+    api_token:
+      generate: { bytes: 24 }
+      show_owner: { label: { zh: API 令牌, en: API token } }
+  permissions:
+    # 首次翻译一个语言方向时从 Mozilla 的模型源下载文件（Firefox 翻译模型）。
+    - network.egress
+    # 翻译扩展在局域网里直连（装好后即开放；装在不可信局域网时注意已知限制，见 README）。
+    - network.lan
+    # MCP 工具经核心总线暴露给 Bot；规范 0.11 起只有声明 tools 权限的插件才注入 WONTON_MCP_URL。
+    - tools
+  # 上游没写最低内存：官方数据英译中峰值约 392 MiB，加余量取 512M。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

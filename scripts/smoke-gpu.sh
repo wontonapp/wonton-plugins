@@ -41,6 +41,7 @@ main() {
   local plugin_dir="${1:-$plugin}" probe rc=0
   [[ -f "$plugin_dir/docker-compose.yml" ]] || { echo "GPU 冒烟：找不到清单 $plugin_dir/docker-compose.yml" >&2; return 1; }
   plugin_dir="$(cd "$plugin_dir" && pwd)" || { echo "GPU 冒烟：无法定位插件目录 $plugin_dir" >&2; return 1; }
+  # 核心 plugin host 直接按清单的 requirements 判断主机；不展开 Compose 变量，避免清单里的 `:?` 被误解析。
   probe="$(gpu_present "$plugin_dir" 2>&1)" || rc=$?
   case "$rc" in
     0) printf 'run=true\n' >>"${GITHUB_OUTPUT:-/dev/null}" ;;

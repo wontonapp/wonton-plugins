@@ -1,0 +1,396 @@
+# wger：训练计划、营养日记和体重记录。按上游官方部署形态
+# （https://github.com/wger-project/docker）：gunicorn、nginx、postgres、redis、
+# celery worker/beat。powersync（手机 App 离线同步）不装，见 README。
+#
+# 认证链路：核心网关认人后带 Remote-User 等头 → nginx → Django。wger 的
+# AuthProxyHeaderMiddleware 只在登录页上按头登录，并把 REMOTE_ADDR 和
+# AUTH_PROXY_TRUSTED_IPS 比对。nginx 借用 web 的网络命名空间
+# （network_mode: service:web，规范"网络"节），Django 看到的直连地址是
+# 127.0.0.1：能到达 Django 的只有同命名空间的 nginx 和核心自己，宿主进程
+# 和别的容器都碰不到。webui.service 写被借用的服务（web），端口是 nginx
+# 监听的 80。
+services:
+  db:
+    # 上游 services/postgres.yaml 的参数。wal_level=logical 只被不装的
+    # powersync 用到，去掉。数据库密码由核心生成（secrets）。
+    image: postgres:15.19-alpine@sha256:eab009ce9447a891d9482702d370bbf132c18563bb87cfdcc2b815c6d3b0372f
+    shm_size: 256mb
+    environment:
+      TZ: ${TZ}
+      POSTGRES_DB: wger
+      POSTGRES_USER: wger
+      POSTGRES_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - work_mem=8MB
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - max_connections=30
+    healthcheck:
+      # 走 TCP 而不是默认的 unix socket：只听 socket 时这里会提前报就绪
+      # （上游注释）。
+      test: ["CMD-SHELL", "pg_isready -h localhost -U \"$${POSTGRES_USER}\""]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+  cache:
+    # 只被 web/worker/beat 访问。上游 redis.conf 实际改过的就是下面这几项
+    # （bind 全网卡、密码、内存上限、LRU、落盘、数据目录），不必背上游
+    # 1200 行默认配置：redis-server 对没写的指令用内置默认值。
+    # 密码由核心生成：申请了 network.egress 的插件网络里，redis 不设密码
+    # 时能被经用户代理可达的进程连上（规范"网络"的建议）。
+    image: redis:8.4.8-alpine3.22@sha256:44b295aedd412d52a9846f51573e906e0a9c7d83ba431f4134b1b338d45ba732
+    read_only: true
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    environment:
+      WONTON_SECRET_REDIS_PASSWORD: ${WONTON_SECRET_REDIS_PASSWORD}
+    configs:
+      - source: redis-conf
+        target: /usr/local/etc/redis/redis.conf
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$${WONTON_SECRET_REDIS_PASSWORD}\" ping | grep -q PONG"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      start_interval: 2s
+
+  web:
+    image: wger/server:2.7@sha256:1c5789b93bfe5eed0b7287255782d9177027b255de2b22b59f511a693a48db04
+    # bootstrap（建表+fixtures）要真连上 db/cache 才能跑：等它们健康再启动。
+    # 2.7 镜像的 entrypoint 不检查 bootstrap 的退出码（master 分支有检查），
+    # 启动早了会带着空库"正常"运行——web 自己的 version 健康检查不碰数据库，
+    # 发现不了。下面显式写 DJANGO_PERFORM_MIGRATIONS 也是同一道保险：
+    # entrypoint 只在它等于 "True" 时才补跑 migrate，不写就跳过。
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    environment:
+      # 数据库（settings/main.py 的 DJANGO_DB_* 必填，不用 powersync 的
+      # PS_DATABASE_URI 读法）
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_DATABASE: wger
+      DJANGO_DB_USER: wger
+      DJANGO_DB_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+      # 缓存
+      DJANGO_CACHE_BACKEND: django_redis.cache.RedisCache
+      DJANGO_CACHE_LOCATION: redis://cache:6379/1
+      DJANGO_CACHE_TIMEOUT: "1296000"
+      DJANGO_CACHE_CLIENT_CLASS: django_redis.client.DefaultClient
+      DJANGO_CACHE_CLIENT_PASSWORD: ${WONTON_SECRET_REDIS_PASSWORD}
+      # 队列
+      CELERY_BROKER: "redis://:${WONTON_SECRET_REDIS_PASSWORD}@cache:6379/2"
+      CELERY_BACKEND: "redis://:${WONTON_SECRET_REDIS_PASSWORD}@cache:6379/2"
+      USE_CELERY: "True"
+      # 密钥与会话：SECRET_KEY 放 secrets，重启后会话不失效
+      SECRET_KEY: ${WONTON_SECRET_SECRET_KEY}
+      # 对外地址与代理：网关保留 Host、写 X-Forwarded-Proto。X_FORWARDED_PROTO_HEADER_SET
+      # 让 Django 认这个头（https 下 cookie/CSRF 的判断才对）；CSRF 默认只有
+      # localhost，要换成网关给的真实 origin。
+      SITE_URL: ${WONTON_APP_URL}
+      CSRF_TRUSTED_ORIGINS: ${WONTON_APP_URL}
+      X_FORWARDED_PROTO_HEADER_SET: "True"
+      TIME_ZONE: ${TZ}
+      TZ: ${TZ}
+      DJANGO_DEBUG: "False"
+      WGER_USE_GUNICORN: "True"
+      # entrypoint 的 migrate 分支按显式 "True" 判断，不写就跳过；迁移幂等，
+      # 每次启动补跑一遍（首次由 bootstrap 建 schema，这里是兜底）
+      DJANGO_PERFORM_MIGRATIONS: "True"
+      # 账号：不开放注册和游客号，家人经代登录头自动进各自的账号。
+      ALLOW_REGISTRATION: "False"
+      ALLOW_GUEST_USERS: "False"
+      # 代登录（sso: proxy）。AUTH_PROXY_* 是 request.META 键：请求头
+      # Remote-User 写成 HTTP_REMOTE_USER。白名单是同命名空间的 nginx
+      #（127.0.0.1）和核心本身；规范要求 webui.service 的环境引用
+      # ${WONTON_CORE_ADDRESS}，不写全网段。
+      AUTH_PROXY_HEADER: HTTP_REMOTE_USER
+      AUTH_PROXY_TRUSTED_IPS: 127.0.0.1,${WONTON_CORE_ADDRESS}/32
+      AUTH_PROXY_CREATE_UNKNOWN_USER: "True"
+      AUTH_PROXY_USER_EMAIL_HEADER: HTTP_REMOTE_EMAIL
+      AUTH_PROXY_USER_NAME_HEADER: HTTP_REMOTE_NAME
+      # 登录爆破防护（上游 prod.env 的取值）：防爆破按 X-Real-IP 记，
+      # 也就是网关认出的来源。
+      AXES_ENABLED: "True"
+      AXES_FAILURE_LIMIT: "10"
+      AXES_COOLOFF_TIME: "30"
+      AXES_HANDLER: axes.handlers.cache.AxesCacheHandler
+      AXES_LOCKOUT_PARAMETERS: ip_address
+      AXES_IPWARE_PROXY_COUNT: "0"
+      AXES_IPWARE_META_PRECEDENCE_ORDER: HTTP_X_REAL_IP,REMOTE_ADDR
+      # 动作库/食物库同步：celery 每周后台跑，不挡启动；条码扫到没见过的
+      # 食物时实时从 wger.de 取。首次同步经出网代理，量大且慢。
+      SYNC_EXERCISES_CELERY: "True"
+      SYNC_EXERCISE_IMAGES_CELERY: "True"
+      SYNC_EXERCISE_VIDEOS_CELERY: "True"
+      SYNC_INGREDIENTS_CELERY: "True"
+      DOWNLOAD_INGREDIENTS_FROM: WGER
+    volumes:
+      - static:/home/wger/static
+      - media:/home/wger/media
+    # gunicorn 在关停时把在途请求跑完（上游）
+    stop_grace_period: 60s
+    healthcheck:
+      # 版本接口要 DB 和缓存都通才算真可用（上游的检查）。
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O", "/dev/null", "http://localhost:8000/api/v2/version/"]
+      interval: 30s
+      timeout: 5s
+      # 首次启动要建库、导 fixtures、collectstatic，慢
+      start_period: 10m
+      start_interval: 10s
+
+  # 静态文件必须由反代出：上游没有 whitenoise，DJANGO_DEBUG=False 时
+  # Django 不出 /static/（上游 README："You *need* to keep this nginx
+  # service"）。借用 web 的网络命名空间，读共享卷里的静态和媒体文件。
+  nginx:
+    image: nginx:1.31.8-alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
+    network_mode: "service:web"
+    depends_on:
+      web:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    configs:
+      - source: nginx-conf
+        target: /etc/nginx/conf.d/default.conf
+    volumes:
+      - static:/wger/static:ro
+      - media:/wger/media:ro
+    healthcheck:
+      # 经 nginx 取一页真页面：配置、静态卷和到 Django 的链路都对
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+  # 同步和发信都在 worker 里跑；出网（wger.de）经核心的出网代理
+  worker:
+    image: wger/server:2.7@sha256:1c5789b93bfe5eed0b7287255782d9177027b255de2b22b59f511a693a48db04
+    command: [/start-worker]
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_DATABASE: wger
+      DJANGO_DB_USER: wger
+      DJANGO_DB_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+      DJANGO_CACHE_BACKEND: django_redis.cache.RedisCache
+      DJANGO_CACHE_LOCATION: redis://cache:6379/1
+      DJANGO_CACHE_TIMEOUT: "1296000"
+      DJANGO_CACHE_CLIENT_CLASS: django_redis.client.DefaultClient
+      DJANGO_CACHE_CLIENT_PASSWORD: ${WONTON_SECRET_REDIS_PASSWORD}
+      CELERY_BROKER: "redis://:${WONTON_SECRET_REDIS_PASSWORD}@cache:6379/2"
+      CELERY_BACKEND: "redis://:${WONTON_SECRET_REDIS_PASSWORD}@cache:6379/2"
+      USE_CELERY: "True"
+      SECRET_KEY: ${WONTON_SECRET_SECRET_KEY}
+      TIME_ZONE: ${TZ}
+      TZ: ${TZ}
+      DJANGO_DEBUG: "False"
+      SYNC_EXERCISES_CELERY: "True"
+      SYNC_EXERCISE_IMAGES_CELERY: "True"
+      SYNC_EXERCISE_VIDEOS_CELERY: "True"
+      SYNC_INGREDIENTS_CELERY: "True"
+      DOWNLOAD_INGREDIENTS_FROM: WGER
+      CELERY_WORKER_CONCURRENCY: "4"
+    volumes:
+      # 同步下来的动作图和视频落在共享的媒体卷，web 经 nginx 出给页面
+      - media:/home/wger/media
+    healthcheck:
+      # worker 真在听队列才会应答 ping（上游的检查）
+      test: ["CMD", "celery", "-A", "wger", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      start_period: 2m
+      start_interval: 10s
+
+  # 周期任务表：按到点时间派活给 worker
+  beat:
+    image: wger/server:2.7@sha256:1c5789b93bfe5eed0b7287255782d9177027b255de2b22b59f511a693a48db04
+    command: [/start-beat]
+    depends_on:
+      worker:
+        condition: service_healthy
+    environment:
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_DATABASE: wger
+      DJANGO_DB_USER: wger
+      DJANGO_DB_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+      DJANGO_CACHE_BACKEND: django_redis.cache.RedisCache
+      DJANGO_CACHE_LOCATION: redis://cache:6379/1
+      DJANGO_CACHE_TIMEOUT: "1296000"
+      DJANGO_CACHE_CLIENT_CLASS: django_redis.client.DefaultClient
+      DJANGO_CACHE_CLIENT_PASSWORD: ${WONTON_SECRET_REDIS_PASSWORD}
+      CELERY_BROKER: "redis://:${WONTON_SECRET_REDIS_PASSWORD}@cache:6379/2"
+      CELERY_BACKEND: "redis://:${WONTON_SECRET_REDIS_PASSWORD}@cache:6379/2"
+      USE_CELERY: "True"
+      SECRET_KEY: ${WONTON_SECRET_SECRET_KEY}
+      TIME_ZONE: ${TZ}
+      TZ: ${TZ}
+      DJANGO_DEBUG: "False"
+      SYNC_EXERCISES_CELERY: "True"
+      SYNC_EXERCISE_IMAGES_CELERY: "True"
+      SYNC_EXERCISE_VIDEOS_CELERY: "True"
+      SYNC_INGREDIENTS_CELERY: "True"
+      DOWNLOAD_INGREDIENTS_FROM: WGER
+    volumes:
+      # 调度状态文件要留在盘上，重启后周期任务才接得上
+      - beat:/home/wger/beat
+    healthcheck:
+      # beat 没有可 ping 的口；调度文件写出来了才算真的跑起来。文件名随
+      # dbm 后端可能是单文件、带后缀或目录，按名字匹配。
+      test: ["CMD-SHELL", "ls /home/wger/beat | grep -q celerybeat-schedule"]
+      interval: 30s
+      timeout: 5s
+      start_period: 1m
+      start_interval: 5s
+
+  # 上游首次启动会预建 admin/{{固定密码}}（wger bootstrap 的
+  # ensure_admin_user，没有环境变量能关）。web 健康后（迁移和 fixtures
+  # 已完成）把它停用，每次重建容器都跑，幂等。
+  init:
+    image: wger/server:2.7@sha256:1c5789b93bfe5eed0b7287255782d9177027b255de2b22b59f511a693a48db04
+    command:
+      - python3
+      - manage.py
+      - shell
+      - -c
+      - |
+        from django.contrib.auth import get_user_model
+        u = get_user_model().objects.filter(username='admin').first()
+        if u and u.is_active:
+            u.is_active = False
+            u.save(update_fields=['is_active'])
+            print('admin user deactivated')
+        else:
+            print('admin user already inactive or absent')
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_DATABASE: wger
+      DJANGO_DB_USER: wger
+      DJANGO_DB_PASSWORD: ${WONTON_SECRET_DB_PASSWORD}
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+      SECRET_KEY: ${WONTON_SECRET_SECRET_KEY}
+      TIME_ZONE: ${TZ}
+      TZ: ${TZ}
+      DJANGO_DEBUG: "False"
+      PYTHONDONTWRITEBYTECODE: "1"
+    restart: "no"
+
+configs:
+  redis-conf:
+    content: |
+      bind * -::*
+      requirepass ${WONTON_SECRET_REDIS_PASSWORD}
+      maxmemory 1gb
+      maxmemory-policy volatile-lru
+      save 3600 1 300 100 60 10000
+      dir /data
+  nginx-conf:
+    file: nginx/default.conf
+
+volumes:
+  postgres-data:
+  redis-data:
+  static:
+  media:
+  beat:
+
+x-wonton:
+  spec: "0.11"
+  id: de.wger.workout
+  version: 0.1.1
+  kind: app
+  title: { zh: 健身助手（wger）, en: Workout & Nutrition (wger) }
+  description:
+    zh: 像手机里的健身 App，把训练计划排到每天，练完记一笔，吃了什么和体重变化也记得清清楚楚。
+    en: "Like a fitness app on your phone: plan workouts for each day, log them as you go, and keep track of what you eat and how your weight changes."
+  icon: icon.png
+  notices: [NOTICE]
+  author: { name: geraldpeng6 }
+  homepage: https://wger.de
+  # 应用（wger）的许可证；依赖镜像的许可见 NOTICE
+  license: AGPL-3.0-only
+  tags:
+    zh: [健身, 健康]
+    en: [Fitness, Health]
+  about:
+    zh: |
+      像手机里的健身 App，把训练计划排到每天，练完记一笔，吃了什么和体重变化也记得清清楚楚。
+
+      每天该练哪些动作、几组几次，照着做就行；练完打勾，重量和次数都有记录。吃饭记一笔，扫条码就能认出包装食品的热量。体重、围度记下来，曲线一眼看到变化。
+
+      家里每个人打开就是自己的账号，训练和饮食互不干扰。第一次启动后，动作库和食物库会从 wger.de 后台慢慢同步下来，要联网，量大、需要几个小时，不影响先用起来。
+
+      数据都在自己家里，不上传到任何别的服务器。
+    en: |
+      Like a fitness app on your phone: plan workouts for each day, log them as you go, and keep track of what you eat and how your weight changes.
+
+      Each day shows the exercises, sets and reps to do; tick them off and the weights are recorded. Meals are one entry each, and scanning a bar code looks up packaged foods. Body weight and measurements show up as curves over time.
+
+      Everyone in the family gets their own account when they open it, with separate workouts and diaries. After the first start, the exercise and food databases sync from wger.de in the background; it needs internet, takes hours because of the size, and the app is usable meanwhile.
+
+      All data stays on your own server.
+  release_notes: { zh: 插件包迁入官方插件合仓，保留旧仓库默认分支的健身、营养和代登录配置。, en: "Moved the plugin package into the official Wonton plugin monorepo; retains workout, nutrition and proxy-authentication configuration from the source default branch." }
+  # 打开即用：代登录头认人，第一次打开自动建号，没有要用户做的一步。
+  # 入口指向登录页并带 next：代登录中间件登录后优先跳 next（同源才接受）。
+  # 不能直接写 path /user/login：登录后它按"当时激活的语言"反向解析（LocaleMiddleware
+  # 在代登录中间件之后才跑），会锁死英文。next 指到 /zh-hans/（认证后回中文仪表盘）。
+  # 界面默认中文靠注入的 Accept-Language，用户在应用里切换语言后 cookie 优先。
+  webui:
+    service: web
+    port: 80
+    path: /user/login?next=/zh-hans/
+    sso: proxy
+    proxy:
+      headers:
+        Remote-User: "{user}"
+        Remote-Email: "{email}"
+        Remote-Name: "{name}"
+        # 界面默认中文：wger 按标准 LocaleMiddleware 选语言（URL 前缀 > cookie >
+        # Accept-Language > LANGUAGE_CODE，后者写死 en 且无环境项可配）。给网页
+        # 请求注入 Accept-Language 让不懂英文的家人首开就是中文；用户在应用里
+        # 手动切换语言后 cookie 优先，不受影响。
+        Accept-Language: "zh-CN"
+  # 动作库、食物库同步和条码查询要连 wger.de，经核心的出网代理
+  permissions: [network.egress]
+  # Django 的 SECRET_KEY（不设则每次重启随机，会话全失效）和内部服务的密码
+  secrets:
+    secret_key:
+      generate: { bytes: 50 }
+    db_password:
+      generate: { bytes: 32 }
+    redis_password:
+      generate: { bytes: 32 }
+  # 上游没写最低内存；六个服务空闲实测合计约 0.8G
+  # （web 467M、worker 127M、beat 124M、db 40M、nginx 31M、cache 11M），
+  # 再留首次同步动作图/视频和并发余量，取 2G
+  requirements:
+    arch: [amd64, arm64]
+    memory: 2G

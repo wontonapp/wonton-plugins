@@ -1,0 +1,183 @@
+# Koel 音乐流媒体：用户的音乐放在共享文件夹 music 里，经核心网关访问，登录用 Koel 自带的
+# 邮箱账号——邮箱是主人的内部邮箱（启动脚本把上游写死的默认管理员改成它）；免费版的 SSO 和反代头
+# 认证都是 Koel Plus 的付费功能，见 plugin-spec 的"应用自带的登录"。
+# 数据库用上游推荐的独立 PostgreSQL 容器（koel/docker：不含数据库，需要单独的 MariaDB/MySQL 或 PostgreSQL）。
+name: koel
+
+services:
+  db:
+    image: postgres:17.11-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
+    # Alpine 官方镜像的 postgres 用户是 70:70，核心按此准备数据库目录属主。
+    user: "70:70"
+    read_only: true
+    tmpfs: ["/tmp", "/var/run/postgresql"]
+    environment:
+      POSTGRES_USER: koel
+      POSTGRES_PASSWORD: ${WONTON_SECRET_DB_PASSWORD:?核心没有注入数据库密码}
+      POSTGRES_DB: koel
+      TZ: ${TZ}
+    volumes:
+      - ${WONTON_APP_DATA:?核心没有注入插件数据目录}/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "koel", "-d", "koel"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+  koel:
+    image: phanan/koel:9.15.0@sha256:af1ec7daf06d22f6781d9e79716e52048108c21b05adfebccec2e474a29f6fde
+    depends_on:
+      db:
+        condition: service_healthy
+    # 上游镜像以 Apache + PHP（www-data）运行；entrypoint 覆盖后镜像 CMD 会被清掉，显式写回。
+    entrypoint: ["/bin/sh", "/wonton-start.sh"]
+    command: ["apache2-foreground"]
+    volumes:
+      # docker compose 的短 volume 语法会先按冒号分段再插值，${VAR:?消息} 里的冒号会数出
+      # “too many colons”（CI smoke 实测）。核心对已声明 storage.share.music:read 的插件必注入
+      # WONTON_SHARE_MUSIC，缺权限在核心自己的校验里报错，这里不需要 :? 再守一道。
+      - ${WONTON_SHARE_MUSIC}:/music:ro
+      - ${WONTON_APP_DATA}/images:/var/www/html/storage/app/public/images
+      - ${WONTON_APP_DATA}/search-indexes:/var/www/html/storage/search-indexes
+      - ${WONTON_APP_DATA}/artifacts:/artifacts
+    configs:
+      - source: start
+        target: /wonton-start.sh
+    healthcheck:
+      # 首页要过 PHP 和数据库，比镜像自带的静态文件检查更真实。
+      test: ["CMD", "curl", "-f", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      start_interval: 2s
+
+configs:
+  start:
+    content: |
+      set -e
+      cd /var/www/html
+      # 挂载目录由核心按 PUID:PGID 预建，PHP 以镜像内置的 www-data（uid 33）运行，属主对不上。
+      # 每次启动把挂载目录本身的属主改回 www-data：幂等，目录里的文件一直是 www-data 写的。
+      chown www-data:www-data /artifacts \
+        /var/www/html/storage/app/public/images \
+        /var/www/html/storage/search-indexes
+      # 上游 9.15.0 的 koel-init 只认 /var/www/html/.env（不认环境变量），这里每次启动
+      # 用注入的变量生成它；APP_KEY 跨升级是同一把，重跑内容不变，幂等。
+      cat > /var/www/html/.env <<WONTONENV
+      APP_KEY=base64:${WONTON_SECRET_APP_KEY:?核心没有注入应用密钥}
+      APP_URL=${WONTON_APP_URL:?核心没有注入插件网页地址}
+      DB_CONNECTION=pgsql
+      DB_HOST=db
+      DB_PORT=5432
+      DB_DATABASE=koel
+      DB_USERNAME=koel
+      DB_PASSWORD=${WONTON_SECRET_DB_PASSWORD:?核心没有注入数据库密码}
+      MEDIA_PATH=/music
+      ARTIFACTS_PATH=/artifacts
+      # 发信走核心的 SMTP（notify 权限给的变量），信转进收件人的 Wonton 私聊。服务器宣告 STARTTLS
+      # 但明文照收；不填用户名密码 Laravel 就不发 AUTH，任何一方填了认证反而失败。
+      # ENCRYPTION=null 关不掉 Symfony Mailer 的机会主义 TLS 升级，明文由启动脚本补的 auto_tls=false 保证。
+      MAIL_MAILER=smtp
+      MAIL_HOST=${WONTON_SMTP_HOST:?核心没有注入 SMTP 服务器地址}
+      MAIL_PORT=${WONTON_SMTP_PORT:?核心没有注入 SMTP 端口}
+      MAIL_FROM_ADDRESS=${WONTON_MAIL_FROM:?核心没有注入发件地址}
+      MAIL_FROM_NAME=Koel
+      MAIL_USERNAME=null
+      MAIL_PASSWORD=null
+      MAIL_ENCRYPTION=null
+      # 不申请 network.egress，需要外网的集成显式关掉：MusicBrainz 元数据、播客订阅、
+      # 网络电台在只有内网的环境里会一直重试、报错。Last.fm、Spotify、YouTube 没配密钥本来就是关的。
+      USE_MUSICBRAINZ=false
+      PODCASTS_ENABLED=false
+      RADIO_ENABLED=false
+      WONTONENV
+      # Symfony Mailer 6.4+ 的 smtp 传输默认机会主义升级 TLS（auto_tls 默认开，Laravel 的
+      # MAIL_ENCRYPTION=null 管不到它）：服务器一宣告 STARTTLS 就升级。核心给 Mailpit 配的是自签
+      # 证书，插件拿不到它也没处信任，PHP 默认验签，握手必败，Laravel 发信直接 500。内网
+      # 插件网络本来就隔离，走明文：给 smtp mailer 补 auto_tls=false。上游没有环境变量能关掉它，
+      # 只能在启动时改这一行；镜像按摘要固定，上游动了锚点行会在这里失败即停，换 pin 时一起看。
+      grep -q "'auto_tls'" config/mail.php ||
+        sed -i "/'local_domain' => env('MAIL_EHLO_DOMAIN'),/a\\            'auto_tls' => false," config/mail.php
+      grep -q "'auto_tls' => false" config/mail.php
+      # 一次性改名：上游把首个管理员写死成 admin@koel.dev（User::FIRST_ADMIN_EMAIL，无配置项可改），
+      # koel:init 只在没有任何管理员时种号。下面复刻上游 koel-entrypoint 的两步（镜像按摘要固定，
+      # 步骤不会漂移），把改名插在 koel:init 种号之后、Apache 开门之前——Koel 的登录名就是邮箱，
+      # 用户第一次打开看到的就是改好的登录名。没有匹配行（已是内部邮箱）就更新 0 行，幂等；
+      # tinker 失败（比如撞 users.email 唯一约束）时 set -e 让 Apache 不启动，失败即停。
+      # 不用单独的 init 容器：它是一次性的，没有有意义的健康状态，新核心会把没有健康检查的服务记成 unknown。
+      # 不走镜像的 koel-init 而直接跑 koel:init：.env 每次启动都现写，koel-init 里那层分支没有别的动作；
+      # 加 --no-scheduler 是因为 koel:init 把装不上 crontab 的机器当致命错误（schedule:run 的 cron 对
+      # www-data 不可用就整个安装崩掉），本插件要定时任务的功能（播客、电台同步）本来就关着。
+      su -s /bin/sh www-data -c 'php artisan koel:init --no-assets --no-interaction --no-scheduler'
+      cat > /tmp/wonton-rename.php <<PHPEOF
+      echo 'renamed ', \Illuminate\Support\Facades\DB::table('users')
+          ->where('email', 'admin@koel.dev')
+          ->update(['email' => '${WONTON_OWNER_EMAIL:?核心没有注入主人内部邮箱}']),
+          ' admin account(s)', PHP_EOL;
+      PHPEOF
+      # HOME 指到 /tmp：psysh 要写 ~/.config，www-data 的家目录不可写，notice 会被当成致命错误。
+      su -s /bin/sh www-data -c 'export HOME=/tmp; php artisan tinker --execute="$$(cat /tmp/wonton-rename.php)"'
+      rm -f /tmp/wonton-rename.php
+      exec docker-php-entrypoint "$$@"
+
+x-wonton:
+  spec: "0.11"
+  id: dev.koel.koel
+  version: 0.2.0
+  kind: app
+  title: { zh: 网页音乐库（Koel）, en: Web Music Player (Koel) }
+  description:
+    zh: 网页做得最精致的自家音乐库：按歌手、专辑听歌、建歌单，还能看收听统计，家里人可以各开账号。适合主要在网页上听歌的人。
+    en: "A home music library with the most polished web player: listen by artist and album, build playlists, see your listening stats, and invite family to their own accounts. Best if you mostly listen in the browser."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/album.png, screenshots/player.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://koel.dev
+  # 应用（Koel）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: MIT
+  tags:
+    zh: [音乐]
+    en: [Music]
+  about:
+    zh: |
+      把共享文件夹里的音乐变成自己的在线音乐库：按歌手、专辑浏览，建歌单，看收听统计。网页在手机上也好用。
+
+      第一次打开用你的内部邮箱登录（<用户名>@wonton.internal），默认密码 KoelIsCool。登录后请立即在设置里改密码；网关挡在前面，改密码之前只有你打得开登录页。
+
+      音乐目录只读：把歌曲放进 music 共享文件夹，然后在 Koel 的设置里点扫描。网页上传需要可写的媒体目录，这里用不了。
+
+      Koel 发的信（邀请家人、找回密码）会作为消息出现在你的 Wonton 私聊里。只能发给家里的人：邀请外面的邮箱会被拒收，Koel 会报发送失败。
+
+      播客、网络电台、Last.fm、MusicBrainz 元数据这些要连外网的功能默认关闭；插件不申请出网权限。单点登录（Google / OIDC）和反向代理认证是 Koel Plus 的付费功能，免费版用不了。
+    en: |
+      Turn the music in your shared folder into your own online library: browse by artist and album, build playlists and see your listening stats. The web player works well on phones too.
+
+      The first sign-in uses your internal Wonton address (<username>@wonton.internal); the default password is KoelIsCool. Change the password right away in Settings; the gateway sits in front, so before the change only you can reach the login page.
+
+      The music folder is read-only: drop songs into the music shared folder, then press Scan in Koel's settings. Uploading from the web needs a writable media folder and does not work here.
+
+      Emails Koel sends (inviting family, password resets) arrive as messages in your Wonton chat. Only people in your home can receive mail: inviting an outside address gets rejected and Koel reports the failure.
+
+      Podcasts, internet radio, Last.fm and MusicBrainz metadata need the internet and are turned off; the plugin does not ask for outbound access. Single sign-on (Google / OIDC) and reverse-proxy authentication are paid Koel Plus features and are not available in the free edition.
+  release_notes: { zh: 插件包迁入官方插件合仓，保留当前分支的内部邮箱通知、默认管理员改名和 Koel 9.15.0 支持。, en: "Moved the plugin package into the official Wonton plugin monorepo; retains internal-mail notifications, default-admin renaming and Koel 9.15.0 support from the current branch." }
+  webui:
+    service: koel
+    port: 80
+    sso: none
+  permissions:
+    - storage.share.music:read
+    # owner.identity：启动脚本要用 WONTON_OWNER_EMAIL 改默认管理员的登录邮箱。
+    # notify：应用发的信（邀请、找回密码）经核心 SMTP 转进收件人的 Wonton 私聊。
+    - owner.identity
+    - notify
+  secrets:
+    db_password:
+      generate: { bytes: 32 }
+    # 32 字节 base64，前面拼上 base64: 就是 Laravel 的 APP_KEY 格式。
+    app_key:
+      generate: { bytes: 32, encoding: base64 }
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

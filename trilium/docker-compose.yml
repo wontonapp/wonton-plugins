@@ -1,0 +1,78 @@
+# Trilium 个人知识库：Node 服务 + SQLite 一体，单容器，数据全在插件数据目录。
+#
+# 认证交给云吞网关（TRILIUM_GENERAL_NOAUTHENTICATION）：插件网络是内部网络，能到 Trilium 的
+# 只有带着主人会话的网关，容器不出网、不开局域网端口。上游文档明确这种场景可以关掉自带认证
+# （docs/User Guide/.../Server Installation/Authentication.md："if authentication is handled by
+# another component"）。不用 sso: oidc：Trilium 的 OIDC 要先在 Options 里把登录方式切到
+# OpenID Connect，再从已登录会话点 Connect account 完成绑定（apps/server/src/services/open_id.ts
+# 的 isOpenIDEnabled 要求 mfaMethod 选项为 oauth 且 subject identifier 已保存），新装实例没有
+# 本地密码可登录，绑定无从发起，装上就会把用户挡在设置向导外。
+#
+# 首次打开是 Trilium 自己的设置向导（新建文档，或从旧实例同步/备份迁移），不做预置、不改数据。
+services:
+  trilium:
+    image: triliumnext/trilium:v0.107.0@sha256:739ba0f0488f506549f7c21dc9e792decd99382cc759f01d5ec1abba32e87da8
+    # 官方入口以 root 起，按 USER_UID/USER_GID 改 node 用户后降权运行（start-docker.sh：
+    # usermod + chown -R /home/node + su）。服务不写 user，核心把数据目录交给 PUID:PGID，正好衔接。
+    environment:
+      TRILIUM_DATA_DIR: /home/node/trilium-data
+      USER_UID: ${PUID}
+      USER_GID: ${PGID}
+      TZ: ${TZ}
+      TRILIUM_GENERAL_NOAUTHENTICATION: "true"
+    volumes:
+      - ${WONTON_APP_DATA}/data:/home/node/trilium-data
+    healthcheck:
+      # /api/health-check 由监听中的服务真实作答（routes.ts 里注册，不带鉴权中间件）；
+      # 镜像自带的 HEALTHCHECK 走同一个端点，这里按官方索引要求在 compose 里显式写出。
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api/health-check"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.6"
+  id: org.triliumnotes.trilium
+  version: 0.1.1
+  kind: app
+  title: { zh: 树状笔记（Trilium）, en: Note Tree (Trilium) }
+  description:
+    zh: 像一棵能无限展开的笔记树：笔记一层套一层分门别类，也能互相链接、画思维导图。适合喜欢按目录从大到小整理资料的人。
+    en: "A note tree that unfolds as deep as you like: file notes inside notes, link them together and add mind maps. For people who like organizing things folder by folder."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/notes.png, screenshots/tree.png, screenshots/editor.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://triliumnotes.org
+  # Trilium 是 AGPL-3.0；插件包自己的许可证在 LICENSE（MIT）。
+  license: AGPL-3.0-only
+  tags:
+    zh: [笔记, 知识库]
+    en: [Notes, Knowledge base]
+  about:
+    zh: |
+      个人知识库：笔记无限层级嵌套，笔记之间连成网，还有画布、思维导图、代码笔记和内置日历。
+      富文本和 Markdown 都能写，全文搜索随手找，改动留有修订历史。
+
+      数据库和附件都存在自己家里。打开就是自己的库：第一次进去选一下“新建文档”或从旧 Trilium
+      迁移，之后没有应用内登录。要格外保密的笔记可以设“受保护”，单独加一层密码。
+    en: |
+      A personal knowledge base: notes nest without limit and link into a network, with canvas,
+      mind maps, code notes and a built-in day planner. Write in rich text or Markdown, find
+      anything with full-text search, and every change keeps a revision history.
+
+      The database and attachments stay at home. Opening the page lands you in your own library:
+      the first visit asks you to create a document (or migrate from an old Trilium), and after
+      that there is no in-app sign-in. Notes that need extra secrecy can be marked "protected"
+      with a password of their own.
+  release_notes: { zh: 插件包迁入官方插件合仓，保留旧仓库默认分支的 Trilium v0.107.0 升级。, en: "Moved the plugin package into the official Wonton plugin monorepo; retains the Trilium v0.107.0 upgrade from the source default branch." }
+  webui:
+    service: trilium
+    port: 8080
+  permissions: []
+  # 镜像支持 amd64、arm64、armv7；这里声明 amd64 和 arm64。上游没写最低内存，本机空闲实测约
+  # 100M（v0.106.1，单用户空库，docker stats），编辑与同步有尖峰，取 256M。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 256M

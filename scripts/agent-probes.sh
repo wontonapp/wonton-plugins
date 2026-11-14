@@ -23,6 +23,8 @@
 # 要模型回答的子项（模型能回话、经聊天调工具、确认卡片、打断、续聊）要先接模型上游（WONTON_DEV_MODEL_*），没接时记 N/A。
 # 等模型回答默认 240 秒，慢的 Agent 在探针里设 AGENT_WAIT（秒）。
 # 等确认卡片默认 120 秒，卡片出得慢的 Agent 在探针里设 AGENT_CARD_WAIT（秒）；要模型先想才出卡的给到 300 以上。
+# Agent 默认模式必须出卡的插件（每条命令都要用户确认）设 AGENT_CARD_REQUIRED=1：确认卡片哪一问没出卡都记
+# FAIL，不按“CLI 免确认直接执行”放宽成 N/A；默认 0。
 # 只要 Bot 回了话就算数的（加密私聊、名单外不应答）不要模型：没有模型时 Bot 回的报错也是一条加密回复。
 #
 # 有的 Agent 收到提示先回一句状态就把这一轮结束，真活在后台接着跑（后台积压时回“在忙别的”）：要卡片的子项
@@ -36,6 +38,7 @@ AGENT_PHONE_STATE=""
 AGENT_OWNER_TOKEN=""
 AGENT_CARD_LOG=""
 AGENT_CARD_EMPTY=""
+AGENT_REQ_ERR=""
 
 # 用户的手机：tunnel-client 进核心的网络命名空间，和核心配对后在 127.0.0.1:18008 开带凭据的代理；
 # echo-bot probe 经它连 Matrix。只起一次，后面的子项共用。起不来时记一行 FAIL 加密私聊（配对坏了是真问题），
@@ -182,10 +185,23 @@ agent_check_chat() { # [文字]：首次安装后加密私聊收发
 
 # 真问到模型：回答里不能是网关或 Agent 的报错（模型不存在、上游出错）。
 agent_check_model() {
-  local out rc=0
+  local file bg out rc=0
   agent_need 模型能回话 model || return 0
-  out="$(agent_say --reply any --wait "${AGENT_WAIT:-240}" --text '请只回答：模型验收通过。' 2>&1)" || rc=$?
+  file="$(agent_tmp)"
+  # --match 只认带答案的那条：桥的状态消息（m.notice 带状态对象的“在想”“等你确认”，probe 看不到对象只看
+  # 得到正文）不算回答，不然 Agent 一出权限卡片这项就提前 PASS，卡片从此没人答，轮次 600 秒超时，后面的
+  # 子项全顺延。等的时候冒出确认卡片就同意（这一项要的是回答，让 Agent 把活干完），不让它堵着。
+  agent_say --reply any --match '模型验收通过' --wait "${AGENT_WAIT:-240}" \
+    --text '请只回答：模型验收通过。' >"$file" 2>&1 &
+  bg=$!
+  while kill -0 "$bg" 2>/dev/null; do
+    agent_card_take || true
+    sleep 2
+  done
+  wait "$bg" || rc=$?
+  out="$(cat "$file")"
   printf '%s\n' "$out"
+  rm -f "$file"
   if ((rc == 0)) && ! grep -Eiq 'model was not found|couldn.t finish|could not finish|provider-error|⚠️' <<<"$out"; then
     extra_item PASS 模型能回话 "经模型网关回答了（上游模型 ${WONTON_DEV_MODEL:-}）"
   else
@@ -236,6 +252,23 @@ agent_check_mcp_chat() {
   rm -f "$file"
 }
 
+# 读一次待答卡片列表：成功把 JSON 打到标准输出；失败返回 1，AGENT_REQ_ERR 留一行失败摘要（HTTP 错误响应、
+# curl 的报错和退出码）。每个请求的秒数由调用方给（--max-time N）：SMOKE_API_MAX_TIME 默认 600 秒，轮询用
+# 它等于把机器忙时的一次慢读当成半小时的挂死。
+agent_confirmations() { # [curl 参数…]
+  local out rc errf
+  errf="$(agent_tmp)"
+  out="$(smoke_api GET /_wonton/api/confirmations "$@" 2>"$errf")"
+  rc=$?
+  AGENT_REQ_ERR="$(agent_tail "${out:+HTTP 响应：$out｜}$(tr '\n' ' ' <"$errf")" 220)"
+  rm -f "$errf"
+  if ((rc == 0)); then
+    printf '%s' "$out"
+  else
+    return "$rc"
+  fi
+}
+
 # 等一张标题、说明或参数里含 <文字>（空 = 任意一张）的确认卡片，按 <approve|reject> 回答；卡片没出现返回 1。
 # [秒数]（默认 AGENT_CARD_WAIT 或 120）是 Bot 安静多久才放弃：它还在发消息就一直等，另受 AGENT_CARD_MAX（默认
 # 1800 秒）的绝对上限兜底。后台积压几分钟才轮到的 Agent 靠这个不丢卡片窗口。
@@ -243,6 +276,7 @@ agent_check_mcp_chat() {
 agent_card_answer() {
   local want="$1" needle="$2" seconds="${3:-${AGENT_CARD_WAIT:-120}}" max="${AGENT_CARD_MAX:-1800}"
   local list id body owner room_url start now idle=0 tick=0 last_ts=0 ts want_kind
+  local api_max="${AGENT_CARD_API_MAX:-30}" fails=0
   AGENT_CARD_LOG=""
   AGENT_CARD_EMPTY=""
   start="$(date +%s)"
@@ -251,7 +285,19 @@ agent_card_answer() {
   owner="$(agent_owner_token)" || owner=""
   room_url="$(jq -rn --arg r "$AGENT_ROOM" '$r | @uri')"
   while :; do
-    list="$(smoke_api GET /_wonton/api/confirmations 2>/dev/null)" || list='{}'
+    if ! list="$(agent_confirmations --max-time "$api_max")"; then
+      fails=$((fails + 1))
+      # 请求失败不是“还没有卡片”：不动安静时钟（Bot 可能正在说话），也不当空列表干等；连着失败就把这项
+      # 报成“请求失败”，免得机器忙时的偶发慢被放大成等卡片超时。
+      if ((fails >= ${AGENT_CARD_REQ_FAILS:-3})); then
+        AGENT_CARD_LOG="确认卡片接口请求失败 $fails 次，最后一次：$AGENT_REQ_ERR"
+        echo "等卡片失败：$AGENT_CARD_LOG"
+        return 1
+      fi
+      sleep 1
+      continue
+    fi
+    fails=0
     id="$(jq -r --arg n "$needle" '[.confirmations[]? | select(((.title // "") + " " + (.description // "") + " "
       + ((.arguments // {}) | tostring)) | contains($n)) | .id][0] // empty' <<<"$list")"
     if [[ -n "$id" ]]; then
@@ -267,9 +313,13 @@ agent_card_answer() {
     fi
     now="$(date +%s)"
     if ((now - start >= max)); then
-      list="$(smoke_api GET /_wonton/api/confirmations 2>/dev/null)" || list='{}'
-      AGENT_CARD_EMPTY="$(jq -r 'if (.confirmations // []) | length > 0 then 0 else 1 end' <<<"$list")"
-      AGENT_CARD_LOG="等到 ${max} 秒，还挂着：$(jq -r '[.confirmations[]? | "\(.id[:8] // "") \(.title // "")"] | join("；")' <<<"$list")"
+      # 最后读一次只是把现场留下：读不到时待答列表是什么样不知道，不当成空列表（AGENT_CARD_EMPTY 不置 1）。
+      if list="$(agent_confirmations --max-time "$api_max")"; then
+        AGENT_CARD_EMPTY="$(jq -r 'if (.confirmations // []) | length > 0 then 0 else 1 end' <<<"$list")"
+        AGENT_CARD_LOG="等到 ${max} 秒，还挂着：$(jq -r '[.confirmations[]? | "\(.id[:8] // "") \(.title // "")"] | join("；")' <<<"$list")"
+      else
+        AGENT_CARD_LOG="等到 ${max} 秒（最后读待答列表也失败：$AGENT_REQ_ERR）"
+      fi
       echo "等卡片超时：$AGENT_CARD_LOG"
       return 1
     fi
@@ -284,9 +334,12 @@ agent_card_answer() {
     sleep 1
     idle=$((idle + 1))
     if ((idle > seconds)); then
-      list="$(smoke_api GET /_wonton/api/confirmations 2>/dev/null)" || list='{}'
-      AGENT_CARD_EMPTY="$(jq -r 'if (.confirmations // []) | length > 0 then 0 else 1 end' <<<"$list")"
-      AGENT_CARD_LOG="Bot 安静超过 ${seconds} 秒，还挂着：$(jq -r '[.confirmations[]? | "\(.id[:8] // "") \(.title // "")"] | join("；")' <<<"$list")"
+      if list="$(agent_confirmations --max-time "$api_max")"; then
+        AGENT_CARD_EMPTY="$(jq -r 'if (.confirmations // []) | length > 0 then 0 else 1 end' <<<"$list")"
+        AGENT_CARD_LOG="Bot 安静超过 ${seconds} 秒，还挂着：$(jq -r '[.confirmations[]? | "\(.id[:8] // "") \(.title // "")"] | join("；")' <<<"$list")"
+      else
+        AGENT_CARD_LOG="Bot 安静超过 ${seconds} 秒（最后读待答列表也失败：$AGENT_REQ_ERR）"
+      fi
       echo "等卡片超时：$AGENT_CARD_LOG"
       return 1
     fi
@@ -404,12 +457,16 @@ agent_wait_idle() { # <子项>
 }
 
 # 确认卡片：同意一次（命令跑了），拒绝一次（命令没跑）。拒绝那一问没出卡、待答列表为空、而同意那一问刚跑过时，
-# 当成“CLI 没再询问”，这一问记 N/A（不算失败）；出了卡仍严格验。不给参数时让 Agent 用 shell 跑 echo，看聊天里的输出
+# 当成“CLI 没再询问”，这一问记 N/A（不算失败；AGENT_CARD_REQUIRED=1 时改记 FAIL，见上）；出了卡仍严格验。
+# 不给参数时让 Agent 用 shell 跑 echo，看聊天里的输出
 # 和回答。[服务]：这家 Agent 只在写工作区时才问（只读命令不出卡片，如 Codex 的 read-only、Claude Code 的 default），
 # 改成让它在 /workspace 里 touch 一个文件，以那个服务容器里文件在不在为准：模型有时不等执行结果就先回话，
 # 拒绝后这一轮也可能直接结束、聊天里没有回答。
 agent_check_card() {
   local file bg svc="${1:-}" container ask_ok ask_no granted=0
+  # 卡片必出的插件（AGENT_CARD_REQUIRED=1）没出卡记 FAIL：缺卡是缺陷，不能按“CLI 免确认直接执行”放宽。
+  local no_card=N/A
+  [[ "${AGENT_CARD_REQUIRED:-0}" == 1 ]] && no_card=FAIL
   agent_need 确认卡片 model || return 0
   agent_wait_idle 确认卡片 || return 0
   if [[ -n "$svc" ]]; then
@@ -438,7 +495,7 @@ agent_check_card() {
   elif [[ -n "$svc" ]] && docker exec "$container" test -e /workspace/card-ok 2>/dev/null; then
     # 没出卡但命令跑了：CLI 免确认直接执行，卡片语义验不到。
     kill "$bg" 2>/dev/null; wait "$bg"
-    extra_item N/A 确认卡片 "CLI 没出卡，命令直接跑了（$svc 里有 card-ok），卡片这一问没验到：$(agent_tail "$AGENT_CARD_LOG" 200)"
+    extra_item "$no_card" 确认卡片 "CLI 没出卡，命令直接跑了（$svc 里有 card-ok），卡片这一问没验到：$(agent_tail "$AGENT_CARD_LOG" 200)"
   else
     kill "$bg" 2>/dev/null; wait "$bg"
     extra_item FAIL 确认卡片 "让 Agent 跑命令，等不到确认卡片：$(agent_tail "$AGENT_CARD_LOG" 200)｜$(agent_tail "$(cat "$file")")"
@@ -466,11 +523,11 @@ agent_check_card() {
   elif [[ -n "$svc" ]] && docker exec "$container" test -e /workspace/card-no 2>/dev/null; then
     # 没出卡但命令也跑了：无从验“拒绝后没跑”。
     kill "$bg" 2>/dev/null; wait "$bg"
-    extra_item N/A 确认卡片 "第二问 CLI 也没出卡、命令直接跑了（$svc 里有 card-no），拒绝没验到：$(agent_tail "$AGENT_CARD_LOG" 200)"
+    extra_item "$no_card" 确认卡片 "第二问 CLI 也没出卡、命令直接跑了（$svc 里有 card-no），拒绝没验到：$(agent_tail "$AGENT_CARD_LOG" 200)"
   elif ((granted)) && [[ "$AGENT_CARD_EMPTY" == 1 ]]; then
     # 本会话刚对同形状命令放行过、待答列表也是空的：CLI 干脆没再问，这一问验不到。
     kill "$bg" 2>/dev/null; wait "$bg"
-    extra_item N/A 确认卡片 "同意那一问已跑过，CLI 没再询问第二问（待答列表为空），拒绝这一问没验到：$(agent_tail "$AGENT_CARD_LOG" 200)"
+    extra_item "$no_card" 确认卡片 "同意那一问已跑过，CLI 没再询问第二问（待答列表为空），拒绝这一问没验到：$(agent_tail "$AGENT_CARD_LOG" 200)"
   else
     kill "$bg" 2>/dev/null; wait "$bg"
     extra_item FAIL 确认卡片 "第二次跑命令等不到确认卡片：$(agent_tail "$AGENT_CARD_LOG" 200)｜$(agent_tail "$(cat "$file")")"

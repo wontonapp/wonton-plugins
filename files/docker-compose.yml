@@ -1,0 +1,78 @@
+# 文件搜索：让 Agent 在授权的共享文件夹里按文件名、按内容找文件，读文字文件。只做这一件事：
+# 申请共享文件夹的读权限，它们只读挂进容器，看不到别的；经 MCP 把工具交给核心的 MCP 总线，核心只路由和授权。
+#
+# 服务自己写的只读 MCP 服务（images/mcp/Dockerfile），Streamable HTTP 在 /mcp，/healthz 只读地打开每个共享文件夹
+# 验一遍。找到的文件返回成 wonton-share 引用，总线换成编号，Agent 调 wonton__share_file 发给用户。
+name: files
+
+services:
+  mcp:
+    # 仓库根 scripts/publish.sh 以插件版本构建，发布时写回该次构建的摘要。
+    image: ghcr.io/wontonapp/wonton-plugins/files/mcp:0.2.4@sha256:81d5367fede3e4701ffb4e050235f6a9e9a456f3ca0dbcafc1a6ac5545734064
+    restart: unless-stopped
+    # 以用户的 uid:gid 运行，宿主上挂进来的只读文件没有额外权限。
+    user: "${PUID}:${PGID}"
+    # 只读根文件系统；服务不写任何地方。
+    read_only: true
+    # 核心的 compose 子集不收 cap_drop 和 security_opt，所以没有 drop 能力和 no-new-privileges；
+    # 非 root、只读根、共享文件夹只读挂载已经限制了影响。
+    environment:
+      # 只写日期的 modified_after 按用户的时区解释；TZ 由核心注入。
+      TZ: "${TZ}"
+    volumes:
+      # 六个共享文件夹都只读：设备经核心上传的文件放在 transfers。
+      - ${WONTON_SHARE_DOCUMENTS}:/shares/documents:ro
+      - ${WONTON_SHARE_PHOTOS}:/shares/photos:ro
+      - ${WONTON_SHARE_MUSIC}:/shares/music:ro
+      - ${WONTON_SHARE_VIDEOS}:/shares/videos:ro
+      - ${WONTON_SHARE_DOWNLOADS}:/shares/downloads:ro
+      - ${WONTON_SHARE_TRANSFERS}:/shares/transfers:ro
+    healthcheck:
+      # 镜像里没有 curl，用二进制自己的客户端；检查的是六个共享文件夹都能打开、能读目录。
+      test: ["CMD", "/wonton-files", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.4"
+  id: app.wonton.files
+  version: 0.2.4
+  kind: app
+  title: { zh: Bot 找文件, en: File Finder for Bots }
+  icon: icon.svg
+  notices: [NOTICE]
+  description:
+    zh: 让 Bot 帮你在共享文件夹里找文件：按名字或内容搜、读出文字内容，找到的直接发给你。没有单独的页面，装好后在聊天里跟 Bot 说就行。
+    en: "Lets your bots find files in your shared folders: search by name or content, read text files and send you what they find. There's no page to open — just ask a bot in chat."
+  license: MIT
+  author: { name: geraldpeng6 }
+  tags:
+    zh: [文件, AI]
+    en: [Files, AI]
+  about:
+    zh: |
+      让 Bot 在你允许的共享文件夹里按名字和内容找文件、列出目录、读文字文件，找到的文件可以直接发给你。
+
+      共享文件夹只读，路径不跟随软链接，只看得到你放行的文件夹。
+    en: |
+      Lets your bot find files by name and content, list directories and read text files in the shared folders you allow; it can send what it finds to you.
+
+      The folders are read-only, symlinks are not followed, and nothing outside them is visible.
+  release_notes: { zh: 迁入官方插件合仓，镜像改由官方仓库构建发布。, en: Moved to the official plugin monorepo and official image publishing. }
+  mcp:
+    service: mcp
+    port: 8080
+    transport: streamable-http
+  permissions:
+    - storage.share.documents:read
+    - storage.share.photos:read
+    - storage.share.music:read
+    - storage.share.videos:read
+    - storage.share.downloads:read
+    - storage.share.transfers:read
+  # 自研插件，镜像是本仓库构建的，amd64 和 arm64 都发；内存按本机空闲实测取整（实测约 2.3M，取 64M）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 64M
