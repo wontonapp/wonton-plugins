@@ -39,7 +39,7 @@ services:
   web:
     # Ente Photos 网页应用（静态导出，nginx 伺服；license: AGPL-3.0-only）。
     # ghcr.io/ente/web 按周从 main 构建，只有 latest 和提交号两种 tag，没有版本号。
-    image: ghcr.io/ente/web:latest@sha256:795e2190489b773c9548f0d8b60350476a0c90ad7c8d4e9e8289c61aed81e3c0
+    image: ghcr.io/ente/web:latest@sha256:f135d345510d9f85545960543961a7b6cd0b78d20e004704a2a0165b7692f3ef
     environment:
       # 镜像入口脚本在启动时把它替换进 JS：网页从同源的 /api/ 调 museum（经 proxy 转发）。
       ENTE_API_ORIGIN: ${WONTON_APP_URL}/api
