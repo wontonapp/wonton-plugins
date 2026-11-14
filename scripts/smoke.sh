@@ -162,11 +162,44 @@ tar -C "$root" --exclude=.wonton --exclude=.git -cf - . | tar -C "$copy" -xf - |
 # dev.sh 从复制出来的工作区里 git archive 出 tag：.git 用符号链接指回原仓库，不复制对象。
 [[ ! -d "$root/.git" ]] || ln -s "$root/.git" "$copy/.git"
 chmod -R a+rX "$copy"
+# Compose 解析短卷时会把未注入的 `${WONTON_SHARE_NAME:?…}` 冒号误判为路径字段。
+# 冒烟只读清单，按 storage.share 声明填临时目录；正式安装时核心会注入同名变量。
+facts_dir="$work/compose-facts"
+mkdir "$facts_dir"
+cp -a "$SMOKE_PLUGIN/." "$facts_dir/"
+share_env_file="$work/share.env"
+python3 - "$SMOKE_PLUGIN/docker-compose.yml" "$facts_dir/docker-compose.yml" "$work/shares" >"$share_env_file" <<'PY'
+import re, sys
+
+source = open(sys.argv[1], encoding="utf-8").read()
+lines = source.splitlines()
+try:
+    start = next(i for i, line in enumerate(lines) if line == "x-wonton:")
+except StopIteration:
+    raise SystemExit("清单没有 x-wonton")
+block = []
+for line in lines[start + 1:]:
+    if line and not line[0].isspace():
+        break
+    block.append(line)
+manifest = "\n".join(block)
+permissions = re.search(r"(?ms)^  permissions:\s*(.*?)(?=^  \S|\Z)", manifest)
+text = re.sub(r"#.*", "", permissions.group(1) if permissions else "")
+names = sorted(set(re.findall(r"storage\.share\.([a-z0-9]+(?:-[a-z0-9]+)*):(?:read|write)", text)))
+for name in names:
+    variable = "WONTON_SHARE_" + name.upper().replace("-", "_")
+    print(f"{variable}={sys.argv[3]}/{name}")
+    source = re.sub(r"\$\{" + re.escape(variable) + r"[^}]*\}", f"{sys.argv[3]}/{name}", source)
+open(sys.argv[2], "w", encoding="utf-8").write(source)
+PY
+while IFS='=' read -r name path; do
+  [[ -z "$name" ]] || { mkdir -p "$path"; export "$name=$path"; }
+done <"$share_env_file"
 
 # --bridge-image：只换复制出来的工作区里 bridge 服务的镜像（升级起点的 tag 仍用它自己的清单）。插件没有 bridge 服务时
 # 报错退出：调用方要测的是换过的桥，静默跳过就等于没测。
 if [[ -n "$bridge_image" ]]; then
-  compose_json() { (cd "$SMOKE_PLUGIN" && docker compose -f docker-compose.yml config --no-interpolate --format json); }
+  compose_json() { (cd "$facts_dir" && docker compose -f docker-compose.yml config --no-interpolate --format json); }
   facts="$(compose_json)" || die "解析不了 docker-compose.yml"
   if [[ "$(jq -r '.services.bridge // empty | type' <<<"$facts")" != object ]]; then
     echo "--bridge-image：清单里没有 bridge 服务，换不了桥镜像" >&2
@@ -174,12 +207,14 @@ if [[ -n "$bridge_image" ]]; then
   fi
   replace_service_image "$SMOKE_PLUGIN/docker-compose.yml" bridge "$bridge_image" ||
     die "--bridge-image：没找到 bridge 服务的 image 行（镜像写在锚点或扩展里时换不了）"
+  replace_service_image "$facts_dir/docker-compose.yml" bridge "$bridge_image" ||
+    die "--bridge-image：事实清单没找到 bridge 服务的 image 行"
   [[ "$(compose_json | jq -r '.services.bridge.image')" == "$bridge_image" ]] ||
     die "--bridge-image：换完以后 bridge 的镜像不是 $bridge_image"
   say "bridge 服务的镜像换成 $bridge_image"
 fi
 
-probes_facts "$SMOKE_PLUGIN"
+probes_facts "$facts_dir"
 probes_load
 # 插件设置值：探针声明的 SMOKE_SETTINGS 在前，命令行的 --setting 在后，同名时后给的算数。每次安装都带上。
 setting_args=()
@@ -188,7 +223,7 @@ for pair in "${SMOKE_SETTINGS[@]}" "${cli_settings[@]}"; do
 done
 
 gpu_rc=0
-"$copy/scripts/smoke-gpu.sh" "$SMOKE_PLUGIN" || gpu_rc=$?
+"$copy/scripts/smoke-gpu.sh" "$facts_dir" || gpu_rc=$?
 if ((gpu_rc == 77)); then
   say "跳过：需要显卡，没跑"
   exit 77
