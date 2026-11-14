@@ -1,0 +1,130 @@
+# Obsidian LiveSync 同步后端：CouchDB 单节点。电脑可经局域网连接，手机和其他第三方客户端经
+# 云吞提供的 HTTPS 客户端入口连接，数据保存在自己家里。
+services:
+  couchdb:
+    # 上游官方镜像，按清单列表（index）的摘要固定；amd64 和 arm64 都有。
+    image: couchdb:3.5.3@sha256:907eab5b7e55ab7cfd241d39b90b2a335ea40bef82acee5a37388c08bf201dda
+    # 不写 user：镜像入口脚本以 root 修 /opt/couchdb 属主、写入 docker.ini 后再降回 5984（上游镜像约定），
+    # 数据目录随之归 5984:5984（上游 setup_own_server.md 也这么提示）。
+    environment:
+      # 管理员账号由镜像入口脚本写进 local.d/docker.ini；密码是核心生成的密钥。
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: ${WONTON_SECRET_ADMIN_PASSWORD}
+    volumes:
+      - ${WONTON_APP_DATA}/data:/opt/couchdb/data
+    # LiveSync 要求的服务端配置（单节点、登录必填、CORS、大小上限），值与上游文档一致。
+    configs:
+      - source: livesync-config
+        target: /opt/couchdb/etc/local.d/obsidian.ini
+      - source: setup-done
+        target: /setup-done.sh
+    healthcheck:
+      # 镜像里没有 curl/wget：用 bash 的 /dev/tcp 请求 /_up。
+      # require_valid_user=true 时 /_up 也要登录，带管理员凭据（实测 401→带凭据 200）。
+      test:
+        - CMD-SHELL
+        - >-
+          bash -c 'exec 3<>/dev/tcp/127.0.0.1/5984 && printf "GET /_up HTTP/1.0\r\nHost: localhost\r\nAuthorization: Basic %s\r\n\r\n" "$$(printf "%s:%s" "$$COUCHDB_USER" "$$COUCHDB_PASSWORD" | base64 -w 0)" >&3 && head -1 <&3 | grep -q " 200 "'
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+  # 一次性服务：等 CouchDB 健康后建库、建客户端账号、设库权限，并核验 CORS 与账号真的可用；失败即停。
+  # 每次创建容器都会重跑，全部动作幂等；标记文件最后写入，供 clients.http.auth.app 判断初始化完成。
+  init:
+    image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+    user: "0:0"
+    entrypoint: ["/bin/sh", "/init.sh"]
+    environment:
+      COUCHDB_USER: admin
+      WONTON_SECRET_ADMIN_PASSWORD: ${WONTON_SECRET_ADMIN_PASSWORD}
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME:?核心没有注入用户名}
+      WONTON_SECRET_CLIENT_PASSWORD: ${WONTON_SECRET_CLIENT_PASSWORD}
+    volumes:
+      - ${WONTON_APP_DATA}/data:/opt/couchdb/data
+    configs:
+      - source: init-script
+        target: /init.sh
+    depends_on:
+      couchdb:
+        condition: service_healthy
+    restart: "no"
+
+configs:
+  livesync-config:
+    file: couchdb.ini
+  init-script:
+    file: init.sh
+  setup-done:
+    file: setup-done.sh
+
+x-wonton:
+  spec: "0.14"
+  id: io.github.vrtmrz.obsidian-livesync
+  version: 0.1.0
+  kind: app
+  title: { zh: 笔记同步（Obsidian LiveSync）, en: Note Sync (Obsidian LiveSync) }
+  description:
+    zh: 把家里电脑和手机里的 Obsidian 笔记同步到一起，像自己的百度网盘一样方便，数据只保存在自己家里。
+    en: Sync Obsidian notes across your family's computers and phones, with the data kept at home.
+  icon: icon.svg
+  notices: [NOTICE]
+  author: { name: geraldpeng6 }
+  homepage: https://github.com/vrtmrz/obsidian-livesync
+  # 服务端是 Apache CouchDB（Apache-2.0）；客户端插件 Obsidian LiveSync 是 MIT，见 README。
+  license: Apache-2.0
+  tags:
+    zh: [笔记, 同步]
+    en: [Notes, Sync]
+  about:
+    zh: |
+      把家里电脑和手机里的 Obsidian 笔记同步到一起，数据保存在自己家里。
+
+      在插件详情里打开局域网入口，复制显示的账号和密码；再打开 HTTPS 客户端入口，把 HTTPS 地址、账号和密码填进 Obsidian LiveSync，数据库名填 obsidiandb。
+
+      电脑可以使用局域网 HTTP 地址；手机上的 Obsidian 按上游要求使用系统信任的 HTTPS 地址。客户端入口会等数据库和账号初始化成功后才开放。
+    en: |
+      Sync Obsidian notes across your family's computers and phones, with the data kept at home.
+
+      Open the LAN entry in the plugin details and copy the displayed username and password. Then open the HTTPS client entry and enter its HTTPS address, the same credentials, and the database name obsidiandb in Obsidian LiveSync.
+
+      Computers can use the LAN HTTP address. Obsidian on phones uses the system-trusted HTTPS address required by the upstream project. The client entry opens after the database and account initialization succeeds.
+  release_notes: { zh: 插件包迁入官方插件合仓，并增加 HTTPS 客户端入口。, en: "Moved into the official plugin monorepo and added an HTTPS client entry." }
+  setup:
+    zh: 在 Obsidian 安装 LiveSync 社区插件，打开本插件的局域网入口复制账号密码，再打开 HTTPS 客户端入口，把对应地址、账号、密码和数据库名 obsidiandb 填进去。
+    en: Install the LiveSync community plugin in Obsidian, copy the username and password from the LAN entry, then open the HTTPS client entry and enter its address, credentials, and database name obsidiandb.
+  # 电脑在可信局域网内可直连 HTTP；手机需要系统信任的 HTTPS，走 clients.http。
+  lan:
+    ports:
+      - { service: couchdb, port: 5984 }
+    client:
+      address: "http://{host}:5984"
+      username: "{user}"
+      password: "{secret:client_password}"
+  clients:
+    http:
+      service: couchdb
+      port: 5984
+      auth:
+        app:
+          setup_done: [/bin/sh, /setup-done.sh]
+      # Fauxton 是管理页，不作为第三方客户端入口公开。
+      public:
+        deny: [/_utils]
+      auth_failures:
+        - { path: /, status: [401, 403] }
+  secrets:
+    admin_password:
+      generate: { bytes: 32 }
+    client_password:
+      generate: { bytes: 32 }
+  permissions:
+    - network.lan
+    - network.clients
+    # 知道用户名：客户端账号按注入的用户名建。
+    - owner.identity
+  # 空闲实测约 160M（docker stats）；镜像支持 amd64 和 arm64（docker buildx imagetools inspect）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 256M
