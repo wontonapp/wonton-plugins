@@ -1,0 +1,197 @@
+# 离线百科（Kiwix）：共享文件夹「文档」的「离线百科」子文件夹里的 .zim 文件，变成一个可全文检索的离线网页。
+#
+# 实测（kiwix-serve 3.8.2，镜像内 kiwix-manage / kiwix-serve）：
+# - kiwix-serve 只认启动时给定的库文件；对空的库文件（<library/> 无条目）照常运行，
+#   对不存在的库文件或没有 <library> 元素的空文件则退出。首次启动的骨架由 init 写好。
+# - --monitorLibrary 监视库文件，重写后自动重载（实测运行中放入 .zim，不重启即出现在目录里）。
+#   kiwix-serve 没有“扫描目录”的开关，库文件由 rescan 服务用上游的 kiwix-manage 生成。
+# - 空库时 kiwix-serve 的首页是一个英文的脚本页面，不会告诉用户去哪放文件；nginx 挡在前面，
+#   空库时显示「还没有内容」的说明页（rescan 以空页文件的有无作标记），有内容时原样转发。
+services:
+  init:
+    image: ghcr.io/kiwix/kiwix-serve:3.8.2@sha256:e478554a9920412eeb5ce1d73f24e4b28445ebed233187cdd03c623c32be46a5
+    # 幂等：已存在就不动（升级、重建容器都会重跑）。骨架里没有书，kiwix-serve 照常起来并等 rescan 填充。
+    user: "${PUID}:${PGID}"
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /library /state/web; test -f /library/library.xml || printf '<?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n<library version=\"20110515\"></library>\\n' > /library/library.xml"]
+    volumes:
+      - ${WONTON_APP_DATA}/library:/library
+      - ${WONTON_APP_DATA}/state/web:/state/web
+    network_mode: none
+    restart: "no"
+
+  server:
+    image: ghcr.io/kiwix/kiwix-serve:3.8.2@sha256:e478554a9920412eeb5ce1d73f24e4b28445ebed233187cdd03c623c32be46a5
+    # 镜像入口是 dumb-init + start.sh，命令拼在 kiwix-serve 后面（端口走镜像默认 8080）。
+    command: ["-l", "/library/library.xml", "--monitorLibrary"]
+    # 以用户身份运行：只读共享文件夹，库文件归用户的用户，升级重建后属主不变。
+    user: "${PUID}:${PGID}"
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ${WONTON_SHARE_DOCUMENTS}:/documents:ro
+      - ${WONTON_APP_DATA}/library:/library
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      # 空库也是可用状态（如实显示“还没有内容”），健康与否只看服务本身。
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+  rescan:
+    image: ghcr.io/kiwix/kiwix-serve:3.8.2@sha256:e478554a9920412eeb5ce1d73f24e4b28445ebed233187cdd03c623c32be46a5
+    entrypoint: ["/bin/sh", "/usr/local/bin/rescan.sh"]
+    user: "${PUID}:${PGID}"
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ${WONTON_SHARE_DOCUMENTS}:/documents:ro
+      - ${WONTON_APP_DATA}/library:/library
+      - ${WONTON_APP_DATA}/state/web:/state/web
+    configs:
+      - source: rescan
+        target: /usr/local/bin/rescan.sh
+        mode: 0555
+      - source: empty-page
+        target: /srv/empty.html
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      # 心跳文件每轮扫描都会碰一下；几分钟内没碰说明扫描停了（find -mmin 有输出才算新）。
+      test: ["CMD", "sh", "-c", "find /library/.rescan-heartbeat -mmin -3 | grep -q ."]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+  # OpenAPI→MCP 适配器（images/mcp-openapi-proxy/，由 .github/workflows/publish-images.yml 构建发布）：
+  # 把 kiwix-serve 的查询接口包成 MCP 工具给 Bot 用，规范见 mcp/openapi.json，全 GET 只读。
+  # 上游 mcp-openapi-proxy 0.4.0（MIT），镜像只是 pip 安装上游包，没有改源码。
+  mcp:
+    image: ghcr.io/wontonapp/mcp-openapi-proxy:0.1.2@sha256:f18d836e3c50061ec166f1b4a2fa27739183da37191ebd4a6374b683354b73bc
+    user: "${PUID}:${PGID}"
+    read_only: true
+    environment:
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "8000"
+      OPENAPI_SPEC_URL: file:///mcp/openapi.json
+      SERVER_URL_OVERRIDE: http://server:8080
+      # 适配器只连插件网络里的上游，不出网：代理变量写空（写成空=这个服务不走代理）。
+      # python 客户端会读这些变量，服务名不在 NO_PROXY 名单里时内网请求会被送去出网代理，报 502。
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+    configs:
+      - source: openapi
+        target: /mcp/openapi.json
+    depends_on:
+      server:
+        condition: service_healthy
+    healthcheck:
+      # 镜像只有 python（slim 没有 curl/wget），健康检查就用它。
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+  web:
+    image: nginx:1.31.8-alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:rw,size=32m
+      - /var/run:rw,size=8m
+      - /var/log/nginx:rw,size=8m
+    volumes:
+      # rescan 在这里放“还没有内容”页（库为空时才有），nginx 首页优先显示它。
+      - ${WONTON_APP_DATA}/state/web:/usr/share/nginx/html/state:ro
+    configs:
+      - source: web-conf
+        target: /etc/nginx/conf.d/default.conf
+      - source: down-page
+        target: /usr/share/nginx/html/down.html
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+configs:
+  rescan:
+    file: rescan.sh
+  openapi:
+    file: mcp/openapi.json
+  empty-page:
+    file: web/empty.html
+  web-conf:
+    file: web/default.conf
+  down-page:
+    file: web/down.html
+
+x-wonton:
+  spec: "0.11"
+  id: org.kiwix.kiwix-serve
+  version: 0.1.2
+  kind: app
+  title: { zh: 离线百科（Kiwix）, en: Offline Wikipedia (Kiwix) }
+  description:
+    zh: 像把一整套维基百科下载回家，断网也能查。把下载的 .zim 文件放进共享文件夹，网页上就能查词、读文章、全文搜索。
+    en: Like keeping a whole Wikipedia at home that works without internet. Drop downloaded .zim files into a shared folder and read and search them on a web page.
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/empty.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://www.kiwix.org
+  # 应用 kiwix-serve 的许可证（GPL-3.0 → SPDX GPL-3.0-only）；插件包自己的许可证写在仓库 LICENSE 里。
+  license: GPL-3.0-only
+  tags:
+    zh: [阅读, 百科, 教育]
+    en: [Reading, Encyclopedia, Education]
+  about:
+    zh: |
+      把维基百科、维基词典、可汗学院这类内容整个下载到家里，断网也能查，孩子查资料不用上网。
+
+      内容文件（.zim）从 library.kiwix.org 下载，放进共享文件夹「文档」的「离线百科」文件夹就自动上架，文件只读、不会被改动。下载好的内容家里所有人都能看，不需要再登录。
+
+      想要哪个百科就放哪个：整部中文维基的精简版约 4.8 GB，单个学科的迷你版只要十几 MB，适合先试小再加大。
+
+      家里的 AI 助手也能帮你查这套离线百科：问它一个问题，它会去查词条、做全文搜索，再把找到的内容讲给你。
+    en: |
+      Keep a whole Wikipedia, dictionary or Khan Academy at home and look things up with no internet — kids can research offline.
+
+      Content files (.zim) come from library.kiwix.org; drop them into the Offline Wikipedia folder in the Documents shared folder and they appear on their own. Files are read-only and never modified. Everyone at home can read them, no extra sign-in.
+
+      Pick only what you need: a trimmed-down Chinese Wikipedia is about 4.8 GB, while a single-subject mini edition is a dozen or so MB — start small, grow later.
+
+      The home AI assistant can search this offline encyclopedia too: ask it a question and it looks up entries, runs the full-text search and tells you what it found.
+  release_notes: { zh: 插件包迁入官方插件合仓；MCP 适配器镜像改由官方合仓发布。, en: "Package moved into the official Wonton plugin monorepo; the MCP adapter image is now published by the official monorepo." }
+  setup:
+    zh: 从 library.kiwix.org 下载一个 .zim 文件（例如“Wikipedia 中文·化学 迷你版”，约 15 MB），放进共享文件夹「文档」的「离线百科」文件夹。
+    en: Download a .zim file from library.kiwix.org (for example the Wikipedia Chinese Chemistry mini edition, about 15 MB) and put it into the Offline Wikipedia folder in the Documents shared folder.
+  webui:
+    service: web
+    port: 80
+    # kiwix-serve 没有账号体系；网页只在网关登录后面可达，家里登录后即用。
+    sso: none
+  mcp:
+    service: mcp
+    port: 8000
+    transport: streamable-http
+  permissions:
+    # 只读：共享文件夹以 :ro 挂载，插件不写用户的文件。
+    - storage.share.documents:read
+    # MCP 工具经核心总线暴露给 Bot；规范 0.11 起只有声明 tools 权限的插件才注入 WONTON_MCP_URL。
+    - tools
+  # 上游镜像有 amd64 和 arm64（docker buildx imagetools inspect）；内存按实测取整（见 README）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 256M
