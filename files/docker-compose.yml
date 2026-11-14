@@ -8,7 +8,7 @@ name: files
 services:
   mcp:
     # 仓库根 scripts/publish.sh 以插件版本构建，发布时写回该次构建的摘要。
-    image: ghcr.io/wontonapp/wonton-plugins/files/mcp:0.2.4@sha256:81d5367fede3e4701ffb4e050235f6a9e9a456f3ca0dbcafc1a6ac5545734064
+    image: ghcr.io/wontonapp/wonton-plugins/files/mcp:0.2.4@sha256:da58e6ac3e075eb1e78fa8d1ef00b0849fa53854bd9f68332402b0ed370cb690
     restart: unless-stopped
     # 以用户的 uid:gid 运行，宿主上挂进来的只读文件没有额外权限。
     user: "${PUID}:${PGID}"
