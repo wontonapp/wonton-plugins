@@ -13,7 +13,7 @@ name: browser
 services:
   browser:
     # 由仓库根 scripts/publish.sh 构建发布，这里写清单列表的摘要。
-    image: ghcr.io/wontonapp/wonton-plugins/browser/browser:0.1.2@sha256:47868161f2e8fc64bb650531064ac7acbb45a072753d3650c82889d7d6b22025
+    image: ghcr.io/wontonapp/wonton-plugins/browser/browser:0.1.2@sha256:158b1a5423cbb83de742815119a519f6090a6f33951ac66db2c93c919a39f4dc
     restart: unless-stopped
     user: "${PUID}:${PGID}"
     # 根文件系统只读，只有 /tmp（和 Chromium 的 /dev/shm）可写；要改的只有自己的数据目录。
