@@ -1,0 +1,109 @@
+# Copyparty：经云吞网关上传、下载、分享文件，带文件索引和多媒体缩略图。
+services:
+  copyparty:
+    # 上游官方镜像（MIT），按多架构清单摘要固定，标签只给人看。
+    image: copyparty/ac:1.20.26@sha256:b2054d65e05daa8982ca17c26b12b74315c0ce586a03ff9018a59c80731b9e19
+    # 镜像能以任意 uid 运行（上游 docker 文档推荐 -u 1000）；以用户身份跑，文件属主就是 PUID:PGID。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      # 文件和索引库（.hist）都在这里，容器重建后仍在。
+      - ${WONTON_APP_DATA}:/w
+    configs:
+      # xff-src 要引用核心地址，而 copyparty 的配置文件不做环境变量展开，
+      # 所以经 configs.content 交给核心按注入变量插值后写进容器。
+      - source: party
+        target: /cfg/copyparty.conf
+    # 服务本身只回 HTTP；网关带真实用户访问的可用性由探针和冒烟另测。
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - "-c"
+        - |
+          import sys, urllib.request as u
+          try: u.urlopen("http://127.0.0.1:3923/", timeout=4)
+          except u.HTTPError as e: sys.exit(0 if e.code < 500 else 1)
+          except Exception: sys.exit(1)
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+    # 上游建议：给缩略图线程 10 秒收尾（docs/examples/docker/basic-docker-compose）。
+    stop_grace_period: 15s
+
+configs:
+  party:
+    content: |
+      [global]
+        # 网关代登录：只信任核心注入的用户名头。idp-h-key 要求请求里同时出现
+        # 这个头；两个头的名字都在清单 webui.proxy.headers 里声明，用户伪造的
+        # 同名头会被网关先删掉，直连容器的来源又被 xff-src 挡住。
+        idp-h-usr: x-wonton-user
+        idp-h-key: x-wonton-auth
+        # 只信任核心网关一个地址；其他来源一律当匿名，读不到也写不进。
+        xff-src: ${WONTON_CORE_ADDRESS}/32
+        xff-hdr: x-forwarded-for
+        rproxy: 1
+        # 文件索引和多媒体元数据（缩略图、时长、标签）
+        e2dsa
+        e2ts
+
+      [/]
+        /w/files
+        accs:
+          # @acct 是 copyparty 自动生成的"全部已知用户"组；匿名不在其中。
+          rwmda: @acct
+
+x-wonton:
+  spec: "0.6"
+  id: me.ocv.copyparty
+  version: 0.1.1
+  kind: app
+  title: { zh: 家庭网盘（Copyparty）, en: Home Cloud Drive (Copyparty) }
+  description:
+    zh: 像百度网盘，但文件存在家里的服务器上：手机、电脑打开网页就能上传下载，照片、视频、音乐直接在线看。最简单好上手，还能开链接让别人下载或往里传文件。
+    en: "Like Google Drive, but the files live on your home server: upload and download from any phone or computer browser, with photos, videos and music playing right there. The easiest drive to start with, and you can share links for others to download from or upload to."
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/files.png, screenshots/photos.png]
+  author: { name: geraldpeng6, url: "https://github.com/geraldpeng6" }
+  homepage: https://github.com/9001/copyparty
+  # 上游 Copyparty 的许可证；插件包自己的许可证在仓库 LICENSE 里。
+  license: MIT
+  tags:
+    zh: [文件, 网盘]
+    en: [Files, Cloud drive]
+  about:
+    zh: |
+      把家里的服务器变成一个网盘：在手机或电脑的网页上上传、下载、整理文件，图片、视频、音乐、PDF 直接预览，整个文件夹打包下载。
+
+      别人给你的分享链接可以直接上传，你也能给任意文件或文件夹生成下载链接和限时口令。
+
+      文件存在插件自己的数据目录里，卸载插件选保留数据时文件不动。
+    en: |
+      Turn your home server into a cloud drive: upload, download and organize files from your phone or computer, with built-in previews for images, videos, music and PDFs, and folder downloads as archives.
+
+      Share links can accept uploads from others, and you can generate download links with passwords and expiry for any file or folder.
+
+      Files live in the plugin's own data directory and survive uninstalling with data kept.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: copyparty
+    port: 3923
+    # 上游没有原生 OIDC；认反向代理注入的用户名头（README#identity-providers），
+    # 由网关代登录，打开就是自己的文件，不用第二次登录。
+    sso: proxy
+    proxy:
+      headers:
+        X-Wonton-User: "{user}"
+        # copyparty 只认"存在这个名字的头"，值随意；名字在清单里声明，网关会先删掉用户伪造的同名头。
+        X-Wonton-Auth: "1"
+  # 文件服务只经网关访问，不申请出网和局域网端口。
+  permissions: []
+  # 上游没写最低内存；本机空闲实测约 45M（含索引），取 128M 留出转码和缩略图的余量。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 128M

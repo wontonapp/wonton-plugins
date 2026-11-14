@@ -1,0 +1,123 @@
+# ESPHome Device Builder：用网页给 ESP32/ESP8266 写固件、无线刷机。
+# mDNS 发现设备和 OTA 都要宿主网络（上游官方部署就是 network_mode: host）；
+# 网页只听回环，由核心中继接入网关，局域网绕不过网关。
+services:
+  # 一次性：给 MCP 请求头算 Basic 凭据 base64("wonton:<网页密码>")。
+  # 头模板里算不了 base64，按规范的一次性服务 + collect 写法交给核心收存。
+  init:
+    image: ghcr.io/esphome/esphome:2026.10.2@sha256:4a918585150e95e7675be84a347384ff308fde1bd32d0e4472666e1252cc0e8f
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - printf 'wonton:%s' "$${ESPHOME_PASSWORD}" | base64 | tr -d '\n' > /run/mcp-basic
+    environment:
+      ESPHOME_PASSWORD: ${WONTON_SECRET_DASHBOARD_PASSWORD}
+    network_mode: none
+    restart: "no"
+
+  esphome:
+    image: ghcr.io/esphome/esphome:2026.10.2@sha256:4a918585150e95e7675be84a347384ff308fde1bd32d0e4472666e1252cc0e8f
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    environment:
+      TZ: ${TZ}
+      # 上游 dashboard 的登录凭据。用新版变量名：裸 USERNAME/PASSWORD 会撞 shell 的 $USERNAME，上游已弃用。
+      ESPHOME_USERNAME: wonton
+      ESPHOME_PASSWORD: ${WONTON_SECRET_DASHBOARD_PASSWORD}
+    volumes:
+      # 设备 YAML、secrets.yaml 和 .esphome/ 编译缓存都在这里，重装不丢。
+      - ${WONTON_APP_DATA}/config:/config
+    network_mode: host
+    # 上游默认绑定所有网卡；--host 127.0.0.1 后局域网直连不进来，网页经核心中继走网关。
+    # mDNS 由 dashboard 里独立的 zeroconf 套接字处理，不受 HTTP 绑定地址影响。
+    command: ["dashboard", "/config", "--host", "127.0.0.1", "--port", "6052"]
+    # /version 公开（设了密码也回 200），和上游镜像自带的 HEALTHCHECK 同一条。
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:6052/version"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      start_interval: 2s
+
+x-wonton:
+  # stable 核心支持到 0.11；用到的字段最高只到 0.8（mcp.headers、optional_permissions、show_owner）。
+  spec: "0.11"
+  # 反向域名：上游官网 esphome.io。
+  id: io.esphome.esphome
+  version: 0.1.1
+  kind: app
+  title: { zh: 自制设备固件（ESPHome）, en: ESPHome }
+  description:
+    zh: 给自制的智能设备写固件、无线刷机，接入智能家居
+    en: Write firmware for your DIY smart devices and flash it over the air
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/editor.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://esphome.io
+  # 上游 ESPHome：C++ 部分 GPLv3，Python 及其余 MIT（"ESPHome License"）；
+  # 镜像里还装了上游的网页面板 esphome-device-builder（Apache-2.0）。
+  # 插件包自己的许可证写在仓库的 LICENSE 里。
+  license: MIT AND GPL-3.0-only AND Apache-2.0
+  tags:
+    zh: [智能家居, 开发]
+    en: [Home, Developer]
+  about:
+    zh: |
+      给动手做的智能设备装大脑：一块 ESP32 开发板接上传感器或开关，在网页里描述它是什么、接了什么，
+      ESPHome 帮你生成固件刷进去，设备就能接入 Home Assistant 这类智能家居平台。
+
+      新建设备像填表一样简单：选板子、加组件，网页向导会生成设备配置；刷过一次固件以后，改配置
+      就能无线更新，不用再接线。第一次刷机在电脑浏览器的网页安装器里完成，之后都在家里无线进行。
+
+      设备配置可以让家里的助手代写：助手能读改设备配置、查组件文档、验证并编译固件。
+    en: |
+      Give your DIY devices a brain: wire a sensor or switch to an ESP32 board, describe what it is
+      in the web interface, and ESPHome builds and flashes the firmware so the device works with
+      Home Assistant and similar smart home platforms.
+
+      Creating a device is like filling in a form: pick a board, add components, and the wizard
+      generates the configuration. After the first flash, configuration changes update over Wi-Fi —
+      no cables needed. The first flash runs from a computer's browser via the web installer;
+      everything after that happens wirelessly at home.
+
+      Your assistant can write device configurations for you: it can read and edit them, look up
+      component documentation, and validate and compile firmware.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  setup:
+    zh: 打开插件网页，用户名 wonton，密码在插件详情页里查看复制。
+    en: Open the plugin's web page; sign in as user "wonton" with the password shown in the plugin details.
+  webui:
+    service: esphome
+    port: 6052
+    sso: none
+  # 上游 dashboard 自带 MCP 服务器（POST /api/mcp，无状态 JSON-RPC）：
+  # 助手经它读改设备配置、查组件文档、验证、编译和装机。
+  # /api/mcp 要凭据（Basic 或 Bearer），用一次性服务算好的 Basic 头。
+  mcp:
+    service: esphome
+    port: 6052
+    path: /api/mcp
+    transport: streamable-http
+    headers:
+      Authorization: Basic {secret:mcp_basic}
+  permissions:
+    # mDNS 发现设备、OTA 无线刷机要宿主网络（上游官方部署同款）。
+    # 网页只听回环，局域网绕不过网关；编译出网也走宿主网络，不经平台出网代理。
+    - network.host
+  # 首次 USB 刷机（把固件从电脑经 USB 线装进设备）：上游推荐走电脑浏览器里的网页安装器，
+  # 浏览器经 USB 直接连设备，不用这台主机的 USB；之后的改固件走 OTA 无线刷机，不需要 USB。
+  # 规范的 devices.usb / devices.serial（可选、默认关）映射到 compose devices 后可再声明。
+  secrets:
+    dashboard_password:
+      # 网页登录密码，主人在插件详情页查看。
+      generate: { bytes: 24 }
+      show_owner:
+        label: { zh: 网页密码, en: Web PASSWORD, zh-Hant: 網頁密碼, ja: ウェブのPASSWORD }
+    mcp_basic:
+      # init 服务算好的 MCP Basic 凭据，见上面 init 的注释。
+      collect: { service: init, path: /run/mcp-basic }
+  requirements:
+    arch: [amd64, arm64]
+    # 上游没写最低内存；装好后实测取整。
+    memory: 1G

@@ -1,0 +1,65 @@
+# Excalidraw：手绘风白板。画布完全在浏览器里运行，服务端只发静态页面。
+services:
+  excalidraw:
+    # 上游官方镜像。上游只发 latest 一个标签（另有按提交构建的 sha-* 标签，正式版本没有独立标签），
+    # 按清单列表摘要固定到 2026-05-06 的构建；多架构，amd64 和 arm64 都有。
+    image: excalidraw/excalidraw:latest@sha256:f7ee194addd607bf831d2af0f0a34463dd4225e426cf35199ef0b12a803398e9
+    # 上游基于 nginx:stable-alpine-slim 直接发静态文件，没有要写的数据；根文件系统只读，
+    # nginx 启动时要写的三处（缓存、pid、日志）用 tmpfs 兜住。
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:rw,size=32m
+      - /var/run:rw,size=8m
+      - /var/log/nginx:rw,size=8m
+    healthcheck:
+      # 上游镜像自带的 HEALTHCHECK 是同一探测，这里按官方索引要求显式写出。
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+x-wonton:
+  spec: "0.6"
+  id: com.excalidraw.excalidraw
+  version: 0.1.1
+  kind: app
+  title: { zh: 手绘白板（Excalidraw）, en: Sketch Whiteboard (Excalidraw) }
+  description:
+    zh: 像在白纸上随手画：流程图、示意图、草图都是手绘风格，画完能导出成图片。
+    en: "Like sketching on paper: flowcharts, diagrams and doodles in a hand-drawn style, ready to export as images."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/canvas.jpg, screenshots/welcome.jpg]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://excalidraw.com
+  # 应用（Excalidraw）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: MIT
+  tags:
+    zh: [白板, 效率]
+    en: [Whiteboard, Productivity]
+  about:
+    zh: |
+      打开就是一块手绘风画布：方框、箭头、文字、便签随手画，拼流程图、架构图和草图；能导入导出 PNG、SVG 和 .excalidraw 文件。
+
+      画布内容保存在你浏览器自己的本地存储里，不经过、也不留在服务器上；换浏览器或清了浏览器数据就要用导出的文件恢复。
+
+      多人协作房间要上游单独的 room 服务，官方镜像不带，这个插件不提供。
+    en: |
+      Open it and you get a hand-drawn style canvas: boxes, arrows, text and sticky notes for flowcharts, architecture sketches and brainstorms; import and export PNG, SVG and .excalidraw files.
+
+      Your drawing is stored in your browser's own local storage — it never reaches the server. Switching browsers or clearing browser data means restoring from an exported file.
+
+      Live collaboration rooms need the upstream room service, which the official image does not ship; this plugin does not provide it.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: excalidraw
+    port: 80
+    # 应用没有任何登录（纯静态画布，数据只存在浏览器本地）。网页仍然只在网关登录后面可达：
+    # 未登录的请求到不了插件。
+    sso: none
+  permissions: []
+  # 上游没写最低内存；本机空闲实测约 23–27M，取 64M。镜像支持 amd64 和 arm64（docker manifest）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 64M
