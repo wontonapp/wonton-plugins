@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bash
+# shellcheck shell=bash
 # 启动前的一次性配置（s6 oneshot，应用服务依赖本服务）：等上游的 cwa-init/cwa-auto-library 建好 app.db，
 # 把 OIDC 提供方、账号口令写进库。应用第一次读配置就是改好的，不用重启、不用 HTTP 登录。
 # 每次创建容器都整体重写（插件规范"OIDC"：保留数据重装后客户端密钥是新的，不能"已存在就跳过"）。
