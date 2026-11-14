@@ -119,7 +119,7 @@ services:
 
   db:
     # 官方 compose 的 postgis/postgis:17-3.5-alpine 没有 arm64，上游注释指定 ARM 用 imresamu 的多架构镜像。
-    image: imresamu/postgis:17-3.5-alpine@sha256:c7e4985375d8a9583e9bbdb33d0182138fa9a24d22ba9d7cc19362c4827b9038
+    image: imresamu/postgis:17-3.6-alpine@sha256:215895192632b408abf8eb430f1e0d1956395444b6727df5af46ecdfa99b619c
     shm_size: 1g
     environment:
       POSTGRES_USER: dawarich
