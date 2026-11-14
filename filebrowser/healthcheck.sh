@@ -39,7 +39,11 @@ check_writable() {
   printf 'wonton-health\n' >"$probe_dir/probe" || fail_storage "$1" 'cannot write probe'
   IFS= read -r result <"$probe_dir/probe" || fail_storage "$1" 'cannot read probe'
   [ "$result" = wonton-health ] || fail_storage "$1" 'probe content mismatch'
-  rm "$probe_dir/probe" && rmdir "$probe_dir" || fail_storage "$1" 'cannot remove probe'
+  if rm "$probe_dir/probe" && rmdir "$probe_dir"; then
+    :
+  else
+    fail_storage "$1" 'cannot remove probe'
+  fi
   probe_dir=
 }
 
