@@ -3,17 +3,28 @@
 set -uo pipefail
 
 gpu_present() {
-  local plugin_dir="$1" host_json rc=0 unmet
+  # 标准输出只放核心的 JSON；标准错误（拉镜像的进度、“Unable to find image”）单独收进临时文件，
+  # 混进 JSON 会让 jq 解析失败。失败时两路都打印，方便取证。
+  local plugin_dir="$1" host_json host_err err_file rc=0 unmet
+  err_file="$(mktemp)" || {
+    echo "GPU 冒烟：无法创建临时文件"
+    return 1
+  }
   host_json="$(LC_ALL=C.UTF-8 docker run --rm --network none \
     -v "$plugin_dir:/plugin:ro" -v /dev:/host-dev:ro -v /sys:/host-sys:ro \
-    -e WONTON_HOST_DEV=/host-dev "$(core_image)" plugin host /plugin 2>&1)" || rc=$?
+    -e WONTON_HOST_DEV=/host-dev "$(core_image)" plugin host /plugin 2>"$err_file")" || rc=$?
+  host_err="$(cat "$err_file")"
+  rm -f "$err_file"
   if ((rc != 0)); then
-    echo "$host_json"
+    printf '标准输出：\n%s\n' "$host_json"
+    [[ -z "$host_err" ]] || printf '标准错误输出：\n%s\n' "$host_err"
     return "$rc"
   fi
   unmet="$(jq -er '[.requirements[]? | select(.status == "unmet" and ((.text // "") | test("GPU|gpu|显卡|NVIDIA|AMD|Intel")))] | length' \
     <<<"$host_json" 2>&1)" || {
     echo "核心 plugin host 输出不是有效 JSON：$unmet"
+    printf '标准输出：\n%s\n' "$host_json"
+    [[ -z "$host_err" ]] || printf '标准错误输出：\n%s\n' "$host_err"
     return 1
   }
   if ((unmet > 0)); then
