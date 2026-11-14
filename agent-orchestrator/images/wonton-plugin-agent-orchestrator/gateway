@@ -1,0 +1,140 @@
+#!/bin/sh
+# 底座启动时同步模型网关和 MCP 配置；缺网关时由 ACP 适配器返回未就绪。
+set -eu
+
+settings="${HOME:-/data/agent/home}/.qwen/settings.json"
+
+merge_settings() {
+    python3 - "$settings" "$1" "${WONTON_MCP_URL:-}" <<'PY'
+import json, os, sys
+
+path, mode, mcp_url = sys.argv[1], sys.argv[2], sys.argv[3]
+backup_path = path + ".wonton-gateway"
+gateway_mark = "Wonton model gateway"
+try:
+    with open(path) as f:
+        data = json.load(f)
+except FileNotFoundError:
+    data = {}
+except (OSError, ValueError) as error:
+    raise SystemExit(f"{path} 不是合法 JSON：{error}")
+if not isinstance(data, dict):
+    raise SystemExit(f"{path} 顶层不是对象")
+
+security = data.get("security") if isinstance(data.get("security"), dict) else {}
+auth = security.get("auth") if isinstance(security.get("auth"), dict) else {}
+model = data.get("model") if isinstance(data.get("model"), dict) else {}
+providers = data.get("modelProviders") if isinstance(data.get("modelProviders"), dict) else {}
+entries = providers.get("openai")
+if entries is not None and not isinstance(entries, list):
+    raise SystemExit(f"{path} 的 modelProviders.openai 不是数组")
+
+if mode == "apply":
+    if not os.path.exists(backup_path):
+        with open(backup_path, "w") as f:
+            json.dump({
+                "selectedType": auth.get("selectedType"),
+                "modelName": model.get("name"),
+                "openai": entries,
+            }, f, ensure_ascii=False)
+    model_id = os.environ["WONTON_MODEL_DEFAULT"]
+    entries = [entry for entry in (entries or [])
+               if not (isinstance(entry, dict) and entry.get("description") == gateway_mark)]
+    entries.append({
+        "id": model_id,
+        "name": model_id,
+        "baseUrl": os.environ["WONTON_MODEL_BASE_URL"],
+        "envKey": "OPENAI_API_KEY",
+        "description": gateway_mark,
+    })
+    providers["openai"] = entries
+    data["modelProviders"] = providers
+    model["name"] = model_id
+    data["model"] = model
+    auth["selectedType"] = "openai"
+else:
+    try:
+        with open(backup_path) as f:
+            backup = json.load(f)
+    except FileNotFoundError:
+        backup = None
+    if isinstance(backup, dict):
+        if backup.get("selectedType") is None:
+            auth.pop("selectedType", None)
+        else:
+            auth["selectedType"] = backup["selectedType"]
+        if backup.get("modelName") is None:
+            model.pop("name", None)
+        else:
+            model["name"] = backup["modelName"]
+        original_entries = backup.get("openai")
+        if original_entries is None:
+            providers.pop("openai", None)
+        else:
+            providers["openai"] = original_entries
+        os.unlink(backup_path)
+    else:
+        entries = [entry for entry in (entries or [])
+                   if not (isinstance(entry, dict) and entry.get("description") == gateway_mark)]
+        if entries:
+            providers["openai"] = entries
+        else:
+            providers.pop("openai", None)
+        if model.get("name") and not entries:
+            model.pop("name", None)
+
+if auth:
+    security["auth"] = auth
+else:
+    security.pop("auth", None)
+if security:
+    data["security"] = security
+else:
+    data.pop("security", None)
+if model:
+    data["model"] = model
+else:
+    data.pop("model", None)
+if providers:
+    data["modelProviders"] = providers
+else:
+    data.pop("modelProviders", None)
+
+servers = data.get("mcpServers")
+if not isinstance(servers, dict):
+    servers = {}
+if mcp_url:
+    servers["wonton"] = {"transport": "http", "httpUrl": mcp_url}
+else:
+    servers.pop("wonton", None)
+if servers:
+    data["mcpServers"] = servers
+else:
+    data.pop("mcpServers", None)
+
+os.makedirs(os.path.dirname(path), exist_ok=True)
+tmp = path + ".tmp"
+fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+with os.fdopen(fd, "w") as f:
+    json.dump(data, f, ensure_ascii=False, indent=1)
+os.replace(tmp, path)
+PY
+}
+
+case "$1" in
+apply)
+    for name in WONTON_MODEL_BASE_URL WONTON_MODEL_API_KEY WONTON_MODEL_DEFAULT; do
+        eval "val=\${$name:-}"
+        [ -n "$val" ] || { echo "缺少 $name，网关变量不全" >&2; exit 1; }
+    done
+    merge_settings apply
+    ;;
+clear)
+    merge_settings clear
+    echo "模型网关未接（WONTON_MODEL_* 不全），模型暂不可用" >&2
+    ;;
+*)
+    echo "用法：gateway apply|clear" >&2
+    exit 1
+    ;;
+esac

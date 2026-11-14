@@ -1,0 +1,103 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MTranServer",
+    "description": "MTranServer 5.1.1 的翻译接口（端点、请求与响应出处：上游服务自带的 OpenAPI 文档 /docs）。翻译和检测都是只读计算，不改任何数据。鉴权由适配器完成：compose 里给适配器设 API_KEY（即插件 secrets 的 api_token），适配器对上游发 Authorization: Bearer。",
+    "version": "5.1.1"
+  },
+  "servers": [{ "url": "http://mtranserver:8989" }],
+  "paths": {
+    "/languages": {
+      "get": {
+        "operationId": "GetLanguages",
+        "summary": "List the supported translation languages",
+        "description": "Returns the language codes this server supports and the language pairs that are currently available.",
+        "responses": {
+          "200": { "description": "An object with `languages` (array of codes) and `pairs` (array of `{from, to}`)." }
+        }
+      }
+    },
+    "/detect": {
+      "post": {
+        "operationId": "DetectLanguage",
+        "summary": "Check which language a text is in",
+        "description": "Detects the language of the given text and returns the code plus a confidence between 0 and 1.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["text"],
+                "properties": {
+                  "text": { "type": "string", "description": "The text to detect the language of." },
+                  "minConfidence": { "type": "number", "description": "Minimum confidence for a detection to be reported (optional)." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "An object with `language` (code) and `confidence` (number)." }
+        }
+      }
+    },
+    "/translate": {
+      "post": {
+        "operationId": "Translate",
+        "summary": "Fetch a translation of a text",
+        "description": "Translates one text from one language to another and returns it in `result`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["from", "to", "text"],
+                "properties": {
+                  "from": { "type": "string", "description": "Source language code, e.g. `en`." },
+                  "to": { "type": "string", "description": "Target language code, e.g. `zh-Hans`." },
+                  "text": { "type": "string", "description": "The text to translate." },
+                  "html": { "type": "boolean", "description": "Treat the text as HTML and keep the markup (default false)." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "An object with `result` (the translated text)." }
+        }
+      }
+    },
+    "/translate/batch": {
+      "post": {
+        "operationId": "TranslateBatch",
+        "summary": "Fetch translations for several texts",
+        "description": "Translates several texts from one language to another and returns them in `results`, in the same order.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["from", "to", "texts"],
+                "properties": {
+                  "from": { "type": "string", "description": "Source language code, e.g. `en`." },
+                  "to": { "type": "string", "description": "Target language code, e.g. `zh-Hans`." },
+                  "texts": { "type": "array", "items": { "type": "string" }, "description": "The texts to translate." },
+                  "html": { "type": "boolean", "description": "Treat the texts as HTML and keep the markup (default false)." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "An object with `results` (array of translated texts)." }
+        }
+      }
+    }
+  }
+}

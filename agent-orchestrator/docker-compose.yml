@@ -1,0 +1,123 @@
+# Agent Orchestrator：agent 服务跑 AO 守护进程（只监听容器内 loopback）和它的工人（Qwen Code），
+# 适配器把 AO 的 REST+SSE 翻成 ACP。两个服务只共享 ACP socket 所在的 run/ 子目录，bridge 的
+# crypto store 和 Matrix 令牌不给 agent。
+services:
+  agent:
+    image: ghcr.io/wontonapp/wonton-plugins/agent-orchestrator/wonton-plugin-agent-orchestrator:0.1.3@sha256:6c5238e97292eb3272797e8dd0c6e35ce2863b65afcc5007759f42dc43698fee
+    user: "65532:65532"
+    restart: unless-stopped
+    environment:
+      HOME: /data/agent/home
+      WONTON_ACP_SOCKET: /data/run/acp.sock
+      WONTON_AGENT_WORKSPACE: /workspace
+      # 编排器和工人的模型都使用核心注入的模型网关。
+      WONTON_MODEL_BASE_URL: ${WONTON_MODEL_BASE_URL:-}
+      WONTON_MODEL_API_KEY: ${WONTON_MODEL_API_KEY:-}
+      WONTON_MODEL_DEFAULT: ${WONTON_MODEL_DEFAULT:-}
+      # 插件工具经 MCP 总线；钩子每次启动写进 qwen 的 MCP 配置，编排器和工人都能用。
+      WONTON_MCP_URL: ${WONTON_MCP_URL:?需要 MCP 总线地址}
+      # AO 守护进程只监听容器内 loopback，适配器在同一个容器里访问。
+      AO_PROJECT_DIR: /workspace/repo
+      AO_HARNESS: qwen
+      # 出网代理由核心注入，这里不写代理变量，写了空值会把核心的注入顶掉。
+    volumes:
+      - ${WONTON_BOT_DATA:?需要 Bot 数据目录}/agent:/data/agent
+      - ${WONTON_BOT_DATA}/run:/data/run
+      - ${WONTON_BOT_DATA}/workspace:/workspace
+    healthcheck:
+      # ACP socket 是底座把转发建好之后才有的；守护进程的 healthz 再确认 AO 真的起来了。
+      test: ["CMD-SHELL", "test -S /data/run/acp.sock && curl -fsS --noproxy '*' --max-time 3 http://127.0.0.1:3001/healthz >/dev/null"]
+      interval: 30s
+      timeout: 6s
+      start_period: 180s
+      start_interval: 3s
+
+  bridge:
+    image: ghcr.io/wontonapp/wonton-acp-bridge:main-452a377@sha256:1d4526dc5b552a08dc6eb8c17f68d0fb0eb08506b815c842edc34914acf2d3c1
+    user: "65532:65532"
+    restart: unless-stopped
+    depends_on:
+      agent:
+        condition: service_started
+    environment:
+      HOME: /data/bridge
+      WONTON_BOT_DATA: /data
+      WONTON_BRIDGE_DATA: /data/bridge
+      WONTON_ACP_SOCKET: /data/run/acp.sock
+      WONTON_AGENT_WORKSPACE: /workspace
+      WONTON_MATRIX_HOMESERVER: ${WONTON_MATRIX_HOMESERVER:?需要 Matrix 地址}
+      WONTON_MATRIX_ACCESS_TOKEN: ${WONTON_MATRIX_ACCESS_TOKEN:?需要 Bot 的 Matrix 访问令牌}
+      WONTON_MATRIX_ALLOWED_USERS: ${WONTON_MATRIX_ALLOWED_USERS:?需要 Bot 白名单}
+      WONTON_MATRIX_HOME_ROOM: ${WONTON_MATRIX_HOME_ROOM:?需要主人与 Bot 的主房间}
+      WONTON_MCP_URL: ${WONTON_MCP_URL:?需要 MCP 总线地址}
+      # 新会话切到这个模式：改文件、跑命令经确认卡片问主人。
+      WONTON_ACP_MODE: guarded
+      # 编排器一轮要读完技能、建仓库、问问题、等回答再派工，模型慢时整条链超过 15 分钟，适配器自己也按
+      # 1800 秒等；桥默认 600 秒就取消，取消会打断编排器手上的任务，话题、卡片、交付全没有。
+      WONTON_ACP_TURN_SECONDS: "1800"
+    volumes:
+      - ${WONTON_BOT_DATA}/bridge:/data/bridge
+      - ${WONTON_BOT_DATA}/run:/data/run
+    healthcheck:
+      test: ["CMD", "test", "-S", "/data/run/acp.sock"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.9"
+  id: ai.agent-orchestrator
+  version: 0.1.3
+  kind: agent
+  title: { zh: AI 编程队长（Agent Orchestrator）, en: Coding Team Lead (Agent Orchestrator) }
+  description:
+    zh: 像给一队编程助手请了位队长：你交给它一个大任务，它拆开派给几个助手分头去做，要你拿主意时弹卡片问你，每个任务单独一个话题。需要先在模型设置里配好 AI。
+    en: "A team lead for a crew of coding bots: hand it one big job and it splits the work across several helpers, asks you with a card when a decision is needed, and keeps each task in its own topic. Set up AI in Models first."
+  icon: icon.png
+  notices: [NOTICE, images/wonton-plugin-agent-orchestrator/LICENSE.agent-orchestrator]
+  author: { name: Wonton plugin authors }
+  homepage: https://github.com/OrchestratorInc/agent-orchestrator
+  license: Apache-2.0
+  tags: { zh: [AI, 开发], en: [AI, Development] }
+  about:
+    zh: |
+      Agent Orchestrator 是给一群编程 AI 派活的“队长”。你给它一个目标，它把活拆给几个“工人”，
+      每人一块自己的地盘各干各的；要问你、要你批准的时候，会弹出确认卡片。每个任务单独开一个聊天话题，
+      回复和进展都记在对应的话题里，不会搅在一起。
+
+      工人和编排器都是 Qwen Code，模型走网关；编排器自己的并发、分工和反馈回投由 AO 管，云吞只做话题、
+      卡片和推送。
+
+      它住在自己的容器里：AO 守护进程只监听容器内 loopback，不给 Docker socket，也碰不到宿主。
+    en: |
+      Agent Orchestrator is the team lead for a crew of coding AIs. Give it a goal and it splits the
+      work across several "workers", each in its own space; when your input or approval is needed,
+      an approval request pops up. Every task gets its own chat topic, so replies and progress stay
+      with that task instead of mixing together.
+
+      Orchestrator and workers are Qwen Code over the model gateway; AO owns concurrency, splitting and
+      feedback routing, Wonton only does topics, cards and push.
+
+      It lives in its own container: the AO daemon listens on container loopback only, gets no Docker
+      socket and cannot reach the host.
+  release_notes:
+    zh: 插件包迁入官方插件合仓，Agent 镜像由官方合仓发布，底座与聊天桥改用官方镜像。
+    en: Moved into the official Wonton plugin monorepo, which publishes the Agent image; uses official base and chat bridge images.
+    zh-Hant: 插件包遷入官方插件合倉，Agent 映像由官方合倉發布，底座與聊天橋改用官方映像。
+    ja: 公式プラグインモノレポへ移行し、Agent イメージの公開元とベース・チャットブリッジのイメージを公式に統一しました。
+  agent:
+    protocol: acp
+  bot:
+    display_name: { zh: 编排器, en: Orchestrator }
+  bots:
+    services: [agent, bridge]
+  permissions:
+    - matrix.bot
+    - tools
+    - models
+    # 首次启动装 qwen-code、AO 自己的版本检查都要出网。
+    - network.egress
+  requirements:
+    arch: [amd64, arm64]
+    memory: 1G

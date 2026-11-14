@@ -1,0 +1,36 @@
+[package]
+name = "wonton-files"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+publish = false
+
+[lib]
+name = "wonton_files"
+path = "src/lib.rs"
+
+[[bin]]
+name = "wonton-files"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.8"
+globset = "0.4"
+jiff = { version = "0.2", features = ["tzdb-bundle-always"] }
+mime_guess = "2"
+percent-encoding = "2"
+rmcp = { version = "=3.8.0", features = ["transport-streamable-http-server", "schemars"] }
+rustix = { version = "1", features = ["fs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "signal"] }
+tokio-util = "0.7"
+
+[dev-dependencies]
+filetime = "0.2"
+tempfile = "3"
+
+[profile.release]
+strip = true
+panic = "abort"
