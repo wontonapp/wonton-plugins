@@ -1,0 +1,105 @@
+# Homebridge：宿主网络是 HomeKit 的硬要求——iPhone 靠 mDNS 发现桥，桥接网络里广播出不去（上游 README
+# "network_mode: host — Required"）。config-ui-x 网页只监听 127.0.0.1，局域网绕不过网关，核心经回环中继接入。
+# 登录用上游自己的首次设置向导（5.x 无默认账号，auth.json 不存在时向导强制先建管理员）。
+services:
+  # 一次性：首次启动前种一份 config.json，把 UI 绑到回环。已存在不覆盖（用户在网页里改的就是这一份）。
+  # 不种 bridge 块：hb-service 首次启动时自己生成随机 username/port/PIN（缺什么补什么）。
+  init:
+    image: homebridge/homebridge:2026-11-10@sha256:49e10e19bce69de56b0b77c724f317858dcd32e17cd9f379833660b1af26dbd5
+    entrypoint: ["sh", "-c"]
+    command:
+      - test -f /data/config.json || cp /seed/config.json /data/config.json
+    volumes:
+      - ${WONTON_APP_DATA}/homebridge:/data
+    configs:
+      - source: seed-config
+        target: /seed/config.json
+    network_mode: none
+    restart: "no"
+
+  homebridge:
+    image: homebridge/homebridge:2026-11-10@sha256:49e10e19bce69de56b0b77c724f317858dcd32e17cd9f379833660b1af26dbd5
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    environment:
+      TZ: ${TZ}
+      # npm 源保持官方默认（registry.npmjs.org）：上游 config-ui-x 网页没有换源设置，镜像每次
+      # 启动还会用自带默认覆盖数据目录里的 .npmrc，改文件没用。
+    volumes:
+      - ${WONTON_APP_DATA}/homebridge:/homebridge
+    # 上游要求宿主网络：HomeKit 桥和 mDNS 广播（镜像内置 avahi）。出网走宿主自己的路由，
+    # 不经平台出网代理，也不申请 network.egress。
+    network_mode: host
+    # 宿主网络的 webui 必须写健康检查（规范硬要求）；查 /api/auth/settings 是 API 真答话，
+    # config.json 载入成功才 200，不是只看进程活着。
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8581/api/auth/settings"]
+      interval: 30s
+      timeout: 10s
+      start_period: 180s
+      start_interval: 5s
+
+configs:
+  seed-config:
+    file: config/config.json
+
+x-wonton:
+  spec: "0.12"
+  # 反向域名：上游官网 homebridge.io。
+  id: io.homebridge.homebridge
+  version: 0.1.1
+  kind: app
+  title: { zh: 家庭桥接器（Homebridge）, en: Homebridge }
+  description:
+    zh: 把米家、涂鸦这些不直接支持苹果"家庭"App 的智能设备接进"家庭"App，像请了个翻译把各家设备的话翻给 iPhone 听。装好后在插件网页里装对应设备的接入插件，再用手机扫码配对。
+    en: Connect smart-home devices that don't support Apple Home (Mi Home, Tuya, …) to the Apple Home app and Siri — like a translator between your gadgets and your iPhone. Install a device plugin in the web UI, then pair from the Home app.
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/wizard.png, screenshots/wizard-account.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://homebridge.io
+  # 上游 Homebridge 的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: Apache-2.0
+  tags:
+    zh: [智能家居, Siri]
+    en: [Home, Siri]
+  about:
+    zh: |
+      在家里跑一个 Homebridge 桥：不支持 HomeKit 的设备（米家、涂鸦等）装上对应的接入插件后，
+      会出现在苹果"家庭"App 里，能用 Siri 和自动化控制，和原生支持 HomeKit 的设备放在同一个家里。
+
+      装好后打开插件网页，按首次设置向导创建管理员账号；在网页的"插件"页里搜索安装设备插件
+      （比如 homebridge-mi-hygrothermograph、homebridge-tuya 之类），配好后在"家庭"App 里
+      用网页上显示的配对码添加桥。
+
+      网页只监听本机回环，经云吞网关访问，局域网绕不过登录；HomeKit 桥端口和设备发现走宿主网络，
+      同一局域网里的 iPhone 才能配对和控制，这是 HomeKit 的工作方式（mDNS 广播）。
+    en: |
+      Runs a Homebridge bridge at home: devices without HomeKit support (Mi Home, Tuya, …) show up
+      in the Apple Home app once you install their plugins, so you can control them with Siri and
+      automations alongside native HomeKit accessories.
+
+      After install, open the plugin's web page and create the admin account in the first-run wizard;
+      search and install device plugins in the Plugins tab (homebridge-mi-hygrothermograph,
+      homebridge-tuya, …), then add the bridge in the Home app with the pairing code shown in the UI.
+
+      The web UI listens on loopback only and is reached through the Wonton gateway, so the LAN cannot
+      bypass its login. The HomeKit bridge port and device discovery use host networking so iPhones on
+      the same LAN can pair and control — that is how HomeKit works (mDNS).
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  setup:
+    zh: 装好后打开插件网页，按首次设置向导创建管理员账号，再在网页里安装你设备对应的接入插件。
+    en: Open the plugin's web page after install, create the admin account in the first-run wizard, then install a plugin for your devices in the web UI.
+  webui:
+    service: homebridge
+    port: 8581
+    # 上游有自己的登录和首次设置向导（建管理员），不需要也不支持代登录。
+    sso: none
+  permissions:
+    # HomeKit 靠 mDNS 广播和本机桥接端口，必须用宿主网络（上游官方要求）。
+    - network.host
+  requirements:
+    arch: [amd64, arm64]
+    # 上游没写最低内存；按本机实测取整（Homebridge 2.5.0 + UI 5.30.0 空载 RSS 约 2xx MB，见 PR 验证记录）。
+    memory: 512M

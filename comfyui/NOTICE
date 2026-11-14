@@ -1,0 +1,49 @@
+许可与声明
+==========
+
+ComfyUI 标志
+------------
+
+图标：ComfyUI
+来源：https://github.com/Comfy-Org/ComfyUI_frontend/blob/main/public/assets/images/comfy-icon-512.png
+     （main 分支，随提交固定）
+版权：Copyright (c) Comfy Org
+商标：ComfyUI 名称和标志是 Comfy Org 的商标。本插件是社区的第三方打包，不是 ComfyUI
+官方出品，也和 Comfy Org 没有任何合作关系。
+处理：官方位图标志原样使用，不改颜色、不变形；标志自带深色底、512×512 满幅正方形，
+作为 icon.png。
+
+上游许可证全文
+
+ComfyUI 的代码按 GNU General Public License v3.0 发布
+（https://github.com/comfyanonymous/ComfyUI/blob/main/LICENSE）：
+
+本插件包含的 ComfyUI 是上游发布版本的完整副本，不修改其源码；GPL-3.0 许可证全文见上游
+仓库 LICENSE 文件，此处不重复。插件包引用的上游 Python 依赖（requirements.txt、
+manager_requirements.txt，含 comfyui-frontend-package、comfyui-workflow-templates、
+comfyui-manager 等）随其上游发布渠道分发，许可证以上游声明为准。
+
+插件包许可证
+------------
+
+MIT License
+
+Copyright (c) 2026 geraldpeng6
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
