@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dev.sh 的 logs、diag 在没有 Docker 的机器上测：假的 docker 和 curl 放在 PATH 前面，只用真的 bash、python3。
+# dev.sh 的 logs、diag 和 smoke-gpu.sh 的核心输出解析在没有 Docker 的机器上测：假的 docker 和 curl 放在 PATH 前面，只用真的 bash、python3。
 # 结果看退出码和输出，不连网。
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -345,6 +345,58 @@ out="$(extra_out 'echo 只看返回值; return 3')"
 has "$out" "FAIL 附加检查：extra_check 失败（退出 3）" "钩子返回非 0 时失败"
 out="$(extra_out 'echo 只看返回值')"
 has "$out" "PASS 附加检查：extra_check 通过" "没记子项时只看返回值"
+
+# smoke-gpu.sh：核心 plugin host 的标准错误（没缓存镜像时的拉取进度）不能混进 JSON。假 docker 只在这一段用。
+gbin="$work/gbin"
+gplugin="$work/gplugin"
+mkdir -p "$gbin" "$gplugin"
+printf 'x-wonton:\n  permissions: [devices.gpu]\n' >"$gplugin/docker-compose.yml"
+cat >"$gbin/docker" <<'DOCKER'
+#!/usr/bin/env bash
+case "${1:-}" in
+  compose) printf '%s\n' '{"x-wonton":{"permissions":["devices.gpu"]}}' ;;
+  run)
+    # 真的 docker run 没缓存镜像时把拉取进度写到标准错误，核心的 JSON 只在标准输出。
+    printf "Unable to find image 'core:latest' locally\nlatest: Pulling from core\n" >&2
+    case "${FAKE_GPU_HOST:-}" in
+      met) printf '%s\n' '{"requirements":[{"status":"met","text":"GPU"}]}' ;;
+      unmet) printf '%s\n' '{"requirements":[{"status":"unmet","text":"需要 GPU"}]}' ;;
+      badjson) printf 'not json\n' ;;
+      crash) printf 'core crashed\n' >&2; exit 1 ;;
+    esac
+    ;;
+  *) exit 1 ;;
+esac
+DOCKER
+chmod +x "$gbin/docker"
+# gpu_smoke <FAKE_GPU_HOST>：跑 smoke-gpu.sh，结果留在 $gout（标准输出和错误合并）、$gstatus、$gruns。
+gpu_smoke() {
+  local status=0
+  : >"$work/github_output"
+  # shellcheck disable=SC2031 # root 只在脚本开头赋值一次，没有子 shell 改它（误报）
+  env FAKE_GPU_HOST="$1" GITHUB_OUTPUT="$work/github_output" PATH="$gbin:$PATH" \
+    bash "$root/scripts/smoke-gpu.sh" "$gplugin" >"$work/gout" 2>&1 || status=$?
+  gout="$(cat "$work/gout")"
+  gstatus=$status
+  gruns="$(cat "$work/github_output")"
+}
+gpu_smoke met
+if [[ $gstatus == 0 && "$gruns" == run=true ]]; then :; else
+  echo "FAIL stderr 有拉取杂讯、stdout 是合法 JSON：应该通过（退出 $gstatus）" >&2
+  printf '%s\n' "$gout" >&2
+  failed=$((failed + 1))
+fi
+gpu_smoke unmet
+if [[ $gstatus == 77 && "$gruns" == run=false ]]; then :; else
+  echo "FAIL 显卡不可用应该跳过（退出 $gstatus）" >&2
+  printf '%s\n' "$gout" >&2
+  failed=$((failed + 1))
+fi
+gpu_smoke badjson
+has "$gout" "不是有效 JSON" "输出不是 JSON 要报错"
+has "$gout" "Unable to find image" "失败时打印标准错误，方便取证"
+gpu_smoke crash
+has "$gout" "core crashed" "核心退出非 0 时打印标准错误"
 
 if ((failed > 0)); then
   echo "$failed 处失败" >&2
