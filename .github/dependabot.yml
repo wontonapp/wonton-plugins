@@ -11,8 +11,13 @@ updates:
     groups:
       image-updates:
         group-by: dependency-name
-    # 数据库跨大版本要迁移数据，自动 PR 不做：nextcloud、romm 留 MariaDB 11.8 LTS（升 12 冒烟挂）。
-    # ignore 只能按整个 update 写，按目录拆会和 /* 重叠，所以对所有插件都只放行 MariaDB 的小版本和补丁；要跨大版本手动开 PR。
+    # 数据库跨大版本要迁移数据（旧数据目录新版起不来），自动 PR 不做：nextcloud、romm 留 MariaDB 11.8 LTS（升 12 冒烟挂），
+    # PostgreSQL、PostGIS 换大版本要 pg_upgrade 或导出导入。
+    # ignore 只能按整个 update 写，按目录拆会和 /* 重叠，所以对所有插件都只放行这些数据库的小版本和补丁；要跨大版本手动开 PR。
     ignore:
       - dependency-name: mariadb
+        update-types: ["version-update:semver-major"]
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
+      - dependency-name: imresamu/postgis
         update-types: ["version-update:semver-major"]
