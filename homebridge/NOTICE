@@ -1,0 +1,20 @@
+# 素材与许可声明
+
+## 图标
+
+`icon.svg` 为本仓库原创（桥梁与房屋线条图形），按插件规范的线条风格手写，未用图片模型生成，
+按本仓库的 MIT 许可证分发。未使用 Homebridge 项目的标志：上游品牌指南不允许未经许可把其标志用作
+第三方应用的图标（https://github.com/homebridge/branding）。
+
+## 商标
+
+Homebridge 名称是 Homebridge 项目的商标。本插件是独立维护的云吞插件包，与 Homebridge 项目
+没有隶属关系，不代表上游官方出品、合作或背书。
+
+## 上游软件许可（随镜像分发，本仓库不再附带其全文）
+
+- Homebridge（核心）：Apache License 2.0 —— https://github.com/homebridge/homebridge/blob/latest/LICENSE
+- Homebridge UI（homebridge-config-ui-x）：MIT License —— https://github.com/homebridge/homebridge-config-ui-x/blob/latest/LICENSE
+- 官方 Docker 镜像 homebridge/homebridge（docker-homebridge 仓库）：GPL-3.0 ——
+  https://github.com/homebridge/docker-homebridge/blob/latest/LICENSE
+  本插件以独立容器运行上游官方镜像，不把其代码链接进其他作品。

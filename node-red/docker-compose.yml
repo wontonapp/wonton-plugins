@@ -8,7 +8,7 @@ services:
   seed-config:
     # 首次启动把 settings.js 和 .npmrc 复制进数据目录，已存在就不覆盖，保住用户改动。
     # settings.js 不能经 configs 直接放进 /data：目标路径和挂载点重叠，规范不允许，走一次性服务。
-    image: nodered/node-red:4.1.12@sha256:c81912d66cb3639170484395ada550c94dfe0a56289cfaec3c8e6dec31f0d164
+    image: nodered/node-red:5.0.9-24@sha256:2ccd38b4066648bd5e17430c50a2f8102c566a82fd4f2fc5c342e61664d6896f
     user: "${PUID}:${PGID}" # 数据目录按 PUID:PGID 交给插件，复制进程同属主才写得进
     volumes:
       - ${WONTON_APP_DATA}:/data
@@ -22,7 +22,7 @@ services:
     restart: "no"
 
   nodered:
-    image: nodered/node-red:4.1.12@sha256:c81912d66cb3639170484395ada550c94dfe0a56289cfaec3c8e6dec31f0d164
+    image: nodered/node-red:5.0.9-24@sha256:2ccd38b4066648bd5e17430c50a2f8102c566a82fd4f2fc5c342e61664d6896f
     # 镜像默认以 uid 1000（node-red 用户）运行；显式写 user 让任意 PUID 的主机都跑得起来。
     user: "${PUID}:${PGID}"
     environment:

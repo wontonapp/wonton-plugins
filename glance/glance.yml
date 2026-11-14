@@ -1,0 +1,45 @@
+# 云吞预置的 Glance 首页。改这份文件（或 widgets/ 里的文件）就能换页面上的内容；
+# 改完一般自动生效，没生效就到插件详情页停止再启动。
+# 全部部件和写法见上游文档：https://github.com/glanceapp/glance/blob/v0.8.8/docs/configuration.md
+pages:
+  - name: 首页
+    columns:
+      - size: small
+        widgets:
+          # 城市等值来自设置（核心设置上线前用 compose 里的默认值），经环境变量在启动时替换。
+          # 地名用英文：glance 检索 open-meteo 固定 language=en，中文地名查不到。
+          - type: weather
+            title: 天气
+            location: ${GLANCE_WEATHER_CITY}
+            units: ${GLANCE_WEATHER_UNITS}
+            hour-format: ${GLANCE_WEATHER_HOUR_FORMAT}
+          - type: clock
+            title: 时钟
+            hour-format: ${GLANCE_HOUR_FORMAT}
+          - type: calendar
+            title: 日历
+      - size: full
+        widgets:
+          - type: group
+            widgets:
+              - type: rss
+                title: 新闻
+                limit: 25
+                collapse-after: 10
+                feeds:
+                  - url: https://sspai.com/feed
+                    title: 少数派
+                  - url: https://www.ruanyifeng.com/blog/atom.xml
+                    title: 阮一峰的网络日志
+                  - url: https://36kr.com/feed
+                    title: 36氪
+              - type: hacker-news
+                limit: 15
+                collapse-after: 8
+          - type: repository
+            # 想盯别的仓库就改这一行（owner/仓库名）。不填 token 时 GitHub 匿名限额每小时 60 次，部件有缓存，一个够用。
+            title: GitHub 仓库
+            repository: glanceapp/glance
+            pull-requests-limit: 3
+            issues-limit: 3
+            commits-limit: 3

@@ -1,0 +1,86 @@
+# ConvertX：网页上传文件、选目标格式、下载转换结果，后端是 ffmpeg、ImageMagick、LibreOffice、pandoc 等本机转换器。
+# 上游 AGPL-3.0，官方镜像 ghcr.io/c4illin/convertx，按清单列表（index）摘要固定。
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx:v0.20.0@sha256:6259e0c1e063120b1ddbc6937372a83be58182b2c9dc82264f58e100907b3e51
+    environment:
+      # 上游入口脚本先以 root 把数据目录 chown 成 PUID:PGID 再降权运行（gosu），所以不写 user：
+      # 核心按“没写 user”把数据目录交给 PUID:PGID，入口脚本接手后应用以这个用户跑。
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      # 经核心网关进容器的是 HTTP：上游给 Cookie 加 Secure 标志（secure: !HTTP_ALLOWED），
+      # Secure Cookie 在浏览器的 HTTP 页面上会被丢掉，登录不上。网关挡在前面，这里开 HTTP 不降低安全性。
+      HTTP_ALLOWED: "true"
+      # 上游实测（src/pages/user.tsx）：false 时第一个账号仍能注册（setup 页），之后注册一律拒绝。
+      # 网关挡着，注册页只有用户打得开。
+      ACCOUNT_REGISTRATION: "false"
+      ALLOW_UNAUTHENTICATED: "false"
+      # 不设的话上游每次重启用 randomUUID() 换密钥，所有登录作废。
+      JWT_SECRET: ${WONTON_SECRET_JWT_SECRET}
+      # 设置项走规范 0.12 的 settings；核心 PR #242 合入前 WONTON_SETTING_* 不注入，冒号减号的默认值兜底，
+      # 兜底值和 Schema 里的 default 一致，当前核心上就是生效值。
+      MAX_CONVERT_PROCESS: "${WONTON_SETTING_MAX_CONVERT_PROCESS:-2}"
+      AUTO_DELETE_EVERY_N_HOURS: "${WONTON_SETTING_AUTO_DELETE_EVERY_N_HOURS:-24}"
+      # 上游只拿它格式化历史页的日期时间，不改界面语言。
+      LANGUAGE: "${WONTON_SETTING_LANGUAGE:-en}"
+    volumes:
+      # SQLite 账号库和上传/输出文件都在这里（data/uploads、data/output）。
+      - ${WONTON_APP_DATA}:/app/data
+    # /healthcheck 是上游自带的无鉴权接口（src/pages/healthcheck.tsx），镜像里有 curl。
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:3000/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+x-wonton:
+  # 0.12：settings 是 0.12 的字段；核心 PR #242 合入前不注入设置值，compose 里都写了 :- 默认值兜底。
+  spec: "0.12"
+  id: app.convertx.convertx
+  version: 0.1.1
+  kind: app
+  title: { zh: 文件格式转换（ConvertX）, en: ConvertX }
+  description:
+    zh: 像格式工厂：网页上传文件、选目标格式，转完直接下载，上千种格式都能转。偶尔把 Heic 照片转 JPG、Markdown 转 PDF、视频转音频，不用在电脑上装软件。
+    en: "Like Format Factory: upload a file, pick the target format and download the result — over a thousand formats supported. Convert Heic photos to JPG, Markdown to PDF or video to audio without installing anything."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/convert.png, screenshots/result.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/C4illin/ConvertX
+  license: AGPL-3.0-only
+  tags: { zh: [工具, 文件], en: [Tools, Files] }
+  about:
+    zh: |
+      把文件转成想要的格式：打开网页、拖进文件、选好目标格式，转完直接下载。
+
+      图片、文档、电子书、音视频、表格的常用互转都有：Heic 照片转 JPG、Markdown 转 PDF、Word 转 PDF、WAV 转 MP3 这类事都在网页上完成。文件在家里服务器上转换，不经过任何外部网站。
+
+      第一个注册的账号是管理员，之后注册自动关闭，家里人共用这个账号。转换结果默认保留 24 小时，同时转换的任务数和日期格式都能在插件设置里改。
+    en: |
+      Convert files to the format you need: open the web page, drop in a file, pick the target format and download the result.
+
+      Common conversions for images, documents, e-books, audio and video are all there: Heic photos to JPG, Markdown to PDF, Word to PDF, WAV to MP3 — everything happens on your own server, no outside website involved.
+
+      The first account registered becomes the admin; registration then closes and the household shares that account. Converted files are kept for 24 hours by default; concurrency and date format are adjustable in the plugin settings.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Moved into the official Wonton plugin monorepo; same content as the previous release." }
+  setup:
+    zh: 打开应用，注册第一个账号：它就是管理员账号，之后注册会自动关闭。
+    en: "Open the app and create the first account: it becomes the admin, and registration closes after that."
+  settings: settings.schema.json
+  webui:
+    service: convertx
+    port: 3000
+    # 应用自己的账号体系（第一个注册的是管理员），核心网关挡在前面。
+    sso: none
+  secrets:
+    jwt_secret:
+      generate: { bytes: 32 }
+  # 应用和全部转换器都在镜像里，运行时不下载任何东西，不出网。
+  permissions: []
+  # 上游没写最低内存；实测 400 段 Markdown 转 PDF（calibre）峰值约 670 MiB、空闲更低，取 1G。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 1G

@@ -1,0 +1,219 @@
+# Frigate：本地 NVR，摄像头画面的实时目标检测和录像都留在自己家里。
+# 用上游官方镜像的 -tensorrt 标签：它内置 onnxruntime-gpu（CUDA 12.8 系运行库，见上游
+# docker/tensorrt/requirements-amd64.txt@v0.18.2），RTX 50 系（sm_120）原生可用，不需要自建镜像。
+# 登录走网关代登录：Frigate 不实现 OIDC，官方支持关闭自带认证、改认反向代理带来的请求。
+# 不用 Remote-User 头（{user} 会让官方检查按“没证明只信任核心”判不合格，而 Frigate 没有可配的
+# 代理白名单项），只用 X-Proxy-Secret：网关只给登录用户的请求带这个密钥，Frigate 校验
+# auth_secret，对不上的请求进不来。关掉自带登录后 Frigate 不分用户，主人就是 admin。
+services:
+  # 一次性：建好数据目录结构，首次启动放种子配置。Frigate 会在网页里改写 config.yml，
+  # 所以复制进数据目录后不再覆盖（升级、重建都不动用户改过的配置）。
+  # 两个 init 都复用 frigate 镜像（同一镜像各写一遍，不用锚点）：插件包只依赖上游一个镜像，
+  # 镜像自带 sh、curl 和 sha256sum，初始化要的都够了。
+  init-config:
+    image: ghcr.io/blakeblackshear/frigate:0.18.2-tensorrt@sha256:1cafb6ebbaff0aaf275cc3f31951bcf7e29f3989f18a10ba9565091367d8736c
+    # 绕过镜像入口（s6 只服务常驻启动），以 PUID 建目录、放配置。
+    user: "${PUID}:${PGID}"
+    entrypoint: ["sh", "-c"]
+    command:
+      - mkdir -p /cfg/model_cache && test -f /cfg/config.yml || cp /seed/config.yml /cfg/config.yml
+    volumes:
+      # 挂和 frigate 相同的子目录：同一插件的绑定挂载不能嵌套（不能挂整个数据目录）。
+      - ${WONTON_APP_DATA}/config:/cfg
+    configs:
+      - source: seed-config
+        target: /seed/config.yml
+    network_mode: none
+    restart: "no"
+
+  # 一次性：下载检测模型。模型不打进镜像（约 3.7 MB），放进数据目录，重装、升级不丢；
+  # 下载后按 sha256 校验，已有就跳过。需要出网，走插件网络的出口。
+  init-model:
+    image: ghcr.io/blakeblackshear/frigate:0.18.2-tensorrt@sha256:1cafb6ebbaff0aaf275cc3f31951bcf7e29f3989f18a10ba9565091367d8736c
+    user: "${PUID}:${PGID}"
+    entrypoint: ["sh", "-c"]
+    command:
+      - test -f /cfg/model_cache/yolox_nano.onnx || (curl -fsSL -C - --retry 3 -o /cfg/model_cache/yolox_nano.onnx.part https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_nano.onnx && printf 'c789161ed43c8269fcd4e67c67eeeb4e80c622da2eb296a20bc6007bd18a0b7d  /cfg/model_cache/yolox_nano.onnx.part\n' | sha256sum -c - && mv /cfg/model_cache/yolox_nano.onnx.part /cfg/model_cache/yolox_nano.onnx)
+    volumes:
+      - ${WONTON_APP_DATA}/config:/cfg
+    depends_on:
+      init-config:
+        condition: service_completed_successfully
+    restart: "no"
+
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:0.18.2-tensorrt@sha256:1cafb6ebbaff0aaf275cc3f31951bcf7e29f3989f18a10ba9565091367d8736c
+    environment:
+      TZ: ${TZ}
+    volumes:
+      # 配置、数据库和模型缓存（首次推理生成的缓存按显卡型号存，换卡后 Frigate 自己重建）。
+      - ${WONTON_APP_DATA}/config:/config
+      # 录像、事件快照和导出，体积随摄像头数量和码率增长。
+      - ${WONTON_APP_DATA}/media:/media/frigate
+    # Frigate 用共享内存在进程间传帧，官方 compose 建议 256mb。
+    shm_size: 256m
+    tmpfs:
+      # 录像段先写这里再落盘，给个上限防止写满内存。
+      - /tmp/cache:size=1g
+    depends_on:
+      init-config:
+        condition: service_completed_successfully
+      init-model:
+        condition: service_completed_successfully
+    # 查真实可用：/api/config 要配置加载完、数据库能查才答话；镜像里自带 curl。
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:5000/api/config"]
+      interval: 30s
+      timeout: 10s
+      start_period: 3m
+      start_interval: 5s
+
+configs:
+  seed-config:
+    content: |
+      # 云吞插件给 Frigate 的种子配置：首次启动复制进数据目录，之后在 Frigate 网页里改的就是这一份。
+      # 摄像头在 Frigate 网页的设置向导里添加，这里不预置；0.18 起这一节必填（没有摄像头写空表）。
+      cameras: {}
+
+      mqtt:
+        enabled: false
+
+      detectors:
+        # -tensorrt 镜像里 onnxruntime-gpu 带 CUDA 和 TensorRT 两个执行器；
+        # AUTO 自动选 CUDA（官方对桌面 NVIDIA 显卡的推荐写法），device 改成 Tensorrt
+        # 可以改用 TensorRT 引擎（首次推理多花几分钟建引擎，缓存在 model_cache 里）。
+        onnx:
+          type: onnx
+          device: AUTO
+
+      model:
+        # YOLOX nano 416x416，上游 YOLOX 发布的 ONNX，由 init-model 服务下载并校验。
+        # 选 nano：安装门（默认 5 分钟）内要下完模型，nano 最小；要更高精度换 tiny/s。
+        model_type: yolox
+        width: 416
+        height: 416
+        input_tensor: nchw
+        input_dtype: float_denorm
+        path: /config/model_cache/yolox_nano.onnx
+        labelmap_path: /labelmap/coco-80.txt
+
+      # go2rtc 的 RTSP 回放流要过认证：局域网里的设备必须带上账号才能拉流；
+      # 这个认证不作用于 localhost，Frigate 自己的摄像头取流不受影响（上游文档
+      # restream.md "Securing Restream With Authentication"）。
+      # 摄像头的回放流在 Frigate 网页或设置向导里加，这里不预置。
+      go2rtc:
+        rtsp:
+          username: wonton
+          password: ${WONTON_SECRET_RTSP_PASSWORD}
+
+      # 网页登录交给云吞网关：关掉 Frigate 自己的登录，只认带 X-Proxy-Secret 的请求
+      # （网关只给登录用户的请求带），对不上就 401。
+      auth:
+        enabled: false
+        # 登录限流按真实客户端 IP：只信任云吞核心网关的地址。
+        trusted_proxies:
+          - ${WONTON_CORE_ADDRESS}/32
+
+      # 8971 默认强 TLS（上游自签证书）；网关到插件这段在插件网络里，TLS 由网关对外负责。
+      tls:
+        enabled: false
+
+      proxy:
+        # 网关只放行登录用户，这个实例的主人就是 admin。
+        default_role: admin
+        # 网关在每个请求上带 X-Proxy-Secret 证明请求来自网关；值由云吞生成，装进配置。
+        auth_secret: ${WONTON_SECRET_FRIGATE_PROXY}
+
+x-wonton:
+  spec: "0.6"
+  # 反向域名：上游官网 frigate.video。
+  id: video.frigate.frigate
+  version: 0.1.1
+  kind: app
+  title: { zh: 摄像头看家（Frigate）, en: Camera Guard (Frigate) }
+  description:
+    zh: 像 24 小时值班的保安：接上家里的摄像头，有人、车、动物出现才录像并标出来，手机上随时回看，录像只存在家里。
+    en: "Like a 24/7 security guard: connect your home cameras and it records only when a person, car or animal shows up, marks them, and lets you review events from your phone — recordings never leave home."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/review.png, screenshots/explore.png, screenshots/review-all.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://frigate.video
+  # 上游 Frigate 的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: MIT
+  tags:
+    zh: [监控, 智能家居]
+    en: [Monitoring, Home]
+  about:
+    zh: |
+      把 Frigate 装在自己家里：接入家里的摄像头，画面不动不看、有动静才录，
+      检测出的人、车、动物带框标出来，事件能在手机上回看，录像不出门。
+
+      有 NVIDIA 显卡就自动用显卡做检测（RTX 50 系也能用）。默认检测模型 YOLOX nano
+      约 3.7 MB，装的时候自动下载，占不到 0.5 GB 显存，几 GB 显存的卡就够；
+      显存越大能同时带的摄像头越多，想换更高精度的模型也行（见插件说明）。
+
+      摄像头在 Frigate 网页的设置向导里添加，填摄像头的 RTSP 地址就行；
+      检测、录像、回放在网页里都能配。给别的设备或软件（VLC、Home Assistant）
+      用的 RTSP 回放流走 rtsp://<这台主机的局域网地址>:8554/<摄像头名>：
+      在插件设置里打开局域网开关，端口才开；回放流要账号，地址和账号
+      （用户名 wonton、密码由云吞生成）在插件详情页里看、可以复制。
+    en: |
+      Run Frigate at home: connect your cameras, record only when something moves,
+      detect people, cars and animals with bounding boxes, and review events from
+      your phone. Recordings never leave your machine.
+
+      Your NVIDIA GPU is used automatically for detection (RTX 50 series included).
+      The default YOLOX nano model is about 3.7 MB, downloads on install and uses
+      under 0.5 GB of VRAM — a card with a few GB is enough; more VRAM means more
+      simultaneous cameras. Higher-accuracy models can be swapped in (see the
+      plugin README).
+
+      Add cameras in the Frigate web setup wizard with their RTSP address.
+      For other devices and software (VLC, Home Assistant), the RTSP restream
+      is at rtsp://<server LAN address>:8554/<camera name>: enable the LAN
+      switch in the plugin settings to open the port; the restream requires
+      credentials — find the address and account (user "wonton", password
+      generated by Wonton) in the plugin details, ready to copy.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: frigate
+    port: 8971
+    sso: proxy
+    proxy:
+      headers:
+        # Frigate 校验 X-Proxy-Secret（auth_secret），密钥只有网关认出用户后才带上；
+        # 不用 {user}：Frigate 关掉自带登录后不按用户区分，也证明不了只信任核心（信任边界见公开插件规范的“网关代登录”一节）。
+        X-Proxy-Secret: "{secret:frigate_proxy}"
+  lan:
+    ports:
+      # go2rtc 的 RTSP 回放流，给局域网里的播放器和 Home Assistant 用。
+      # Frigate 网页里的实时画面走网页端口，不经这里。
+      # 带 client 时端口默认关，用户在插件设置里打开后，详情页显示地址和账号。
+      - { service: frigate, port: 8554 }
+    client:
+      # 摄像头名是用户在 Frigate 里自己取的，地址里留占位；账号固定，密码由云吞生成。
+      address: "rtsp://{host}:8554/<摄像头名>"
+      username: "wonton"
+      password: "{secret:rtsp_password}"
+  secrets:
+    frigate_proxy:
+      generate: { bytes: 32 }
+    rtsp_password:
+      generate: { bytes: 24 }
+  permissions:
+    # 检测模型推理在显卡上跑。
+    - devices.gpu
+    # 拉摄像头的 RTSP 流（局域网）、下载检测模型（外网）、检查新版本。
+    - network.egress
+    # 在局域网上开放 RTSP 回放流端口。
+    - network.lan
+  # 显卡给 frigate 服务；required：本插件的核心功能就是显卡检测。
+  gpu:
+    services: [frigate]
+  requirements:
+    # 上游 -tensorrt 镜像只发 amd64。
+    arch: [amd64]
+    # 上游没写最低内存，按本机实测取整（一路 768x432 摄像头检测+录像时容器 RSS 约 1.4 GiB，多路按此估）。
+    memory: 2G
+    gpu: { need: required }

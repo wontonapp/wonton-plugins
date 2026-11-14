@@ -1,0 +1,151 @@
+# Sonarr 剧集自动追更：网页经云吞网关访问（应用侧认证设 External，由网关挡在前面）；
+# 元数据来自 Sonarr 自带的 skyhook/TheTVDB，出网由 network.egress 提供；
+# 配了 torrent_client 能力（qBittorrent Web API）时，一次性服务把它登记成下载客户端；
+# 一次性服务还把 Email 通知接到核心的内部邮箱（notify），应用发的信转进收件人的 Wonton 私聊。
+services:
+  # 一次性服务：替用户建好剧集根目录（media 共享文件夹里的 tv），已有就不动。
+  prepare:
+    image: linuxserver/sonarr:4.0.20@sha256:673dc4609a5672bc8e46069c86ffcea283a86b48d34a6c93d8da8c24a1b87571
+    user: "${PUID}:${PGID}"
+    entrypoint: ["/bin/sh", "-ec", "mkdir -p /media/tv"]
+    volumes:
+      - ${WONTON_SHARE_MEDIA}:/media
+    network_mode: none
+    restart: "no"
+
+  sonarr:
+    depends_on:
+      prepare:
+        condition: service_completed_successfully
+    # LinuxServer.io 的 Sonarr 镜像，上游安装文档指定的镜像（lscr.io/linuxserver/sonarr 的 Docker Hub 名），
+    # amd64 和 arm64，按清单列表（index）的摘要固定；上游 GPL-3.0-only。
+    image: linuxserver/sonarr:4.0.20@sha256:673dc4609a5672bc8e46069c86ffcea283a86b48d34a6c93d8da8c24a1b87571
+    # 镜像以 root 启动再降到 PUID:PGID（LSIO 约定），数据目录由核心按默认交给 PUID:PGID。
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      # 认证交给云吞网关：External 挂 NoAuthenticationHandler（同 None），应用不再出登录页，
+      # 也不弹 v4 的"启用认证"强制窗（它只在 authentication=none 时出现）。
+      SONARR__AUTH__METHOD: External
+      # API key 由核心生成、经 secrets 注入：一次性服务和之后的 Agent/其他插件读同一个值，
+      # 不用去 config.xml 抠。SONARR__AUTH__APIKEY 是上游文档列出的正式环境变量。
+      SONARR__AUTH__APIKEY: ${WONTON_SECRET_API_KEY}
+    volumes:
+      - ${WONTON_APP_DATA}/config:/config
+      # 下载目录和剧集库：与 qBittorrent（/downloads）、Jellyfin（/media）用同名共享文件夹、
+      # 同样的容器内路径，各家看到的路径才对得上；剧集根目录是 /media/tv。
+      - ${WONTON_SHARE_DOWNLOADS}:/downloads
+      - ${WONTON_SHARE_MEDIA}:/media
+    healthcheck:
+      # /ping 免鉴权，且会真查一次数据库，能发现应用起没起来。
+      test: ["CMD", "curl", "--noproxy", "*", "--fail", "--silent", "--show-error", "http://127.0.0.1:8989/ping"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+    stop_grace_period: 30s
+
+  # 一次性服务：把 torrent_client 能力（qBittorrent Web API）登记成 Sonarr 的下载客户端。
+  # wants 的提供方没装时变量为空，如实说明并跳过；提供方装好后核心接上使用方、重建容器，
+  # 本服务带着注入的 WONTON_TORRENT_CLIENT_URL 重跑，登记成下载客户端。
+  register-download-client:
+    image: linuxserver/sonarr:4.0.20@sha256:673dc4609a5672bc8e46069c86ffcea283a86b48d34a6c93d8da8c24a1b87571
+    entrypoint: ["/bin/sh", "/register-download-client.sh"]
+    environment:
+      WONTON_TORRENT_CLIENT_URL: ${WONTON_TORRENT_CLIENT_URL:-}
+      WONTON_SECRET_API_KEY: ${WONTON_SECRET_API_KEY}
+    configs:
+      - source: register-download-client
+        target: /register-download-client.sh
+    depends_on:
+      sonarr:
+        condition: service_healthy
+    restart: "no"
+
+  # 一次性服务：把 Email 通知接到核心的内部邮箱，收件人是主人的内部邮箱，信转进收件人的 Wonton 私聊。
+  mail:
+    image: linuxserver/sonarr:4.0.20@sha256:673dc4609a5672bc8e46069c86ffcea283a86b48d34a6c93d8da8c24a1b87571
+    entrypoint: ["/bin/sh", "/mail.sh"]
+    environment:
+      # 缺了就装不上：notify 没给 SMTP 三件套、owner.identity 没给收件地址，都要如实报错。
+      WONTON_SMTP_HOST: ${WONTON_SMTP_HOST:?}
+      WONTON_SMTP_PORT: ${WONTON_SMTP_PORT:?}
+      WONTON_MAIL_FROM: ${WONTON_MAIL_FROM:?}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?}
+      WONTON_SECRET_API_KEY: ${WONTON_SECRET_API_KEY}
+    configs:
+      - source: mail
+        target: /mail.sh
+    depends_on:
+      sonarr:
+        condition: service_healthy
+    restart: "no"
+
+configs:
+  register-download-client:
+    file: register-download-client.sh
+  mail:
+    file: mail.sh
+
+x-wonton:
+  spec: "0.12"
+  id: tv.sonarr.sonarr
+  version: 0.1.1
+  kind: app
+  title: { zh: 剧集追更（Sonarr）, en: TV Shows (Sonarr) }
+  description:
+    zh: 追剧自动化：想看的剧加进片单，新一集一出就自动下载进剧集库
+    en: "Follow TV shows hands-off: add a series and new episodes download into your library automatically"
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://sonarr.tv
+  # 应用（Sonarr）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: GPL-3.0-only
+  tags:
+    zh: [视频, 下载, 追剧]
+    en: [Video, Downloads, TV]
+  setup:
+    zh: 要自动下载，先装 qBittorrent（下载工具）和 Prowlarr（找片源）插件。
+    en: For automatic downloads, install the qBittorrent (downloads) and Prowlarr (indexers) plugins first.
+  about:
+    zh: |
+      把想看的剧加进片单，Sonarr 盯着片源：新一集一出，自动通过下载工具下载、按季集改名归档进剧集库，Jellyfin 里刷新就能看，像给家里请了个追剧助理。
+
+      自动找片源要两样东西：下载工具（qBittorrent 插件，Sonarr 自动把登记的下载客户端接上）和索引器（Prowlarr 插件）。下载的文件在共享文件夹 downloads，剧集整理进共享文件夹 media 下的 tv 文件夹，Sonarr 优先用硬链接，下载完不用再占一份空间。网页经云吞网关打开，应用侧不再设登录。应用的提醒（下载完成、版本升级、健康问题）经云吞的内部邮箱发到主人的 Wonton 私聊里。
+    en: |
+      Add the shows you follow, and Sonarr watches for you: when a new episode airs, it downloads via your download client, renames and files it into your TV library by season, ready to stream in Jellyfin — like an assistant that never misses an episode.
+
+      Fully automatic downloads need two things: a download client (qBittorrent plugin, registered automatically) and indexers (Prowlarr plugin). Downloads land in the downloads shared folder and are organized into the tv folder of the media shared folder; Sonarr hardlinks when possible so files aren't stored twice. The web stays behind the Wonton gateway login, with no second login in the app. App notices (downloads, upgrades, health issues) reach the owner's Wonton chat via the internal mailbox.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: sonarr
+    port: 8989
+  # Sonarr 是下载工具的使用方，也是给别的插件（求片、字幕）用的提供方：
+  # 用 torrent_client 能力接下载器（提供方装了就用，没装也照常装）；
+  # x-wonton.sonarr 提供 /api/v3 的 REST 接口。provides 和 requires 不能并存，这里用 wants。
+  wants: [torrent_client]
+  provides:
+    x-wonton.sonarr:
+      service: sonarr
+      port: 8989
+  # API key 由核心生成、按 secrets 注入：应用（SONARR__AUTH__APIKEY）、一次性服务、
+  # 之后经能力接入的插件和 Agent 读同一个值。
+  secrets:
+    api_key:
+      generate: { bytes: 32 }
+  permissions:
+    # 剧集和集数元数据来自 Sonarr 自带的 skyhook 服务（TheTVDB 等）。
+    - network.egress
+    # 下载目录，与 qBittorrent 插件同一个共享文件夹。
+    - storage.share.downloads:write
+    # 剧集库，与 Jellyfin 插件同一个共享文件夹。
+    - storage.share.media:write
+    # 应用发的通知信经核心的内部 SMTP 转进收件人的 Wonton 私聊。
+    - notify
+    # 通知的收件地址用主人的内部邮箱（WONTON_OWNER_EMAIL）。
+    - owner.identity
+  requirements:
+    arch: [amd64, arm64]

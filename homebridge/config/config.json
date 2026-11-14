@@ -1,0 +1,11 @@
+{
+  "platforms": [
+    {
+      "name": "Config",
+      "platform": "config",
+      "port": 8581,
+      "host": "127.0.0.1",
+      "auth": "form"
+    }
+  ]
+}

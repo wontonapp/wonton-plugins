@@ -1,0 +1,12 @@
+图标
+====
+
+`icon.png` 取自上游 scanservjs 仓库的 `app-ui/src/icons/android-chrome-512x512.png`
+（https://github.com/sbs20/scanservjs ，提交 v3.3.0），未作修改。
+
+- 版权与许可：scanservjs 以 GPL-2.0 发布（https://github.com/sbs20/scanservjs/blob/master/LICENSE），
+  图标随项目分发，版权归上游作者 Stefan Brown（sbs20）及贡献者所有。
+- 商标说明："scanservjs" 名称与标志是上游项目的标志；本插件包对它的使用仅为指示上游应用，
+  不构成对商标来源的更改或暗示背书。
+
+插件包其余文件（清单、配置、文档、截图）按本仓库 LICENSE（MIT）分发。

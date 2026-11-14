@@ -1,0 +1,103 @@
+# Traccar 定位平台：定位器和手机客户端把位置报进来，网页地图看位置、轨迹和电子围栏。
+# 设备协议端口开在局域网（lan.ports），网页经核心网关 OIDC 登录。
+services:
+  traccar:
+    image: traccar/traccar:6.17.0@sha256:b32d9346adf46df7c33c58577e17ad60f6feadd1f3cd87c876041f6c79317ef1
+    environment:
+      TZ: ${TZ}
+      # 上游约定（Config.java）：设了这个变量后所有配置键都能用环境变量覆盖，
+      # 键名规则是点换下划线、驼峰拆开大写（web.url → WEB_URL）。
+      CONFIG_USE_ENVIRONMENT_VARIABLES: "true"
+      # 上游按 web.url 拼 OIDC 回调（<web.url>/api/session/openid/callback），
+      # 必须和核心登记的回调地址一致。
+      WEB_URL: ${WONTON_APP_URL}
+      OPENID_ISSUER_URL: ${WONTON_OIDC_ISSUER}
+      OPENID_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      OPENID_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      # 跳过 traccar 自己的登录页，直接走核心登录；上游同时停用密码登录（含 Basic 认证）。
+      OPENID_FORCE: "true"
+      # 上游数据库里 registration 默认 false，家人经核心认证后首次登录会被拒；
+      # 打开这个开关才给他们自动建号（都是核心认证过的家庭成员）。
+      OPENID_ALLOW_REGISTRATION: "true"
+      # 带 admin 组的人上游授管理员。
+      OPENID_ADMIN_GROUP: admin
+      # 默认 geocoder（locationiq）要 API key，没有 key 每个定位点都会报错；默认关掉，
+      # 要地址的用户改 geocoder.* 配置（见 README）。
+      GEOCODER_ENABLE: "false"
+      # 上游默认开全部 60 多种协议的端口；只开家用常见的三种：
+      # OsmAnd 5055（手机 Traccar Client / OsmAnd）、GT06 5023（车载定位器）、H02 5013（手表、项圈）。
+      PROTOCOLS_ENABLE: osmand,gt06,h02
+    volumes:
+      # H2 数据库和照片等媒体文件；日志按上游默认写在 ./logs。
+      - ${WONTON_APP_DATA}/data:/opt/traccar/data
+      - ${WONTON_APP_DATA}/logs:/opt/traccar/logs
+    # JVM 按容器内存自动封顶堆（25% ≈ 512M），家庭规模（几个设备）富余。
+    mem_limit: 2G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8082/api/server"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.13"
+  id: org.traccar.traccar
+  version: 0.1.3
+  kind: app
+  title: { en: Traccar }
+  description:
+    zh: 像一张全家共用的定位地图：手机、车载定位器、老人手表和宠物项圈的位置和轨迹都汇到这里看
+    en: "One shared map for the family: see the location and history of phones, car trackers, watches and pet collars"
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/map.jpg]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://www.traccar.org
+  license: Apache-2.0
+  tags:
+    zh: [定位, 地图]
+    en: [Location, Map]
+  about:
+    zh: |
+      给家里的车、老人、孩子和宠物装上定位器后，在一张地图上看他们在哪、走过哪里。
+
+      第一次用：打开网页加一台设备，拿到设备的唯一编号，填进定位器或手机客户端里，位置就会出现在地图上。可以画电子围栏，进出围栏时给你发通知（支持邮件、Telegram 等渠道，要在网页里配置）。
+
+      手机装 Traccar Client（或 OsmAnd 的跟踪插件）后填这台服务器的局域网地址就能上报。车载定位器、手表这类设备也是连同一个地址和端口。定位上报只开在家里局域网，设备离开家里网络后位置不再更新；网页地图在哪都能打开。
+    en: |
+      Put trackers on the family car, seniors, kids or pets, and see on one map where they are and where they have been.
+
+      First use: open the web page, add a device, and enter its unique identifier into the tracker or phone app. Positions then appear on the map. You can draw geofences and get notified when they are crossed (email, Telegram and other channels, configured in the web page).
+
+      Install Traccar Client (or the OsmAnd tracking plugin) on a phone, enter the server's LAN address, and it reports. Dedicated trackers connect to the same address and port. Position reporting works on the home LAN only: once a device leaves the home network its location stops updating, while the map page itself opens from anywhere.
+  release_notes:
+    zh: 插件包迁入官方插件合仓，内容与上一版相同。
+    en: "Package moved into the official Wonton plugin monorepo; same content as the previous release."
+  webui:
+    service: traccar
+    port: 8082
+    # 入口指上游 OIDC 起点：服务端 302 进核心登录链，无 JS 也能走通。
+    # 不能用根路径：SPA 建应用会话靠 JS，curl 型探测走不到。
+    path: /api/session/openid/auth
+    sso: oidc
+    oidc:
+      redirect_paths: [/api/session/openid/callback]
+      admin_groups: [admin]
+  # 设备上报端口开在局域网：家里和同网的设备直接连，连接不经核心登录，上游协议自带设备编号认设备。
+  # 只发布 TCP：上游 6.17 的 OsmAnd 解码器只处理 HTTP over TCP（手机客户端也是 HTTP GET），
+  # 协议里的 UDP 通道不解码（实测发包不产生定位），不发布。
+  lan:
+    ports:
+      - { service: traccar, port: 5055 }
+      - { service: traccar, port: 5023 }
+      - { service: traccar, port: 5013 }
+  permissions:
+    # 把 5055/5023/5013 发布到局域网地址上。
+    - network.lan
+    # 报警通知走用户在网页里配置的渠道（邮件、Telegram 等），这些是容器向外的连接。
+    - network.egress
+  # 镜像多架构（amd64 + arm64，docker buildx imagetools inspect）；上游没写最低内存，按空闲实测取 1G。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 1G

@@ -1,0 +1,149 @@
+# Donetick：Go 后端 + 内嵌前端 + SQLite 在同一个进程里，不额外起数据库。
+#
+# 登录全走核心的 OIDC：`disable_password_auth` 关掉注册、登录和找回密码（SSO-only），
+# `is_user_creation_disabled` 再关一层注册入口；打开网页落在登录页，点「云吞」由核心的身份提供方登进去。
+# 上游的 OIDC 逐端点填写（不读发现文档），正好用核心注入的三个端点变量，不用写死核心内部路径。
+# `single_circle_instance` 让全家进同一个家庭圈，主人的角色由 OIDC 组 `owner` 每次登录同步成管理员。
+services:
+  donetick:
+    # 上游官方镜像（AGPL-3.0），多架构清单列表摘要固定。
+    image: docker.io/donetick/donetick:v0.1.86@sha256:66253a32a8e8ed8c49c49418b43abe1181db23e07defe97748d2cb7508c487cd
+    # 镜像默认 root；降权到主人的用户，SQLite 和上传的文件归主人。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      # SQLite 路径只在环境变量里（配置文件的 database 节没有 sqlite 路径项），缺省落在工作目录 /。
+      DT_SQLITE_PATH: /data/donetick.db
+    volumes:
+      # SQLite 库和本地文件存储（头像、任务照片）。
+      - ${WONTON_APP_DATA}/data:/data
+    # 包里的文件经 configs 交给容器（核心在启动前写进去），不能用卷挂载。
+    configs:
+      - source: config
+        target: /config/selfhosted.yaml
+    healthcheck:
+      # /health 回版本和状态：路由起来了、配置加载了、库开好了（fx 装配里 DB 连不上应用不启动）。
+      # 镜像是 alpine，有 busybox wget。
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2021/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+
+configs:
+  config:
+    content: |
+      name: "wonton"
+      is_done_tick_dot_com: false
+      is_user_creation_disabled: true
+      disable_password_auth: true
+      # 全家一个圈：新 OIDC 用户进共享家庭圈，不建个人圈。
+      single_circle_instance: true
+      database:
+        type: "sqlite"
+        migration: true
+      jwt:
+        secret: "${WONTON_SECRET_JWT_SECRET}"
+        session_time: 168h
+        max_refresh: 1440h
+      server:
+        port: 2021
+        serve_frontend: true
+        # 日历订阅等外链的基地址。
+        public_host: "${WONTON_APP_URL}"
+      scheduler_jobs:
+        due_job: 30m
+        overdue_job: 3h
+        pre_due_job: 3h
+      logging:
+        level: "info"
+        encoding: "json"
+      oauth2:
+        # 登录页按钮的文字。
+        name: "云吞"
+        client_id: "${WONTON_OIDC_CLIENT_ID}"
+        client_secret: "${WONTON_OIDC_CLIENT_SECRET}"
+        auth_url: "${WONTON_OIDC_AUTH_URL}"
+        token_url: "${WONTON_OIDC_TOKEN_URL}"
+        user_info_url: "${WONTON_OIDC_USERINFO_URL}"
+        redirect_url: "${WONTON_APP_URL}/auth/oauth2"
+        scopes: [openid, profile, email, groups]
+        # 主人的 groups 里有 owner：每次登录同步成圈管理员。
+        admin_groups: [owner]
+      # 头像、任务照片存本地；不配就不填（默认走 S3，自托管没有）。
+      storage:
+        storage_type: "local"
+        base_path: "/data/files"
+      bridge:
+        enabled: false
+
+x-wonton:
+  spec: "0.11"
+  id: com.donetick.donetick
+  version: 0.1.1
+  kind: app
+  title: { zh: 家务打卡（Donetick）, en: Chores (Donetick) }
+  description:
+    zh: 像一张全家的值日表：家务轮着做、做完打卡，逾期会提醒，攒积分能换奖励
+    en: "A shared chore chart for the family: rotate tasks, check them off, earn points for rewards"
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/tasks.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://donetick.com
+  license: AGPL-3.0-only
+  tags:
+    zh: [家务, 家庭, 提醒]
+    en: [Chores, Family, Reminders]
+  about:
+    zh: |
+      把家里要做的活变成一张全家的打卡表：扫地、倒垃圾、遛狗这些家务设好频次，自动轮着分给每个人，
+      到期了在任务列表里点一下就算完成，逾期没做的会标出来。
+
+      做家务攒积分，攒够了按家里定的奖励换；谁做了什么、做得勤不勤，积分页一眼看到。也可以设一次性的事，
+      比如交水电费、换滤芯。
+
+      登录用云吞的账号，打开就是自己的任务；家人打开时进的是同一个家庭圈，看到同一张表。
+    en: |
+      Turns household chores into a family check-in chart: set up recurring chores like sweeping, trash or
+      walking the dog, and Donetick rotates them between family members. Tasks due today are one tap to
+      complete, and overdue ones are flagged.
+
+      Finished chores earn points; trade them for rewards your family defines. The points page shows who
+      did what at a glance. One-off errands like paying bills work too.
+
+      Sign-in uses your Wonton account. Family members share the same household chart.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: donetick
+    port: 2021
+    # 上游登录页没有“自动跳 OIDC”的选项，落在登录页点一下「云吞」。
+    path: /login
+    sso: oidc
+    oidc:
+      # 前端固定回调 /auth/oauth2（浏览器登录后回这里，前端拿 code 换应用自己的会话）。
+      redirect_paths: [/auth/oauth2]
+      # 上游用 golang.org/x/oauth2 换令牌，密钥放请求体。
+      token_endpoint_auth_method: client_secret_post
+  # 家务打卡不需要出网：OIDC、数据和提醒都在家里。
+  permissions: []
+  secrets:
+    # 会话令牌的签名密钥：不写就每次启动随机生成，重启后全家都要重新登录。
+    jwt_secret:
+      generate: { bytes: 32 }
+  # 应用页面（tabs）放主页和任务列表，放不放由用户决定。
+  tabs:
+    - id: home
+      title: { zh: 主页, en: Home }
+      icon: tabs/home.svg
+      icon_selected: tabs/home-fill.svg
+      path: /
+    - id: chores
+      title: { zh: 任务, en: Chores }
+      icon: tabs/chores.svg
+      icon_selected: tabs/chores-fill.svg
+      path: /my/chores
+  # 上游没写最低内存；本机空闲实测约 28M、带数据和页面操作约 45M，取 64M。镜像有 amd64 和 arm64（还有 arm/v7，清单只收两种）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 64M

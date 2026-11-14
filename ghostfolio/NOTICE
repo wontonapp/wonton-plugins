@@ -1,0 +1,23 @@
+# 云吞插件 pb-ghostfolio 的许可与声明
+
+图标
+====
+
+`icon.png` 使用 Ghostfolio 官方标志（上游仓库 `apps/client/src/assets/android-chrome-512x512.png`，原样使用，未改色、未变形）。
+
+Ghostfolio 名称和标志是 Ghostfolio 项目及其权利人的商标；本插件是独立维护的云吞插件包，不代表上游官方出品、合作或背书。
+
+许可证
+------
+
+上游应用的许可证：AGPL-3.0-only，上游仓库 https://github.com/ghostfolio/ghostfolio 。
+
+本插件包的许可证见仓库的 LICENSE（MIT）。
+
+第三方镜像逐个列许可：
+
+| 镜像 | 许可证 |
+| --- | --- |
+| `ghostfolio/ghostfolio` | AGPL-3.0-only |
+| `postgres:15.15-alpine3.22` | PostgreSQL Licence |
+| `redis:8.4-alpine` | AGPL-3.0 / RSAL-2.0 / SSPL-1.0 三选一 |

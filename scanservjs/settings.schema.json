@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "x-wonton-order": ["airscan_devices", "saned_hosts"],
+  "properties": {
+    "airscan_devices": {
+      "type": "string",
+      "default": "",
+      "x-wonton-title": { "zh": "eSCL 扫描仪", "en": "eSCL scanners" },
+      "x-wonton-description": {
+        "zh": "格式：\"名字\" = \"http://192.0.2.10/eSCL\"，多台用英文分号隔开",
+        "en": "Format: \"Name\" = \"http://192.0.2.10/eSCL\"; separate multiple scanners with semicolons"
+      }
+    },
+    "saned_hosts": {
+      "type": "string",
+      "default": "",
+      "x-wonton-title": { "zh": "SANE 网络主机", "en": "SANE network hosts" },
+      "x-wonton-description": {
+        "zh": "运行 saned 的主机地址，多台用英文分号隔开",
+        "en": "Hosts running saned, separated by semicolons"
+      }
+    }
+  }
+}

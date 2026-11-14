@@ -1,0 +1,104 @@
+# 家庭表格（Grist）：像 Excel 又能当小数据库用，单容器，数据都在 /persist。
+#
+# 登录用网关代登录：Grist 的代登录头里放的是邮箱（上游文档 forwarded-headers 一节），
+# 所以这里用 {email}；GRIST_DEFAULT_EMAIL 用的 WONTON_OWNER_EMAIL 和网关注入的是
+# 同一个内部邮箱，主人第一个登录就是安装管理员，家里人登进来各有各的账号。
+# Grist 没有可信代理白名单的选项，本插件不出网、不开局域网端口，能连到它的
+# 只有核心和本插件自己的容器（见规范“网关代登录”的表格）。
+name: grist
+
+services:
+  grist:
+    # 上游官方镜像 grist-oss：只有自由开源代码（Apache-2.0），社区版，amd64 和 arm64 都有。
+    # 主镜像 gristlabs/grist 只有 amd64，且带可切换的商业版（要激活密钥，插件不依赖它）。
+    image: gristlabs/grist-oss:1.7.22@sha256:40d2c0ce0c29b2aa1ec1dcf9652ec26a13a8f2b4b44116733bcede428afd27dc
+    # 镜像入口脚本以 root 启动、把 /persist 归一到镜像内 grist 用户（uid 1001）再降权运行，
+    # 不认 PUID/PGID，所以不写 user。备份时注意数据目录里的文件属主是这个 uid。
+    environment:
+      APP_HOME_URL: ${WONTON_APP_URL:?核心没有注入插件网页地址}
+      # 第一个用它登录的人成为安装管理员；改值会改掉管理员，核心注入的邮箱装好后不变。
+      GRIST_DEFAULT_EMAIL: ${WONTON_OWNER_EMAIL:?核心没有注入主人邮箱}
+      # 网关代登录：网关认出用户后带上 X-Wonton-User。
+      GRIST_FORWARD_AUTH_HEADER: X-Wonton-User
+      # 单个家庭站点：沿用内置站点 docs，根路径就是首页（上游自托管文档的 GRIST_SINGLE_ORG 用法）。
+      # 不要设成别的名字：上游为自定义站点预建管理员时拿邮箱当显示名，登录后右上角会显示邮箱而不是名字。
+      GRIST_SINGLE_ORG: docs
+      # 新安装默认先进 /boot 的首次设置向导；插件已把该配的都配好，直接投入服务。
+      GRIST_IN_SERVICE: "true"
+      # 每个请求都认代登录头、不依赖 Grist 自己的会话：登录态始终和网关一致，不会出现会话和请求头
+      # 各认一个账号的情况（上游 forwarded-headers 文档的 K8s 变体在用同一开关）。
+      GRIST_IGNORE_SESSION: "1"
+      # 不申请高权限，公式沙箱退回不隔离模式：公式以容器用户直接运行，
+      # 别导入陌生人的表格（见 README）。上游默认值 gvisor 需要 SYS_PTRACE 等能力。
+      GRIST_SANDBOX_FLAVOR: unsandboxed
+      # 不出网：关遥测和版本检查，避免反复尝试连外网。（值必须加引号：YAML 把裸 off 当布尔。）
+      GRIST_TELEMETRY_LEVEL: "off"
+      GRIST_ALLOW_AUTOMATIC_VERSION_CHECKING: "false"
+      GRIST_SESSION_SECRET: ${WONTON_SECRET_SESSION_SECRET:?核心没有注入会话密钥}
+    volumes:
+      - ${WONTON_APP_DATA:?核心没有注入插件数据目录}:/persist
+    healthcheck:
+      # /status 在就绪前回 503（{"error":"starting"}），就绪后回 200（“... is alive.”）。
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8484/status"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.11"
+  id: com.getgrist.grist
+  version: 0.1.1
+  kind: app
+  title: { zh: 家庭表格（Grist）, en: Home Spreadsheets (Grist) }
+  description:
+    zh: 像会记账的 Excel，又是个小数据库：家里的资产、报销、清单放进互相联动的表格里，还能生成图表
+    en: Like a spreadsheet crossed with a little database — track budgets, inventories and lists in linked tables with charts
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://www.getgrist.com
+  license: Apache-2.0
+  tags:
+    zh: [效率, 记账]
+    en: [Productivity, Finance]
+  about:
+    zh: |
+      把家里的东西记进表格：资产、报销、课程表、藏书清单都行。表格之间能互相引用，
+      汇总自动算，还能画成图表；像 Excel 一样上手，又像数据库一样不乱。
+
+      建好一张表格，家里人都能打开；每一行、每一列谁看得到、谁能改，都可以设规则。
+
+      用 Python 写公式的部分直接在本插件里运行，没有隔离保护；所以只导入自己和家人做的表格，
+      不要导入网上陌生人的表格文件。
+    en: |
+      Put household things into tables: assets, expenses, timetables, book lists. Tables can
+      reference each other, totals recalculate automatically, and everything can become a chart.
+      Easy to start like a spreadsheet, tidy like a database.
+
+      Share a document with the whole family; you decide who can see or edit each table, column and row.
+
+      Formulas are Python code that runs inside the plugin without isolation, so only import documents
+      made by you or your family — not files from strangers.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: grist
+    port: 8484
+    sso: proxy
+    proxy:
+      headers:
+        # Grist 的代登录只认邮箱（上游 forwarded-headers 文档），没有用户名概念。
+        X-Wonton-User: "{email}"
+  # 会话密钥由核心生成：重装（保留数据）沿用，删数据重装后旧会话失效，重新登录即可。
+  secrets:
+    session_secret:
+      generate: { bytes: 32 }
+  # owner.identity：Grist 在首次启动时按 GRIST_DEFAULT_EMAIL 预建管理员，需要主人的邮箱。
+  permissions:
+    - owner.identity
+  requirements:
+    # 上游 grist-oss 镜像有 amd64 和 arm64（docker buildx imagetools inspect）。
+    arch: [amd64, arm64]
+    # 上游没写最低内存；空载实测约 192M（打开文档后的 Python 数据引擎另计），取 512M。
+    memory: 512M

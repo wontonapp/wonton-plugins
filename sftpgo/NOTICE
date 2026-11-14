@@ -1,0 +1,11 @@
+SFTPGo 插件包（compose、hook 脚本、文档）遵循仓库根目录 LICENSE 的许可。
+
+图标
+----
+文件：icon.png
+来源：https://github.com/drakkan/sftpgo 仓库 img/logo.png（commit v2.7.6）
+版权：Copyright (c) 2019 Nicola Murino
+许可：AGPL-3.0-only（https://www.gnu.org/licenses/agpl-3.0.html）
+说明：SFTPGo 的名称和标志是 Nicola Murino（drakkan）的商标/标志。本插件是独立的第三方
+集成，按原样使用上游标志，未做修改（仅等比缩放并置于白色底上），与上游项目或其作者
+没有任何隶属或背书关系。SFTPGo 项目主页：https://sftpgo.com
