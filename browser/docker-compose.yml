@@ -1,0 +1,121 @@
+# Bot 的浏览器：Bot 用 Playwright MCP（微软官方镜像）驾驶家里服务器上的一台可见 Chromium，
+# 用户在网页里看实时画面、随时接手。画面用 Debian 仓库的 Xvfb + x11vnc + noVNC + nginx 拼成
+# （镜像由 images/browser/Dockerfile 构建，全是发行版组件，没有应用代码）：
+# - Chromium 的 DevTools 只肯绑 127.0.0.1（headful 下 --remote-debugging-address 被忽略，上游
+#   linuxserver/chromium 也一样，见其 issue #71），容器里的 nginx 把 9222 转到插件网络（Host 改写成 127.0.0.1，DevTools 只认 IP 或 localhost），只给
+#   同网络的 Playwright MCP 用；CDP 等于整台浏览器的完全控制权，不能出插件网络。
+# - 网页入口是 noVNC（websockify 的 WebSocket）。它自身不带登录可关（没有认证这回事），所以
+#   sso 用 none：网关对每个请求（含 WebSocket）都先校验用户的会话，未登录进不来，进去就是画面。
+# - Chromium 的资料（cookie、登录状态）在数据目录的 profile/：用户登录过的网站 Bot 也能用，
+#   about 里如实写了这一点。
+name: browser
+
+services:
+  browser:
+    # 由仓库根 scripts/publish.sh 构建发布，这里写清单列表的摘要。
+    image: ghcr.io/wontonapp/wonton-plugins/browser/browser:0.1.2@sha256:47868161f2e8fc64bb650531064ac7acbb45a072753d3650c82889d7d6b22025
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    # 根文件系统只读，只有 /tmp（和 Chromium 的 /dev/shm）可写；要改的只有自己的数据目录。
+    read_only: true
+    tmpfs:
+      - /tmp
+    # 现代网站（YouTube 等）要用大的 /dev/shm。
+    shm_size: 1g
+    environment:
+      TZ: ${TZ}
+      WONTON_APP_URL: ${WONTON_APP_URL}
+    volumes:
+      - ${WONTON_APP_DATA}:/config
+    depends_on:
+      mcp:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - 'import socket, urllib.request as u; s=socket.socket(socket.AF_UNIX); s.settimeout(3); s.connect("/tmp/x11vnc.sock"); assert s.recv(12).startswith(b"RFB "); s.close(); u.urlopen("http://127.0.0.1:6080/vnc.html",timeout=3); u.urlopen("http://127.0.0.1:9222/json/version",timeout=3)'
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+
+  mcp:
+    image: mcr.microsoft.com/playwright/mcp:v0.0.85@sha256:cc70a6922ff856f3aba0fe97d0d94220dc9a7f367f6d332facc6d81d9a91e60e
+    restart: unless-stopped
+    # 和上游镜像一样以 node 用户运行；根文件系统只读，cwd（/home/node）和 /tmp 用 tmpfs。
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /home/node:uid=1000,gid=1000,mode=0700
+    # 连接插件自己的浏览器：Bot 的每一步都发生在用户看得见的那台 Chromium 里。
+    # 镜像的 ENTRYPOINT 带着它自己的 --headless --browser chromium --no-sandbox，
+    # 给了 --cdp-endpoint 就不会启动自己的浏览器，这三个参数不起作用。
+    # 核心按动态容器名/IP 连接 browser 的 nginx 入口；入口拒绝浏览器 Origin，后端只认 localhost Host。
+    # 不开放通配 Host，浏览器页面无法直接冒充这个 Host 绕过入口。
+    command:
+      - --port
+      - "8931"
+      - --host
+      - 0.0.0.0
+      - --allowed-hosts
+      - localhost:8931,127.0.0.1:8931
+      - --cdp-endpoint
+      - http://browser:9222
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - 'fetch("http://127.0.0.1:8931/mcp",{method:"POST",headers:{"content-type":"application/json",accept:"application/json, text/event-stream"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"initialize",params:{protocolVersion:"2025-06-18",capabilities:{},clientInfo:{name:"healthcheck",version:"0.0.0"}}})}).then(r=>process.exit(r.ok?0:1),()=>process.exit(1))'
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.4"
+  id: app.wonton.browser
+  version: 0.1.2
+  kind: app
+  title: { zh: Bot 的浏览器, en: Bot Browser }
+  description:
+    zh: 让 Bot 替你上网办事：它开网页、点按、填表时你在旁边实时看着，需要时随时接手；你登录过的网站它也能直接用。
+    en: "Lets your bot get things done on the web: watch live as it opens pages, clicks and fills in forms, and take over whenever you need to. It shares your sign-ins, so sites you're logged into work for it too."
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/live-view.png, screenshots/browsing.png]
+  author: { name: geraldpeng6 }
+  homepage: https://github.com/wontonapp/wonton-plugins/tree/main/browser
+  # 独立组件的主许可证；包内第三方文件的完整声明随 Debian /usr/share/doc/*/copyright 保留。
+  # Chromium BSD-3-Clause，Playwright Apache-2.0，noVNC MPL-2.0，x11vnc GPL-2.0-or-later，
+  # websockify LGPL-3.0-only，nginx BSD-2-Clause，Xvfb MIT，Supervisor BSD-3-Clause-Modification。
+  license: BSD-3-Clause AND Apache-2.0 AND MPL-2.0 AND GPL-2.0-or-later AND LGPL-3.0-only AND BSD-2-Clause AND MIT AND BSD-3-Clause-Modification AND OFL-1.1 AND CC-BY-SA-3.0 AND Zlib
+  tags:
+    zh: [AI, 工具]
+    en: [AI, Tools]
+  about:
+    zh: |
+      Bot 用这台浏览器开网页、点按、填表，你实时看着它的画面。需要你的时候，直接在画面上打字、点按，做完再交回去。
+
+      它和你共用一套登录状态：你登录过的网站，Bot 也能用。
+    en: |
+      The bot opens pages, clicks and fills forms in this browser while you watch the screen live. When it needs you, take over with your own typing and clicks, then hand the page back.
+
+      It shares one login state with you: sites you signed into work for the bot too.
+  release_notes: { zh: 插件迁入官方合仓，自建镜像改由官方仓库发布。, en: "Moved the plugin into the official monorepo, with custom images published from the official repository." }
+  webui:
+    service: browser
+    port: 6080
+    sso: none
+  mcp:
+    service: browser
+    port: 8931
+    transport: streamable-http
+  permissions:
+    - network.egress
+  # 自研插件，镜像是本仓库构建的，amd64 和 arm64 都发；内存按本机空闲实测取整（实测约 311M，取 512M）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

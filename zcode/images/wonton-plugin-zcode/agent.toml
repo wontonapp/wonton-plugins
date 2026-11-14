@@ -1,0 +1,42 @@
+# ZCode 的配置：ACP 桥首次启动从 npm 装（版本和 npm 摘要固定），CLI 在镜像里。
+
+[[install]]
+name = "zcode-acp-server"
+version = "0.82.1"
+source = "npm"
+package = "zcode-acp-server"
+integrity = "sha512-QHVaKQk8yEYCTWfmaW1+VpwBe5iq7zcPd32SlEy7sZeuPS/xMPZQvKxb8XrPFrekOig6f0kE2594d5uOZae3IQ=="
+
+[skills]
+target = "~/.zcode/skills"
+
+[prompt]
+target = "~/.zcode/AGENTS.md"
+
+# MCP 总线地址由网关钩子每次启动同步。
+[gateway]
+hook = "/usr/local/lib/wonton-agent/gateway"
+
+[acp]
+command = ["/usr/local/bin/zcode-acp"]
+
+[web]
+port = 8080
+
+# 显式选择后才切换来源；底座在命令成功后重启容器。
+[[login]]
+id = "account-zai"
+name = "Z.ai 账号（浏览器授权）"
+command = ["/usr/local/lib/wonton-agent/model-source", "zai"]
+status = ["/usr/local/lib/wonton-agent/login-status", "account", "zai"]
+
+[[login]]
+id = "account-bigmodel"
+name = "智谱账号（浏览器授权，bigmodel.cn）"
+command = ["/usr/local/lib/wonton-agent/model-source", "bigmodel"]
+status = ["/usr/local/lib/wonton-agent/login-status", "account", "bigmodel"]
+
+[[login]]
+id = "model-gateway"
+name = "使用模型网关"
+command = ["/usr/local/lib/wonton-agent/model-source", "gateway"]

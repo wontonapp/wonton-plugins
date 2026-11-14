@@ -1,0 +1,141 @@
+# ZCode Agent：agent 跑固定版本的官方 ZCode CLI（镜像里）和 ACP 桥 zcode-acp-server（首次启动装到数据卷）；
+# 两个服务只共享 ACP socket 所在的 run/ 子目录，bridge 的 crypto store 和 Matrix 令牌不给 agent。
+services:
+  agent:
+    image: ghcr.io/wontonapp/wonton-plugins/zcode/wonton-plugin-zcode:0.1.4@sha256:a54733cd77980f13ad8ecb84e0412507c630aac412bb3aa7fa66a7e9faf721bf
+    user: "65532:65532"
+    restart: unless-stopped
+    environment:
+      HOME: /data/agent/home
+      WONTON_ACP_SOCKET: /data/run/acp.sock
+      WONTON_AGENT_WORKSPACE: /workspace
+      # 核心注入模型网关；未接网关时允许在登录页明确选择官方账号。
+      WONTON_MODEL_BASE_URL: ${WONTON_MODEL_BASE_URL:-}
+      WONTON_MODEL_API_KEY: ${WONTON_MODEL_API_KEY:-}
+      WONTON_MODEL_DEFAULT: ${WONTON_MODEL_DEFAULT:-}
+      # 插件工具经 MCP 总线；地址带 Bot 令牌，钩子每次启动写进 CLI 运行配置。
+      WONTON_MCP_URL: ${WONTON_MCP_URL:?需要 MCP 总线地址}
+      # 凭据文件的加密密钥：核心按安装生成一次，重建容器不变，否则已有的登录解不开。
+      ZCODE_CREDENTIAL_SECRET: ${WONTON_SECRET_ZCODE_CREDENTIAL_SECRET}
+      # 会话起始权限模式：改文件和跑命令前弹确认卡片。
+      ZCODE_ACP_MODE: guarded
+      # 桥自己也要出网（账号 token 交换），Node 24 认这个变量并读容器里的代理环境变量。
+      NODE_USE_ENV_PROXY: "1"
+      # 出网代理由核心注入，这里不写代理变量，写了空值会把核心的注入顶掉。
+    volumes:
+      - ${WONTON_BOT_DATA:?需要 Bot 数据目录}/agent:/data/agent
+      - ${WONTON_BOT_DATA}/run:/data/run
+      - ${WONTON_BOT_DATA}/workspace:/workspace
+    healthcheck:
+      # socket 是底座把 ACP 转发建好之后才有的，有它才说明 Agent 能接连接。
+      test: ["CMD", "test", "-S", "/data/run/acp.sock"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      start_interval: 2s
+
+  bridge:
+    image: ghcr.io/wontonapp/wonton-acp-bridge:main-452a377@sha256:1d4526dc5b552a08dc6eb8c17f68d0fb0eb08506b815c842edc34914acf2d3c1
+    user: "65532:65532"
+    restart: unless-stopped
+    depends_on:
+      agent:
+        condition: service_started
+    environment:
+      HOME: /data/bridge
+      WONTON_BOT_DATA: /data
+      WONTON_BRIDGE_DATA: /data/bridge
+      WONTON_ACP_SOCKET: /data/run/acp.sock
+      WONTON_AGENT_WORKSPACE: /workspace
+      WONTON_MATRIX_HOMESERVER: ${WONTON_MATRIX_HOMESERVER:?需要 Matrix 地址}
+      WONTON_MATRIX_ACCESS_TOKEN: ${WONTON_MATRIX_ACCESS_TOKEN:?需要 Bot 的 Matrix 访问令牌}
+      WONTON_MATRIX_ALLOWED_USERS: ${WONTON_MATRIX_ALLOWED_USERS:?需要主人的 Matrix 用户 ID}
+      WONTON_MATRIX_HOME_ROOM: ${WONTON_MATRIX_HOME_ROOM:?需要主人与 Bot 的主房间}
+      WONTON_MCP_URL: ${WONTON_MCP_URL:?需要 MCP 总线地址}
+      # 新会话切到这个模式：改文件、跑命令经确认卡片问主人。
+      WONTON_ACP_MODE: guarded
+    volumes:
+      - ${WONTON_BOT_DATA}/bridge:/data/bridge
+      - ${WONTON_BOT_DATA}/run:/data/run
+    healthcheck:
+      test: ["CMD", "test", "-S", "/data/run/acp.sock"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.9"
+  id: ai.zcode
+  version: 0.1.4
+  kind: agent
+  title: { zh: AI 编程助手（ZCode）, en: Coding Bot (ZCode) }
+  description:
+    zh: 智谱家的编程助手：在聊天里帮你写代码、改文件、跑命令，动手前先弹卡片问你。和通用聊天 Agent 相比，更适合想在聊天里改文件、跑命令并使用智谱官方编程工具的人；只想闲聊不适合选它。默认用模型设置，不需要智谱账号或 key，也能选择智谱或 Z.ai 账号登录。
+    en: "Zhipu's (Z.ai) coding bot: it writes code, edits files and runs commands from your chat, asking with a card before it acts. Compared with a general chat Agent, it is for people who want Zhipu's official coding tools and need to edit files or run commands in chat; it is not for casual chat. Models setup needs no Zhipu account or key; you can also sign in with a Zhipu or Z.ai account."
+  icon: icon.png
+  notices: [NOTICE, images/wonton-plugin-zcode/LICENSE.zcode]
+  author: { name: Wonton plugin authors }
+  homepage: https://github.com/zai-org/ZCode
+  license: Apache-2.0
+  tags: { zh: [AI, 开发], en: [AI, Development] }
+  about:
+    zh: |
+      ZCode 是智谱的编程 AI，住进你的聊天里：改文件、跑命令之前先弹确认卡片问你；你装的应用提供的工具
+      也能在聊天里用。默认用模型设置里配好的 AI；也可以在应用页打开登录网页（管默认 Bot）或在聊天里
+      发 /wonton login（管这个聊天的 Bot），明确选择智谱或 Z.ai 账号登录。切回模型设置也在登录页选择。
+
+      注意两件事：Coding Plan 的额度和加速条款只对官方工具和官方端点有效，经这里用的是官方 ZCode CLI 本体，
+      但社区 ACP 桥拉起的会话算不算官方工具，官方没写明；账号登录的令牌过期后不会自动刷新，要重新登录一次。
+
+      它住在自己的容器里，改文件、跑命令之前经确认卡片问你；Wonton 插件的工具也从聊天里调。
+    en: |
+      ZCode is Zhipu's coding AI, living in your chat: it sends an approval request before editing
+      files or running commands, and the tools your apps provide work from the chat too. By default
+      it uses the AI set up in Models. To use your own identity, open the sign-in page on the app
+      screen (for the default bot) or send /wonton login in the chat (for this chat's bot), and
+      explicitly choose a Zhipu or Z.ai account. Use the same page to switch back to Models.
+
+      Two things to know: the Coding Plan quota and speed terms only cover official tools and endpoints.
+      This plugin runs the official ZCode CLI itself, but whether sessions started through the community
+      ACP bridge count as an official tool is not documented by Zhipu. A sign-in token is not refreshed
+      automatically once it expires, and you have to sign in again.
+
+      It works in its own container and asks through confirmation cards before editing files or running
+      commands; Wonton plugin tools are called from the chat too.
+  release_notes:
+    zh: 插件包迁入官方插件合仓，Agent 镜像由官方合仓发布，底座与聊天桥改用官方镜像。
+    en: Moved into the official Wonton plugin monorepo, which publishes the Agent image; uses official base and chat bridge images.
+    zh-Hant: 插件包遷入官方插件合倉，Agent 映像由官方合倉發布，底座與聊天橋改用官方映像。
+    ja: 公式プラグインモノレポへ移行し、Agent イメージの公開元とベース・チャットブリッジのイメージを公式に統一しました。
+  agent:
+    protocol: acp
+    # id 和 agent.toml 的 [[login]] 一一对应；登录都在 ZCode 自己的程序里完成。
+    login:
+      - id: account-zai
+        title: { zh: Z.ai 账号, en: Z.ai account }
+      - id: account-bigmodel
+        title: { zh: 智谱账号（bigmodel.cn）, en: Zhipu account (bigmodel.cn) }
+      - id: model-gateway
+        title: { zh: 模型网关, en: Model gateway }
+  bot:
+    display_name: { zh: ZCode, en: ZCode }
+  bots:
+    services: [agent, bridge]
+  webui:
+    service: agent
+    port: 8080
+    sso: none
+  secrets:
+    # 凭据文件的加密密钥，装一次生成一次，存在核心的密钥库里。
+    zcode_credential_secret:
+      generate: { bytes: 32 }
+  permissions:
+    - matrix.bot
+    - tools
+    - models
+    # 账号登录和登录后的官方模型请求都要出网。
+    - network.egress
+  requirements:
+    arch: [amd64, arm64]
+    memory: 1G

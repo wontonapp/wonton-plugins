@@ -1,0 +1,7 @@
+#!/bin/sh
+# CLI 命令行入口（登录、状态脚本里用）：代理变量的处理和 zcode-acp 一样。
+set -eu
+if [ -n "${HTTPS_PROXY:-}" ]; then export ZCODE_HTTP_PROXY="${ZCODE_HTTP_PROXY:-$HTTPS_PROXY}"; fi
+if [ -n "${NO_PROXY:-}" ]; then export ZCODE_NO_PROXY="${ZCODE_NO_PROXY:-$NO_PROXY}"; fi
+unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy NODE_USE_ENV_PROXY
+exec node "${ZCODE_BIN:-/opt/zcode/glm/zcode.cjs}" "$@"

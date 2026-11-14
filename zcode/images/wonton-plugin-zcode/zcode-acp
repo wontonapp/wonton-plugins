@@ -1,0 +1,29 @@
+#!/bin/sh
+# ACP 入口：底座每来一个连接就起一次。把平台注入的代理转成 CLI 认的变量，再把通用代理变量摘掉。
+# 通用变量留着的话，Node 的 undici 全局代理会先接管请求、不认 CLI 的 noProxy，内部地址（模型网关、
+# MCP 总线）就会绕到宿主的出网代理上。ZCODE_* 是 CLI 自己的开关，它的模型请求和工具子进程都按它出网。
+set -eu
+source_file="${HOME:?需要 HOME}/.zcode/wonton-model-source"
+source=gateway
+if [ -f "$source_file" ]; then
+    source=$(cat "$source_file")
+fi
+case "$source" in
+    gateway)
+        for name in WONTON_MODEL_BASE_URL WONTON_MODEL_API_KEY WONTON_MODEL_DEFAULT; do
+            eval 'value=${'"$name"':-}'
+            [ -n "$value" ] || { echo "模型网关未就绪：缺少 $name" >&2; exit 1; }
+        done
+        export ZCODE_PROVIDER=wonton-gateway ZCODE_MODEL="$WONTON_MODEL_DEFAULT"
+        ;;
+    zai|bigmodel)
+        export ZCODE_PROVIDER="account:${source}-individual-coding-plan"
+        unset ZCODE_MODEL
+        ;;
+    *) echo "模型来源记录无效，请重新选择" >&2; exit 1 ;;
+esac
+if [ -n "${HTTPS_PROXY:-}" ]; then export ZCODE_HTTP_PROXY="${ZCODE_HTTP_PROXY:-$HTTPS_PROXY}"; fi
+if [ -n "${NO_PROXY:-}" ]; then export ZCODE_NO_PROXY="${ZCODE_NO_PROXY:-$NO_PROXY}"; fi
+unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy NODE_USE_ENV_PROXY
+export ZCODE_BIN="${ZCODE_BIN:-/opt/zcode/glm/zcode.cjs}"
+exec node /data/agent/tools/zcode-acp-server/0.82.1/dist/cli.js
