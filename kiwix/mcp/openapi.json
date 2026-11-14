@@ -1,0 +1,146 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Kiwix Server",
+    "description": "kiwix-serve 3.8.2 的查询接口（端点与参数出处：kiwix-tools docs/kiwix-serve.rst）。全部只读（GET），无鉴权：服务只在插件网络里，适配器之外只有核心。",
+    "version": "3.8.2"
+  },
+  "servers": [{ "url": "http://server:8080" }],
+  "paths": {
+    "/suggest": {
+      "get": {
+        "operationId": "SuggestEntries",
+        "summary": "Look up page title suggestions in one book",
+        "description": "Suggestions (JSON array) for a partially typed page title, matched against the page titles of the given ZIM file.",
+        "parameters": [
+          {
+            "name": "content",
+            "in": "query",
+            "required": true,
+            "description": "Name of the ZIM file (the book's `name` metadata, as listed by the entries tool).",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "term",
+            "in": "query",
+            "description": "Partially typed query text.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "Maximum number of suggestions (default 10).",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "Return suggestions starting from this index (default 0).",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "A JSON array of suggestions." }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "operationId": "SearchBook",
+        "summary": "Search for pages inside one book",
+        "description": "Full-text search in the given ZIM file. The result is the search results page (HTML) listing matched articles.",
+        "parameters": [
+          {
+            "name": "content",
+            "in": "query",
+            "required": true,
+            "description": "Name of the ZIM file to search (legacy single-book parameter; at least one book selector is mandatory for /search).",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pattern",
+            "in": "query",
+            "description": "Text to search for.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "Return results starting from this index (default 0).",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "pageLength",
+            "in": "query",
+            "description": "Maximum number of results in the response (default 25, capped at 140).",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "The search results page (HTML)." }
+        }
+      }
+    },
+    "/random": {
+      "get": {
+        "operationId": "RandomArticle",
+        "summary": "Get a random article from one book",
+        "description": "Redirects to a randomly selected article page of the given ZIM file; the HTTP client follows the redirect and returns the article (HTML).",
+        "parameters": [
+          {
+            "name": "content",
+            "in": "query",
+            "required": true,
+            "description": "Name of the ZIM file.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "A randomly chosen article page (HTML)." }
+        }
+      }
+    },
+    "/catalog/v2/entries": {
+      "get": {
+        "operationId": "ListCatalogEntries",
+        "summary": "List the books in the library",
+        "description": "Paginated OPDS feed (Atom XML) of the ZIM files in the library, optionally filtered. Each entry carries the book's id (urn:uuid), name, title, language, size and description.",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "description": "Return entries starting from this index (default 0).",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "Maximum number of entries (default 10; -1 for all; 0 returns none but reveals the total via the feed's totalResults).",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "description": "Filter by language, comma-separated 3-letter codes (e.g. `zho,eng`); an entry matches when any of its languages is listed.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by category, comma-separated (e.g. `wikipedia,gutenberg`).",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only entries whose title or description contains this text.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "An OPDS acquisition feed (Atom XML) of matching books." }
+        }
+      }
+    }
+  }
+}
