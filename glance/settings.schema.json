@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "x-wonton-order": [
+    "city",
+    "hour_format",
+    "units"
+  ],
+  "properties": {
+    "city": {
+      "type": "string",
+      "default": "Beijing, China",
+      "maxLength": 64,
+      "x-wonton-title": {
+        "zh": "天气城市",
+        "en": "Weather city",
+        "zh-Hant": "天氣城市",
+        "ja": "天気の都市"
+      },
+      "x-wonton-description": {
+        "zh": "天气部件显示的城市，用英文名写“City, Country”（如“Shanghai, China”；open-meteo 按英文名检索，中文查不到）",
+        "en": "City for the weather widget, as \"City, Country\" in English (open-meteo matches English names)",
+        "zh-Hant": "天氣部件顯示的城市，用英文名寫「City, Country」（如「Shanghai, China」；open-meteo 以英文名檢索）",
+        "ja": "天気ウィジェットに表示する都市（「City, Country」の英語表記、open-meteo は英語名で検索）"
+      }
+    },
+    "hour_format": {
+      "type": "string",
+      "enum": [
+        "12h",
+        "24h"
+      ],
+      "default": "24h",
+      "x-wonton-title": {
+        "zh": "小时制",
+        "en": "Hour format",
+        "zh-Hant": "小時制",
+        "ja": "時刻の形式"
+      },
+      "x-wonton-enum-titles": {
+        "12h": {
+          "zh": "12 小时制",
+          "en": "12-hour",
+          "zh-Hant": "12 小時制",
+          "ja": "12時間制"
+        },
+        "24h": {
+          "zh": "24 小时制",
+          "en": "24-hour",
+          "zh-Hant": "24 小時制",
+          "ja": "24時間制"
+        }
+      }
+    },
+    "units": {
+      "type": "string",
+      "enum": [
+        "metric",
+        "imperial"
+      ],
+      "default": "metric",
+      "x-wonton-title": {
+        "zh": "温度单位",
+        "en": "Temperature units",
+        "zh-Hant": "溫度單位",
+        "ja": "温度の単位"
+      },
+      "x-wonton-enum-titles": {
+        "metric": {
+          "zh": "摄氏度（℃）",
+          "en": "Celsius",
+          "zh-Hant": "攝氏（℃）",
+          "ja": "摂氏（℃）"
+        },
+        "imperial": {
+          "zh": "华氏度（℉）",
+          "en": "Fahrenheit",
+          "zh-Hant": "華氏（℉）",
+          "ja": "華氏（℉）"
+        }
+      }
+    }
+  }
+}

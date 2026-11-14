@@ -1,0 +1,13 @@
+# 图标
+
+`icon.svg` 里的图形取自 Donetick 上游仓库的官方标志
+[`assets/logo.svg`](https://github.com/donetick/donetick/blob/main/assets/logo.svg)（main@582841ab，2026-11-12），
+原样缩放放在白色底上，未改颜色和形状。
+
+- 版权与许可：Donetick 是 [AGPL-3.0](https://github.com/donetick/donetick/blob/main/LICENSE.md) 许可的开源项目，标志随其源码分发。
+- 商标：Donetick 名称与标志是 Donetick 项目的商标/标识。本插件是上游应用在云吞平台的打包，不是 Donetick 官方出品，也不代表有官方背书。
+
+# 插件包
+
+其余清单、配置和插件专属文件（`docker-compose.yml`、`tabs/`、`smoke-probes.sh` 等）按本仓库的
+MIT 许可证（见 [LICENSE](LICENSE)）分发。

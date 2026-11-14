@@ -53,7 +53,9 @@ data_write() { # 建一个带随机标记的文件夹、传一个内容也是标
 
 data_check() { # 读回标记：文件内容一致，目录也在
 	local marker dir body listing token
+	[[ -f "${SMOKE_STATE:-}" && -s "$SMOKE_STATE" ]] || { echo "标记文件里没有数据：先跑 data_write"; return 1; }
 	marker="$(cat "$SMOKE_STATE")"
+	[[ -n "$marker" ]] || { echo "标记文件为空：先跑 data_write"; return 1; }
 	dir="wonton-smoke-$marker"
 	nc_session || return 1
 	token="$(requesttoken "$SMOKE_JAR")" || { echo "取不到 CSRF 令牌"; return 1; }

@@ -1,0 +1,184 @@
+# FileBrowser Quantum：经云吞网关浏览、预览、上传、下载、整理共享文件夹里的文件。
+services:
+  filebrowser:
+    # 上游官方镜像（Apache-2.0），按多架构清单摘要固定，标签只给人看。
+    image: gtstef/filebrowser:2.0.2-stable@sha256:de2b4c4d18485ea202ab2cdada5bd25d8f0b8ed071712c8216a67194c31285ae
+    # 上游镜像固定以 uid 1000 运行、不支持 PUID/PGID（gtsteffaniak/filebrowser#2342）；
+    # 里面的 Go 静态二进制能以任意 uid 运行，直接以用户身份跑，新建文件属主就是 PUID:PGID。
+    user: "${PUID}:${PGID}"
+    volumes:
+      # 索引数据库和缓存持久化，容器重建后可复用；上游仍会执行启动扫描。
+      - ${WONTON_APP_DATA}:/home/filebrowser/data
+      # 只读共享：浏览、预览、下载；readOnly 同时关掉界面上的改动入口。
+      - ${WONTON_SHARE_PHOTOS}:/data/photos:ro
+      - ${WONTON_SHARE_MUSIC}:/data/music:ro
+      - ${WONTON_SHARE_VIDEOS}:/data/videos:ro
+      # 读写共享：文档整理、下载清理、设备上传文件的取用。
+      - ${WONTON_SHARE_DOCUMENTS}:/data/documents
+      - ${WONTON_SHARE_DOWNLOADS}:/data/downloads
+      - ${WONTON_SHARE_TRANSFERS}:/data/transfers
+    environment:
+      TZ: ${TZ}
+      # 上游镜像默认在挂载点里找 config.yaml；配置经 configs 写到挂载点外，用这个变量指过去。
+      FILEBROWSER_CONFIG: /home/filebrowser/filebrowser.yaml
+    configs:
+      - source: config
+        target: /home/filebrowser/filebrowser.yaml
+      - source: healthcheck
+        target: /home/filebrowser/healthcheck.sh
+    healthcheck:
+      test: ["CMD", "sh", "/home/filebrowser/healthcheck.sh"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+configs:
+  healthcheck:
+    file: healthcheck.sh
+  config:
+    content: |
+      http:
+        port: 80
+        baseURL: "/"
+        # 网关重设 X-Forwarded-*：OIDC 回调地址由此推导，不能自己拼。
+        trustProxyHeaders: true
+        externalUrl: ${WONTON_APP_URL}
+        # 登录只有 OIDC，WebDAV 客户端过不了这一关，关掉。
+        disableWebDAV: true
+      server:
+        disableUpdateCheck: true
+        # 镜像里的默认缓存目录归 uid 1000，换 uid 运行时写不了；放进数据目录里的子目录（属主 PUID）。
+        # 索引库和打包下载的临时文件都在这里，容器重建后仍在。
+        cacheDir: /home/filebrowser/data/cache
+        sources:
+          - path: /data/documents
+            name: 文档
+            config:
+              defaultEnabled: true
+              private: true
+              defaultPermissions:
+                view: true
+                download: true
+                modify: true
+                delete: true
+                create: true
+                configured: true
+          - path: /data/photos
+            name: 照片
+            config:
+              defaultEnabled: true
+              readOnly: true
+              defaultPermissions:
+                view: true
+                download: true
+                configured: true
+              private: true
+          - path: /data/music
+            name: 音乐
+            config:
+              defaultEnabled: true
+              readOnly: true
+              defaultPermissions:
+                view: true
+                download: true
+                configured: true
+              private: true
+          - path: /data/videos
+            name: 视频
+            config:
+              defaultEnabled: true
+              readOnly: true
+              defaultPermissions:
+                view: true
+                download: true
+                configured: true
+              private: true
+          - path: /data/downloads
+            name: 下载
+            config:
+              defaultEnabled: true
+              defaultPermissions:
+                view: true
+                download: true
+                modify: true
+                delete: true
+                create: true
+                configured: true
+              private: true
+          - path: /data/transfers
+            name: 传输
+            config:
+              defaultEnabled: true
+              defaultPermissions:
+                view: true
+                download: true
+                modify: true
+                delete: true
+                create: true
+                configured: true
+              private: true
+      auth:
+        methods:
+          password:
+            enabled: false
+          oidc:
+            enabled: true
+            issuerUrl: ${WONTON_OIDC_ISSUER}
+            clientId: ${WONTON_OIDC_CLIENT_ID}
+            clientSecret: ${WONTON_OIDC_CLIENT_SECRET}
+            scopes: "openid profile groups"
+            # 云吞的 groups scope：用户是 ["owner"]。只放 owner 组进来。
+            adminGroup: owner
+            userGroups: [owner]
+            userIdentifier: preferred_username
+
+x-wonton:
+  spec: "0.4"
+  id: org.filebrowser.quantum
+  version: 0.1.4
+  kind: app
+  title: { zh: 网页文件管理器（File Browser）, en: Web File Manager (File Browser) }
+  description:
+    zh: 像电脑上的文件夹窗口搬进了网页：翻看家里的共享文件夹，照片视频直接预览，上传、下载、改名、移动都能做。最轻巧，打开就是你的文件。
+    en: "Your computer's folder window, in a browser: go through the shared folders on your home server, preview photos and videos, and upload, download, rename or move files. The lightest option — it opens straight to your files."
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/files.png, screenshots/photos.png, screenshots/preview.png, screenshots/upload.png, screenshots/transfers.png]
+  author: { name: geraldpeng6, url: "https://github.com/geraldpeng6" }
+  homepage: https://filebrowserquantum.com
+  # 上游 FileBrowser Quantum 的许可证；插件包自己的许可证在仓库 LICENSE 里。
+  license: Apache-2.0
+  tags:
+    zh: [文件]
+    en: [Files]
+  about:
+    zh: |
+      在网页上浏览共享文件夹：图片、视频、音乐直接预览播放，文档在线看，上传、下载、重命名、移动、打包下载都能做。
+
+      打开就是你自己的文件，不用再记一个密码。
+    en: |
+      Browse the shared folders in a web page: preview images, play videos and music, read documents, upload, download, rename, move and download folders as archives.
+
+      It opens straight into your own files, with no extra password.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: filebrowser
+    port: 80
+    # 上游没有"自动跳转 OIDC"的配置，入口直接指到它的 OIDC 起点端点（302 到身份提供方），
+    # 登录页不再要多点一下。退出登录落在登录页，需要时再经此端点登录。
+    path: /api/auth/oidc/login
+    sso: oidc
+    oidc:
+      redirect_paths: [/api/auth/oidc/callback]
+  permissions:
+    - storage.share.documents:write
+    - storage.share.photos:read
+    - storage.share.music:read
+    - storage.share.videos:read
+    - storage.share.downloads:write
+    - storage.share.transfers:write
+  # 上游没写最低内存；本机空闲实测约 46M，取 128M。镜像支持 amd64 和 arm64（docker manifest inspect）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 128M

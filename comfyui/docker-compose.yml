@@ -1,0 +1,112 @@
+# ComfyUI：节点式生图工作流。上游没有发布官方镜像，镜像由 images/comfyui/Dockerfile 构建
+# （PyTorch cu128 官方基础镜像 + 上游 v0.44.0 发布源码），发布时由 scripts/publish.sh 推送并按摘要固定。
+# RTX 50 系需要 CUDA 12.8+，清单 arch 只写 amd64。
+services:
+  init:
+    # 同一镜像各写一遍，不用锚点。启动前在数据目录建好模型目录树，属主跟 user 走（PUID:PGID）。
+    image: ghcr.io/geraldpeng6/comfyui:0.1.0@sha256:fe5414a78d362139c0d98b594aaf95d323bbb17f23939c2236429f49502b4e76
+    user: "${PUID}:${PGID}"
+    entrypoint: ["mkdir", "-p"]
+    command:
+      - /data/models/checkpoints
+      - /data/models/diffusion_models
+      - /data/models/loras
+      - /data/models/vae
+      - /data/models/text_encoders
+      - /data/models/clip
+      - /data/models/upscale_models
+      - /data/models/controlnet
+      - /data/models/configs
+      - /data/custom_nodes
+      - /data/user
+      - /data/input
+      - /data/output
+      - /data/home
+    volumes:
+      - ${WONTON_APP_DATA}:/data
+    network_mode: none
+    restart: "no"
+  comfyui:
+    image: ghcr.io/geraldpeng6/comfyui:0.1.0@sha256:fe5414a78d362139c0d98b594aaf95d323bbb17f23939c2236429f49502b4e76
+    # ComfyUI 是纯 Python 应用，以任意 uid 运行；数据目录文件归用户的用户。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      # 镜像默认 HOME 是 /root，按 PUID 运行时不可写；torch、节点的缓存放数据目录。
+      HOME: /data/home
+    volumes:
+      - ${WONTON_APP_DATA}:/data
+    # PyTorch 用共享内存传进程间张量，默认 64 MiB 不够；规范对 ComfyUI 的示例也是 8g。
+    shm_size: 8g
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    # 查的是 API 真的能答话（无鉴权的系统状态接口），不只是进程活着。
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8188/api/system_stats', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 3m
+      start_interval: 5s
+
+x-wonton:
+  spec: "0.6"
+  # 反向域名：上游是 comfy.org。
+  id: org.comfy.comfyui
+  version: 0.1.1
+  kind: app
+  title: { zh: AI 画图（ComfyUI）, en: AI Image Studio (ComfyUI) }
+  description:
+    zh: 用家里的显卡让 AI 画图、做视频：把步骤像积木一样连起来，放进模型就能出图。上手有门槛，适合愿意折腾的 AI 绘画爱好者。
+    en: "Make AI images and videos on your own graphics card: connect the steps like building blocks, add a model and generate. There's a learning curve — best for AI art hobbyists."
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/generated.png, screenshots/workflow.png, screenshots/workflows.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://www.comfy.org
+  # 上游 ComfyUI 的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: GPL-3.0-only
+  tags:
+    zh: [AI, 视频]
+    en: [AI, Video]
+  about:
+    zh: |
+      把 ComfyUI 装在自己家里，在自己的显卡上生成图片和视频，数据不出门。
+
+      有 NVIDIA 显卡就自动用显卡。模型不进镜像：把模型文件放进插件数据目录的 models/ 下
+      （比如 checkpoints/ 放大模型），装好的 ComfyUI-Manager 也能在网页里直接下载。
+      想跑主流大图模型：SDXL base 1.0 约 6.9 GB，1024×1024 生成最低约 8 GB 显存，
+      32 GB 显卡很宽裕；更大模型按文件大小自估。
+
+      网页里能装自定义节点（Manager），出网权限就是给它们下载用的：节点是别人的代码，
+      装之前自己看一眼。
+    en: |
+      Run ComfyUI at home: generate images and videos on your own graphics card, with data
+      staying on your machine.
+
+      Your NVIDIA GPU is used automatically. Models are not part of the image: put model files
+      into the plugin data directory under models/ (checkpoints/ for checkpoints), or download
+      them in the web UI with the bundled ComfyUI-Manager. A popular starting point: SDXL base
+      1.0 is about 6.9 GB and needs roughly 8 GB of VRAM for 1024×1024; a 32 GB card has plenty
+      of headroom.
+
+      Custom nodes can be installed from the web UI (Manager); the internet permission exists
+      for their downloads. Custom nodes are third-party code — review before installing.
+  release_notes: { zh: 插件包迁入官方插件合仓，保留 ComfyUI v0.44.0 构建镜像和 web_get 数据探针。, en: "Moved into the official Wonton plugin monorepo; keeps the ComfyUI v0.44.0 image build and web_get data probes." }
+  # ComfyUI 没有登录页（网关挡着，只有登录用户打得开），也不支持 OIDC 或代理用户名，所以 none。
+  webui:
+    service: comfyui
+    port: 8188
+    sso: none
+  # 出网：Manager 和自定义节点下载模型、节点用。
+  permissions:
+    - devices.gpu
+    - network.egress
+  # 显卡给 comfyui 服务；required：本插件就是为显卡准备的，CPU 跑不动主流模型。
+  gpu:
+    services: [comfyui]
+  requirements:
+    arch: [amd64]
+    # 空闲约 1.5 GiB，跑 SDXL 生成时峰值更高；取 4G。
+    memory: 4G
+    gpu: { need: required }

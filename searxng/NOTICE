@@ -1,0 +1,27 @@
+图标
+----
+
+icon.svg 里的放大镜图形取自 SearXNG 官方仓库的标志
+（searxng/searxng 仓库 searx/static/themes/simple/img/favicon.svg，提交 626105eec11d776e2dbccff6cc93fd2cd85f4d0c），
+原样缩放放在白色底上，没有改色或变形。
+
+SearXNG 标志的版权和许可：
+版权归 SearXNG 项目及贡献者所有（见仓库 AUTHORS.rst），随仓库以 AGPL-3.0-or-later 发布
+（https://www.gnu.org/licenses/agpl-3.0.txt）。
+完整许可文本见 https://github.com/searxng/searxng/blob/master/LICENSE
+
+商标说明：SearXNG 名称和标志是 SearXNG 项目的商标或标志。本插件不是 SearXNG 官方出品，
+也没有得到 SearXNG 项目的背书。
+
+搜索工具
+--------
+
+mcp 服务使用 isokoliuk/mcp-searxng（https://github.com/ihor-sokoliuk/mcp-searxng，MIT License，
+Copyright (c) 2024 Ihor Sokoliuk），只使用上游官方镜像，未做修改。
+MIT 许可文本见 https://github.com/ihor-sokoliuk/mcp-searxng/blob/main/LICENSE
+
+SearXNG 应用本体
+----------------
+
+searxng 服务使用 SearXNG 官方镜像 searxng/searxng（AGPL-3.0-or-later，
+https://github.com/searxng/searxng），只使用上游官方镜像，未做修改。

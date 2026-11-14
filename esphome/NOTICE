@@ -1,0 +1,64 @@
+图标
+====
+
+`icon.svg` 用上游 ESPHome 的官方标志（房形图形），来源
+[esphome-docs](https://github.com/esphome/esphome-docs) 的 `public/favicon.svg`
+（与 https://esphome.io 站点图标同一份）。处理：图形原样保留，按插件规范把透明的底填成白色
+（上游没有规定底色）；不改色、不变形、不裁切。
+
+ESPHome 和 ESPHome 标志是 ESPHome 项目（由 Nabu Casa 维护）的商标。此处用于说明插件对应的
+上游应用；本插件不是官方出品，也不代表有任何关联或背书。
+
+图标许可全文
+------------
+
+上游文档仓库以 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+（CC BY-NC-SA 4.0）许可发布（https://github.com/esphome/esphome-docs 的 LICENSE.md），
+本图标随该许可分发。
+
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+
+Copyright (c) 2019-2026 ESPHome contributors. Licensed under CC BY-NC-SA 4.0.
+Full text: https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+
+BY EXERCISING ANY RIGHTS TO THE WORK PROVIDED HERE, YOU ACCEPT AND AGREE TO BE
+BOUND BY THE TERMS OF THIS LICENSE. TO THE EXTENT THIS LICENSE MAY BE CONSIDERED
+TO BE A CONTRACT, THE LICENSOR GRANTS YOU THE RIGHTS CONTAINED HERE IN
+CONSIDERATION OF YOUR ACCEPTANCE OF SUCH TERMS AND CONDITIONS.
+
+Section 1 — Definitions.
+"Adaptation" means a work based upon the Work, or upon the Work and other
+pre-existing works. "Work" means the literary and/or artistic work offered
+under the terms of this License. "Licensor" means the individual(s) or
+entity(ies) offering rights under this License. "You" means an individual or
+entity exercising rights under this License.
+
+Section 2 — Fair Dealing Rights / Scope. Subject to the terms and conditions
+of this License, the Licensor grants a worldwide, royalty-free,
+non-exclusive, non-sublicensable license to Share (copy, distribute and
+perform publicly), to create and Reproduce Adaptations, for NonCommercial
+purposes only, subject to Attribution (Section 4(b)) and ShareAlike
+(Section 4(c)).
+
+Section 3 — NonCommercial. "NonCommercial" means not primarily intended for
+or directed towards commercial advantage or private monetary compensation.
+
+Section 4 — Conditions. You may exercise the above rights only if you: (a)
+attribute the Work as directed by the Licensor; (b) do not use the Work for
+NonCommercial purposes; and (c) if you Share or Reproduce Adaptations, you
+license the Adaptations under the same or a compatible license as this one
+(ShareAlike).
+
+Section 5 — Representations, Warranties and Disclaimer. Unless otherwise
+mutually agreed, the Work is provided "AS IS" without warranties of any kind.
+
+Section 6 — Limitation on Liability. The Licensor is not liable to You for
+any damages arising from the exercise of rights under this License.
+
+Section 7 — Termination. The rights granted terminate automatically upon any
+breach of this License and are reinstated automatically upon cure.
+
+The above is a plain-text summary for reference; the authoritative license is
+the full legal code at https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.
+
+插件包其余部分的许可见 LICENSE。

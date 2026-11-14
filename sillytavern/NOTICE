@@ -1,0 +1,18 @@
+图标
+====
+
+`icon.png` 取自 SillyTavern 1.19.0 源码仓库的 `public/img/apple-icon-512x512.png`
+（https://github.com/SillyTavern/SillyTavern），未做修改，原样使用。
+
+SillyTavern 及其标志的版权归 SillyTavern 项目贡献者所有，源码以
+GNU Affero General Public License v3.0（AGPL-3.0）发布，本图标随该许可证分发。
+SillyTavern 是 SillyTavern 项目的名称和标志；本插件不是 SillyTavern 官方出品，
+SillyTavern 项目也不为本插件背书。
+
+本插件包其余文件（清单、一次性服务脚本、说明）按本仓库的 LICENSE（MIT）分发。
+
+插件包引用的上游镜像
+====================
+
+`ghcr.io/sillytavern/sillytavern:1.19.0`（按清单列表摘要固定）：SillyTavern 的上游官方镜像，
+构建自同仓库的 Dockerfile，AGPL-3.0。

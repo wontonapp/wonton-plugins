@@ -1,0 +1,149 @@
+# 家庭电子书库：书库放共享文件夹 books，网页经云吞登录（OIDC，主人带 admin 组自动是管理员，
+# 家人首次登录自动建号）。阅读器 App 连局域网端口走 OPDS（应用自带的账号密码认证）。
+# 丢进入库目录的书由应用自动转格式、补元数据。
+# 上游 Calibre-Web Automated（GPL-3.0），镜像按清单列表（index）的摘要固定。
+services:
+  calibre-web-automated:
+    image: crocodilestick/calibre-web-automated:v4.0.8@sha256:5e00373854247750cc3e4479b492ae09293ff5e06ed10177f226634d97888679
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      # 一次性 s6 服务 wonton-sso 用：把 OIDC 提供方配置写进 app.db（上游只存这里，没有环境变量），
+      # 每次创建容器都要重写（密钥会换，见插件规范"OIDC"）。
+      WONTON_OIDC_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      WONTON_OIDC_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      WONTON_OIDC_ISSUER: ${WONTON_OIDC_ISSUER}
+      WONTON_OIDC_AUTH_URL: ${WONTON_OIDC_AUTH_URL}
+      WONTON_OIDC_TOKEN_URL: ${WONTON_OIDC_TOKEN_URL}
+      WONTON_OIDC_USERINFO_URL: ${WONTON_OIDC_USERINFO_URL}
+      # 核心的 OIDC 签发方是 http（插件网络内别名），oauthlib 默认拒绝在 http 上发起流程；
+      # 容器端口只对着核心网关和局域网开关，流量不越过主机边界。
+      OAUTHLIB_INSECURE_TRANSPORT: "1"
+      # 主人的 OIDC 账号（应用在他首次登录时自动建）同步成 lan.client 显示的口令，OPDS 才能用。
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME}
+      WONTON_SECRET_CLIENT_PASSWORD: ${WONTON_SECRET_CLIENT_PASSWORD}
+    volumes:
+      # 应用配置（app.db、转换缓存、处理记录）；上游镜像约定用 /config。
+      - ${WONTON_APP_DATA}/config:/config
+      # 入库目录：应用处理后删除源文件，不属用户数据，放应用数据目录。
+      - ${WONTON_APP_DATA}/ingest:/cwa-book-ingest
+      # 书库放共享文件夹：用户在文件插件里看得到；应用要写 metadata.db、转格式写回，必须可写。
+      - ${WONTON_SHARE_BOOKS}:/calibre-library
+    # 不改上游镜像：经镜像自带的 s6 user bundle 加一个启动前的 oneshot（写入 app.db 的代登录设置、
+    # 换掉默认账号），并把自己加进应用服务的依赖里，应用第一次读到的就是改好的配置。
+    # markers 是 s6-rc 的空占位文件，dependencies.d/ 下的名字=依赖的服务，user/contents.d/ 登记 oneshot。
+    configs:
+      - source: sso-run
+        target: /etc/s6-overlay/s6-rc.d/wonton-sso/run
+        mode: 0555
+      - source: sso-setup
+        target: /etc/s6-overlay/s6-rc.d/wonton-sso/setup.py
+      - source: sso-type
+        target: /etc/s6-overlay/s6-rc.d/wonton-sso/type
+      - source: sso-up
+        target: /etc/s6-overlay/s6-rc.d/wonton-sso/up
+      - source: sso-dep-init
+        target: /etc/s6-overlay/s6-rc.d/wonton-sso/dependencies.d/cwa-init
+      - source: sso-dep-library
+        target: /etc/s6-overlay/s6-rc.d/wonton-sso/dependencies.d/cwa-auto-library
+      - source: sso-dep-binaries
+        target: /etc/s6-overlay/s6-rc.d/wonton-sso/dependencies.d/calibre-binaries-setup
+      - source: sso-dep-app
+        target: /etc/s6-overlay/s6-rc.d/svc-calibre-web-automated/dependencies.d/wonton-sso
+      - source: sso-contents
+        target: /etc/s6-overlay/s6-rc.d/user/contents.d/wonton-sso
+    healthcheck:
+      # 网页真的能打开（未登录返回 200 登录页）；--noproxy 防止走出口代理。
+      test: ["CMD", "curl", "--noproxy", "*", "-fsS", "http://127.0.0.1:8083/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      start_interval: 2s
+
+configs:
+  sso-run:
+    file: sso-setup.sh
+  sso-setup:
+    file: sso-setup.py
+  sso-type:
+    content: oneshot
+  sso-up:
+    content: /etc/s6-overlay/s6-rc.d/wonton-sso/run
+  sso-dep-init:
+    content: ""
+  sso-dep-library:
+    content: ""
+  sso-dep-binaries:
+    content: ""
+  sso-dep-app:
+    content: ""
+  sso-contents:
+    content: ""
+
+x-wonton:
+  spec: "0.13"
+  id: app.calibre-web-automated.books
+  version: 0.1.3
+  kind: app
+  title: { zh: 家庭书架（Calibre-Web Automated）, en: Home Book Library (Calibre-Web Automated) }
+  description:
+    zh: 家里的电子书架：把书丢进去，自动转格式、补封面和简介，全家人在手机、平板和电脑上随时读
+    en: A bookshelf for the family's ebooks — drop books in and they are converted and catalogued automatically, ready to read on any screen
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/library.jpg, screenshots/reader.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/crocodilestick/Calibre-Web-Automated
+  # 应用（Calibre-Web Automated）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: GPL-3.0-only
+  tags:
+    zh: [阅读, 书]
+    en: [Reading, Books]
+  about:
+    zh: |
+      把家里的书摆上一个全家人都能打开的书架：手机、平板、电脑的浏览器里直接读，Kindle、Kobo 这类阅读器 App 连上来也能读。
+
+      打开网页就是用云吞的账号登录，不用另外注册；家人第一次打开自动建号，能读书、能下载。把电子书文件放进"待入库"文件夹，或者从网页上传，它会自动转成通用格式、抓封面和简介、摆上书架。书架本身是普通的文件夹（books 共享文件夹），书一直都在那里，卸载插件也不会丢。
+
+      发到 Kindle 需要在应用设置里填你自己邮箱的发信服务器（亚马逊只收来自你邮箱的投递）；插件不代填。抓封面和简介需要能访问外网。阅读器 App 怎么连：在插件详情里打开"在局域网开放"，把显示的地址、账号和密码填进 App（先在网页里登录一次，密码才生效）。
+    en: |
+      Put your family's books on one shelf everyone can open: read in the browser on phones, tablets and computers, or connect reader apps like Kindle and Kobo.
+
+      Opening the web page signs you in with your Wonton account — no extra registration; family members get an account on their first visit and can read and download. Drop ebook files into the ingest folder or upload them on the web page — they are converted to common formats, enriched with covers and descriptions, and shelved automatically. The library itself is a plain folder (the books shared folder), so your books stay even if the plugin is removed.
+
+      Sending to Kindle needs your own email account's outgoing mail settings in the app (Amazon only accepts mail from your address); the plugin does not fill them in for you. Fetching covers and descriptions needs internet access. To connect a reader app, turn on the LAN switch in the plugin details and enter the address, account and password shown there (sign in on the web once first, then the password works).
+  release_notes: { zh: 插件包迁入官方插件合仓，保留 admin 组管理员登录配置。, en: "Moved into the official Wonton plugin monorepo; keeps administrator login through the admin group." }
+  webui:
+    service: calibre-web-automated
+    port: 8083
+    # 打开网页直接进 OIDC 登录跳转，省掉应用登录页上点按钮。
+    path: /login/generic
+    sso: oidc
+    oidc:
+      # 上游 flask-dance 的回调：oauth_bb.py 拼 "{host}/login/{provider}/authorized"。
+      redirect_paths: [/login/generic/authorized]
+      admin_groups: [admin]
+  # 阅读器 App（OPDS，Basic Auth）在局域网直连；详情页的开关打开后显示地址和账号。
+  lan:
+    ports:
+      - { service: calibre-web-automated, port: 8083 }
+    client:
+      address: "http://{host}:8083"
+      username: "{user}"
+      password: "{secret:client_password}"
+  secrets:
+    client_password:
+      generate: { bytes: 32 }
+  permissions:
+    # 书库在共享文件夹里，应用要建目录、写 metadata.db、写回转换后的书。
+    - storage.share.books:write
+    # 抓封面、简介等元数据（Google Books、Douban 等应用内置源）。
+    - network.egress
+    # OPDS 阅读器在局域网直连。
+    - network.lan
+    # 管理员账号按注入的用户名建。
+    - owner.identity
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

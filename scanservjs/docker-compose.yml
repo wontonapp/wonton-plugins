@@ -1,0 +1,86 @@
+# scanservjs：把网络扫描仪变成网页，扫好的文件写进共享文件夹“文档”。
+# 网络扫描仪的地址在设置里手填（eSCL/AirScan、saned）；mDNS 自动发现要宿主网络的 dbus，不做。
+services:
+  scanservjs:
+    # 上游官方镜像，amd64 和 arm64 都有；上游没写最低内存，按实测取整。
+    image: sbs20/scanservjs:v3.3.0@sha256:7a0c0dfd546f483c2fe8c5ccdcd8fc96301a41fb0d4309747fc8268108defb6a
+    environment:
+      TZ: ${TZ}
+      # 两项设置原样交给上游入口脚本：AIRSCAN_DEVICES 追加进 /etc/sane.d/airscan.conf，
+      # SANED_NET_HOSTS 追加进 /etc/sane.d/net.conf；为空时入口脚本跳过。
+      # :- 兜底：核心检查清单时按默认值试渲染，引用不存在的变量会让安装失败。
+      AIRSCAN_DEVICES: ${WONTON_SETTING_AIRSCAN_DEVICES:-}
+      SANED_NET_HOSTS: ${WONTON_SETTING_SANED_HOSTS:-}
+    volumes:
+      # 应用数据（preview/temp/thumbnail 和备用 output 目录）。
+      - ${WONTON_APP_DATA}:/var/lib/scanservjs
+      # 共享文件夹只能整个挂载，扫描结果经 config.local.js 指到它下面的子目录。
+      - ${WONTON_SHARE_DOCUMENTS}:/documents
+    configs:
+      - source: local
+        target: /etc/scanservjs/config.local.js
+    healthcheck:
+      # 镜像里没有别的 HTTP 客户端，用自带的 node；/api/v1/system 只读系统信息，不触发 scanimage。
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/api/v1/system').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      start_interval: 1s
+
+configs:
+  local:
+    file: config/config.local.js
+
+x-wonton:
+  spec: "0.12"
+  id: io.github.sbs20.scanservjs
+  version: 0.1.1
+  kind: app
+  title: { zh: 网页扫描（scanservjs）, en: scanservjs }
+  description:
+    zh: 把网络扫描仪变成网页，手机上点一下就扫，文件自动进“文档”文件夹
+    en: Turn a network scanner into a web page — scan from your phone, files land in the Documents folder
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/sbs20/scanservjs
+  # 上游应用的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: GPL-2.0-only
+  tags:
+    zh: [工具, 文档]
+    en: [Tools, Documents]
+  about:
+    zh: |
+      像把扫描仪搬进了网页：手机、平板、电脑打开就能扫描，不用装任何驱动，扫好的文件自动存进共享文件夹“文档”，可以接着交给 paperless-ngx 归档。
+
+      支持两种网络扫描仪：免驱的 eSCL/AirScan（大多数带网络扫描功能的一体机）和 SANE 网络共享（saned）。装好后把扫描仪的地址填进插件设置就能用，多台用分号隔开。
+
+      输出格式有 JPG、PNG、PDF，多页可以合成一个 PDF 或压缩包，还能做文字识别（OCR）。扫描结果存在“文档”文件夹的“扫描件”子目录里。
+
+      接在电脑 USB 口上的扫描仪暂时接不进来：底座还不能把宿主 USB 设备交给插件，支持后会在扫描仪设置里加上。也扫描不到广播出来的新扫描仪（自动发现要宿主网络），地址要手动填。
+    en: |
+      Your scanner, on a web page: open it from a phone, tablet or computer and scan — no drivers to install. Scanned files land in the Documents shared folder automatically, ready for archiving with paperless-ngx.
+
+      Two kinds of network scanners work: driverless eSCL/AirScan (most all-in-one printers with network scanning) and SANE network sharing (saned). Enter the scanner address in the plugin settings after install; separate multiple scanners with semicolons.
+
+      Output formats include JPG, PNG and PDF; multi-page scans can be merged into one PDF or a zip, with optional OCR. Scans are stored in the “扫描件” subfolder of the Documents folder.
+
+      USB scanners attached to the server are not supported yet: the platform cannot hand host USB devices to plugins. Scanners are not discovered automatically either (that needs host networking) — enter addresses manually.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  setup:
+    zh: 装好后打开插件设置，把网络扫描仪的地址填进去，例如 "家里的一体机" = "http://192.0.2.10/eSCL"。没有网络扫描仪时网页会显示“找不到扫描仪”。
+    en: After install, open the plugin settings and enter your network scanner's address, e.g. "Home MFP" = "http://192.0.2.10/eSCL". With no scanner configured the page reports “no devices”.
+  webui:
+    service: scanservjs
+    port: 8080
+    # 上游没有身份头或 OIDC 支持，默认无登录；网页始终在核心网关后面。
+    sso: none
+  settings: settings.schema.json
+  # 连局域网里的扫描仪（eSCL 的 http 端口、saned 的 6566）。
+  permissions:
+    - storage.share.documents:write
+    - network.egress
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

@@ -1,0 +1,150 @@
+# Glance 信息面板：一个页面看天气、日历、时钟、新闻和 RSS。
+# 上游 glanceapp/glance，AGPL-3.0-only，镜像按清单列表（index）的摘要固定。
+#
+# glance 只有文件配置，没有网页设置页：数据目录就是它的配置目录（容器里 /app/config），
+# 主人或 Agent 改里面的 glance.yml 就能换部件；glance 检测到文件变化会自动重载，
+# Agent 的文件工具（下面的 mcp 服务）也指向这份目录，改完同样自动生效；
+# 检测不可用（inotify 受限）时在详情页停止再启动也一样。
+# 包里的默认配置由一次性服务在首次安装时复制进数据目录，已有不覆盖，用户和 Agent 改过的才能留下；
+# configs 注入的文件默认 0444，用 install -m 0644 落盘，主人和 Agent 才能改数据目录里的这份。
+# 天气城市等设置经 glance 的 ${ENV} 配置替换生效；核心的设置（wonton-core#242）上线前变量不注入，
+# compose 里 ${VAR:-默认值} 的默认值生效（默认 "Beijing, China"）。
+services:
+  init:
+    image: glanceapp/glance:v0.8.8@sha256:4d7445bc7971836858ffddee5d7501f1efbabb6e694a45b1dde1a789bb1943bb
+    user: "${PUID}:${PGID}"
+    entrypoint: ["/bin/sh", "-c", "test -f /data/glance.yml || install -m 0644 /seed/glance.yml /data/glance.yml"]
+    volumes:
+      - ${WONTON_APP_DATA}:/data
+    configs:
+      - source: glance-config
+        target: /seed/glance.yml
+    network_mode: none
+    restart: "no"
+
+  glance:
+    image: glanceapp/glance:v0.8.8@sha256:4d7445bc7971836858ffddee5d7501f1efbabb6e694a45b1dde1a789bb1943bb
+    user: "${PUID}:${PGID}"
+    restart: unless-stopped
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    environment:
+      TZ: ${TZ}
+      # 设置值经 glance 的 ${ENV} 配置替换进页面（首页的天气和时钟引用这些变量）。
+      # 核心的设置（wonton-core#242）上线前变量不注入，冒号后的默认值生效；设置页可用后，
+      # 改设置会重建容器，新值随之生效（清空设置时核心回到 Schema 里的默认值，和这里的取值一致）。
+      GLANCE_WEATHER_CITY: ${WONTON_SETTING_CITY:-Beijing, China}
+      GLANCE_WEATHER_UNITS: ${WONTON_SETTING_UNITS:-metric}
+      GLANCE_WEATHER_HOUR_FORMAT: ${WONTON_SETTING_HOUR_FORMAT:-24h}
+      GLANCE_HOUR_FORMAT: ${WONTON_SETTING_HOUR_FORMAT:-24h}
+    volumes:
+      - ${WONTON_APP_DATA}:/app/config
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+  mcp:
+    # AI 助手改配置用的文件工具：读、写、列目录、看文件信息（njbrake/filesystem-mcp-server，Apache-2.0）。
+    # 只挂配置目录并把它设为工具的根，配置文件之外碰不到；不给删文件、移动、建目录这几个工具。
+    image: ghcr.io/njbrake/filesystem-mcp-server:main@sha256:dccd34b61b4ff60ce2603252424320a3a9632bdf528123fe0c00aca0226bc180
+    user: "${PUID}:${PGID}"
+    command: ["--allowed-root", "/app/config"]
+    read_only: true
+    restart: unless-stopped
+    volumes:
+      - ${WONTON_APP_DATA}:/app/config
+    healthcheck:
+      # 走一遍 MCP 握手才算是能用；握完把会话关掉，不留下来。
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import http.client, json
+
+          hello = json.dumps({
+              "jsonrpc": "2.0", "id": 1, "method": "initialize",
+              "params": {
+                  "protocolVersion": "2025-11-25", "capabilities": {},
+                  "clientInfo": {"name": "healthcheck", "version": "0"},
+              },
+          })
+          c = http.client.HTTPConnection("127.0.0.1", 8123, timeout=5)
+          c.request("POST", "/mcp", hello, {
+              "Content-Type": "application/json",
+              "Accept": "application/json, text/event-stream",
+          })
+          r = c.getresponse()
+          r.read()
+          sid = r.getheader("mcp-session-id")
+          ok = r.status == 200 and bool(sid)
+          c.request("DELETE", "/mcp", headers={"Mcp-Session-Id": sid})
+          c.getresponse().read()
+          raise SystemExit(0 if ok else 1)
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+
+configs:
+  glance-config:
+    file: ./glance.yml
+
+x-wonton:
+  spec: "0.12"
+  id: app.github.glanceapp.glance
+  version: 0.1.2
+  kind: app
+  title: { zh: 信息面板（Glance）, en: Glance }
+  description:
+    zh: 把天气、日历、新闻和 RSS 放进一个页面
+    en: "Weather, calendar, news and RSS on one page"
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/news.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/glanceapp/glance
+  # 应用（Glance）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: AGPL-3.0-only
+  tags:
+    zh: [信息面板, 天气, RSS]
+    en: [Dashboard, Weather, RSS]
+  about:
+    zh: |
+      一块信息面板：打开一个页面就能看到天气、日历、时间、新闻和 RSS 订阅，像钉在墙上的留言板。打开就用，不用注册登录。
+
+      页面上放什么由你定：默认页有天气（Beijing）、时钟、日历、资讯（少数派、阮一峰的网络日志、36氪、Hacker News）和 GitHub 仓库动态。想换城市或加别的（股票、监控、待办……）就改数据目录里的配置文件，上百种部件见上游文档；云吞的设置页上线后，天气城市等常用项直接在详情页的设置里改。也可以直接跟云吞的 AI 助手说“把天气换成上海”这类话，它帮你改配置。注意：天气城市要用英文写（如“Shanghai, China”），上游按英文名查天气。
+    en: |
+      An information dashboard: weather, calendar, clock, news and RSS feeds on a single page, like a board on the wall. Open and use, no account needed.
+
+      You decide what's on it: the default page shows weather (Beijing), clock, calendar, news (sspai, Ruanyifeng, 36kr, Hacker News) and GitHub repo activity. Change the city or add other widgets (markets, monitors, todos…) by editing the config files in the data directory; see the upstream docs for all options. Once Wonton's settings page ships, common options like the weather city can be changed in the plugin's settings. You can also just ask the Wonton AI assistant, e.g. "switch the weather to Shanghai".
+  release_notes: { zh: 插件包迁入官方插件合仓，保留 AI 助手改面板配置能力。, en: "Package moved into the official Wonton plugin monorepo; retains the AI assistant's dashboard editing tools." }
+  webui:
+    service: glance
+    port: 8080
+    # glance 默认没有用户体系；网页始终在云吞网关的登录后面，不再另设账号。
+    sso: none
+  # AI 助手的工具入口：文件读、写、列目录、看文件信息，只对配置目录。
+  mcp:
+    service: mcp
+    port: 8123
+    transport: streamable-http
+    tools: [read_file, write_file, list_directory, get_file_info]
+  tabs:
+    - id: home
+      title: { zh: 面板, en: Glance }
+      icon: tabs/home.svg
+      icon_selected: tabs/home-fill.svg
+      path: /
+  settings: settings.schema.json
+  permissions:
+    # 天气（open-meteo）、RSS 源、Hacker News、GitHub 接口都要出网。
+    - network.egress
+  # 上游镜像 amd64 和 arm64 都有（清单列表另有 armv7，不列）；上游没写最低内存，
+  # 本机空闲实测约 60M，取 256M 留余量。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 256M

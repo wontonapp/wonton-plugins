@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["max_convert_process"],
+  "x-wonton-order": ["max_convert_process", "auto_delete_every_n_hours", "language"],
+  "properties": {
+    "max_convert_process": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16,
+      "default": 2,
+      "x-wonton-title": { "zh": "同时转换数", "en": "Concurrent conversions", "zh-Hant": "同時轉換數", "ja": "同時変換数" },
+      "x-wonton-description": {
+        "zh": "同时进行的转换任务数，0 为不限制；转大文件内存吃紧时调小",
+        "en": "How many conversions run at once, 0 for unlimited; lower it if large files strain memory",
+        "zh-Hant": "同時進行的轉換任務數，0 為不限制；轉大檔案記憶體吃緊時調小",
+        "ja": "同時に実行する変換タスク数、0 で無制限。大きなファイルでメモリが厳しい場合は小さく"
+      }
+    },
+    "auto_delete_every_n_hours": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8760,
+      "default": 24,
+      "x-wonton-title": { "zh": "结果保留小时数", "en": "Keep results for hours", "zh-Hant": "結果保留小時數", "ja": "結果保持時間（時間）" },
+      "x-wonton-description": {
+        "zh": "转换的文件超过这个小时数后自动删除，0 为不删",
+        "en": "Converted files older than this many hours are deleted, 0 to keep them",
+        "zh-Hant": "轉換的檔案超過這個小時數後自動刪除，0 為不刪",
+        "ja": "変換したファイルをこの時間を過ぎると自動削除、0 で削除しない"
+      }
+    },
+    "language": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 35,
+      "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]+)*$",
+      "default": "en",
+      "x-wonton-title": { "zh": "日期格式语言", "en": "Date format language", "zh-Hant": "日期格式語言", "ja": "日付書式の言語" },
+      "x-wonton-description": {
+        "zh": "历史页里日期时间的显示格式，如 zh、en、ja；不改界面语言",
+        "en": "Locale for dates and times on the history page, e.g. zh, en, ja; does not change the interface language",
+        "zh-Hant": "歷史頁裡日期時間的顯示格式，如 zh、en、ja；不改介面語言",
+        "ja": "履歴ページの日付時刻の書式、例 zh、en、ja。界面の言語は変わらない"
+      }
+    }
+  }
+}

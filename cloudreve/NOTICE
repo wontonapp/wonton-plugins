@@ -1,0 +1,20 @@
+图标
+====
+
+`icon.png` 是 Cloudreve 的官方标志。
+
+来源：https://github.com/cloudreve/frontend/blob/master/public/static/img/cloudreve.svg
+版权：Copyright Cloudreve (https://github.com/cloudreve/cloudreve)
+处理：官方 SVG（viewBox 0 0 1835 1835，amd64/arm64 无关的纯矢量，无滤镜、无内嵌位图）等比栅格化为
+512×512 PNG，构图、比例和配色不变；因 SVG 原文件超过插件规范对图标的 128 KiB 限制而改用 PNG，
+并以官方 PWA 默认背景色白色（#ffffff，见 Cloudreve 默认设置 pwa_background_color）补满四角透明，
+不加圆角、边框或阴影。
+
+许可：上游 Cloudreve 主仓库以 GPL-3.0 分发（https://github.com/cloudreve/cloudreve，LICENSE 为
+GPL-3.0 全文）；标志所在的 cloudreve/frontend 仓库未附许可文件，标志默认按版权法保护。本插件包
+不修改标志本身，仅按上述方式栅格化并补背景色，用于标识本插件集成的应用。
+
+商标
+
+Cloudreve 名称和标志归 Cloudreve 项目及其权利人所有。这里只用它们标识本插件集成的应用，不表示
+与上游存在官方合作、隶属关系或获得其背书。软件许可证不授予商标权。

@@ -1,0 +1,184 @@
+# Gramps Web 家谱：上游是单镜像应用（gunicorn + 前端静态文件），加 Celery worker（同一镜像）
+# 和 Valkey 做任务队列（上游 compose 用它，兼容 Redis 协议）。
+# 登录走云吞的身份提供方（上游官方 OIDC，自定义 provider）；AI 问答经云吞的模型网关。
+name: gramps-web
+
+services:
+  valkey:
+    image: valkey/valkey:8-alpine@sha256:2602ace2be6569bc2bbb06f873776516ab9089821525be34f4305c67eb9db02a
+    # 任务队列和限速缓存，重启丢队列是上游 compose 本来的语义，不开持久化；
+    # --save "" 关掉 RDB，配 read_only 根文件系统就不会有写盘失败的报错。
+    command: ["valkey-server", "--save", ""]
+    read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli ping | grep -q PONG"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      start_interval: 2s
+
+  grampsweb:
+    image: ghcr.io/gramps-project/grampsweb:26.11.2@sha256:80a1d75ca0f67f9203aecca60f7639312a2769fe0af45b34608b0add64f7c07f
+    environment:
+      TZ: ${TZ}
+      # 树名：不存在时启动自动建。用户在应用里改了树名的话，重启会按这个名字再建一棵空树，
+      # README 里写明别改。不设 TREE_ID——设了它启动就不建树，首装会失败（见 ../research.md）。
+      GRAMPSWEB_TREE: 我们的家谱
+      # 回调地址按它拼（BASE_URL + /api/oidc/callback/custom），必须和核心登记的一致。
+      GRAMPSWEB_BASE_URL: ${WONTON_APP_URL}
+      GRAMPSWEB_SECRET_KEY: ${WONTON_SECRET_SECRET_KEY}
+      GRAMPSWEB_CELERY_CONFIG__broker_url: redis://valkey:6379/0
+      GRAMPSWEB_CELERY_CONFIG__result_backend: redis://valkey:6379/0
+      GRAMPSWEB_RATELIMIT_STORAGE_URI: redis://valkey:6379/1
+      # 登录交给云吞的身份提供方：打开网页自动跳 OIDC，关掉本地用户名密码登录（也就关掉了本地注册）。
+      # 角色按 groups 声明映射：主人（owner 组）=Admin，家人和被分享的亲戚（member 组）=Editor。
+      GRAMPSWEB_OIDC_ENABLED: "true"
+      GRAMPSWEB_OIDC_ISSUER: ${WONTON_OIDC_ISSUER}
+      GRAMPSWEB_OIDC_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      GRAMPSWEB_OIDC_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      GRAMPSWEB_OIDC_NAME: 云吞
+      GRAMPSWEB_OIDC_SCOPES: openid profile email groups
+      GRAMPSWEB_OIDC_AUTO_REDIRECT: "true"
+      GRAMPSWEB_OIDC_DISABLE_LOCAL_AUTH: "true"
+      GRAMPSWEB_OIDC_GROUP_ADMIN: owner
+      GRAMPSWEB_OIDC_GROUP_EDITOR: member
+      GRAMPSWEB_DISABLE_TELEMETRY: "true"
+      # AI 问答经模型网关（OpenAI 兼容）。网关没接上时三个变量都是空串，聊天接口如实报错；
+      # OPENAI_API_KEY 是 Pydantic AI 直读的变量，上游规定不加 GRAMPSWEB_ 前缀。
+      GRAMPSWEB_LLM_MODEL: ${WONTON_MODEL_DEFAULT}
+      GRAMPSWEB_LLM_BASE_URL: ${WONTON_MODEL_BASE_URL}
+      OPENAI_API_KEY: ${WONTON_MODEL_API_KEY}
+      # 默认 8 个 worker 太重，家用两够了。
+      GUNICORN_NUM_WORKERS: 2
+    volumes:
+      # 用户库（sqlite）、搜索索引、缩略图缓存、导出缓存、媒体文件、家谱数据库（Gramps 的
+      # Berkeley DB，在 GRAMPSHOME=/root 下）。镜像以 root 跑，目录由核心交给 PUID:PGID。
+      - ${WONTON_APP_DATA}/users:/app/users
+      - ${WONTON_APP_DATA}/indexdir:/app/indexdir
+      - ${WONTON_APP_DATA}/thumbnail_cache:/app/thumbnail_cache
+      - ${WONTON_APP_DATA}/cache:/app/cache
+      - ${WONTON_APP_DATA}/media:/app/media
+      - ${WONTON_APP_DATA}/grampsdb:/root/.gramps/grampsdb
+    tmpfs:
+      - /tmp
+    depends_on:
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/"]
+      interval: 30s
+      timeout: 10s
+      # 首次启动要建树、迁移用户库、起搜索索引，给足时间；就绪后尽快报健康。
+      start_period: 5m
+      start_interval: 5s
+
+  celery:
+    # 同一镜像跑 worker：导出、缩略图、备份这些后台任务。env 和 web 保持一致
+    # （worker 里也创建应用上下文，需要同样的配置）。
+    image: ghcr.io/gramps-project/grampsweb:26.11.2@sha256:80a1d75ca0f67f9203aecca60f7639312a2769fe0af45b34608b0add64f7c07f
+    command: celery -A gramps_webapi.celery worker --loglevel=INFO --concurrency=2
+    environment:
+      TZ: ${TZ}
+      GRAMPSWEB_TREE: 我们的家谱
+      GRAMPSWEB_BASE_URL: ${WONTON_APP_URL}
+      GRAMPSWEB_SECRET_KEY: ${WONTON_SECRET_SECRET_KEY}
+      GRAMPSWEB_CELERY_CONFIG__broker_url: redis://valkey:6379/0
+      GRAMPSWEB_CELERY_CONFIG__result_backend: redis://valkey:6379/0
+      GRAMPSWEB_RATELIMIT_STORAGE_URI: redis://valkey:6379/1
+      GRAMPSWEB_OIDC_ENABLED: "true"
+      GRAMPSWEB_OIDC_ISSUER: ${WONTON_OIDC_ISSUER}
+      GRAMPSWEB_OIDC_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      GRAMPSWEB_OIDC_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      GRAMPSWEB_OIDC_NAME: 云吞
+      GRAMPSWEB_OIDC_SCOPES: openid profile email groups
+      GRAMPSWEB_OIDC_AUTO_REDIRECT: "true"
+      GRAMPSWEB_OIDC_DISABLE_LOCAL_AUTH: "true"
+      GRAMPSWEB_OIDC_GROUP_ADMIN: owner
+      GRAMPSWEB_OIDC_GROUP_EDITOR: member
+      GRAMPSWEB_DISABLE_TELEMETRY: "true"
+      GRAMPSWEB_LLM_MODEL: ${WONTON_MODEL_DEFAULT}
+      GRAMPSWEB_LLM_BASE_URL: ${WONTON_MODEL_BASE_URL}
+      OPENAI_API_KEY: ${WONTON_MODEL_API_KEY}
+    volumes:
+      - ${WONTON_APP_DATA}/users:/app/users
+      - ${WONTON_APP_DATA}/indexdir:/app/indexdir
+      - ${WONTON_APP_DATA}/thumbnail_cache:/app/thumbnail_cache
+      - ${WONTON_APP_DATA}/cache:/app/cache
+      - ${WONTON_APP_DATA}/media:/app/media
+      - ${WONTON_APP_DATA}/grampsdb:/root/.gramps/grampsdb
+    tmpfs:
+      - /tmp
+    depends_on:
+      grampsweb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      # worker 真在应答队列才算可用；celery 以镜像默认用户跑，和 web 同一个用户。
+      test: ["CMD-SHELL", "celery -A gramps_webapi.celery inspect ping --destination celery@$${HOSTNAME} | grep -q pong"]
+      interval: 60s
+      timeout: 15s
+      start_period: 5m
+      start_interval: 10s
+
+x-wonton:
+  spec: "0.11"
+  id: org.gramps-project.grampsweb
+  version: 0.1.1
+  kind: app
+  title: { zh: 家谱（Gramps Web）, en: Family Tree (Gramps Web) }
+  description:
+    zh: 把家谱放到网上，和亲戚一起补充：加人、写生平、传老照片，谁打开都是最新的。
+    en: Put your family tree online and build it together — add relatives, stories and photos, always up to date for everyone.
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png, screenshots/person.png]
+  author: { name: geraldpeng6 }
+  homepage: https://www.grampsweb.org
+  license: AGPL-3.0-only
+  tags:
+    zh: [家谱, 家庭]
+    en: [Genealogy, Family]
+  about:
+    zh: |
+      把家里的家谱搬到网上，亲戚们用手机或电脑打开就能一起补充：加人、写生平、传老照片，改动互相看得到。
+
+      登录用云吞的账号，打开就进来了，不用再注册一遍。想给谁看、给谁改，在应用里随时调整。
+
+      可以问 AI 关于家谱的问题，比如"太爷爷有几个兄弟姐妹"。在应用的用户管理里按角色开启后可用，AI 经云吞的模型网关回答，不用填任何密钥。
+
+      地名页面的地图底图要从网上取，没有外网时地图是空白的，家谱本身不受影响。
+    en: |
+      Put the family tree online so relatives can build it together from a phone or computer: add people, life stories and old photos, with everyone's changes visible.
+
+      Sign-in uses your Wonton account — the app opens straight in, no second sign-up. Who may view or edit is up to you, per person.
+
+      You can ask the AI assistant about the tree, like "how many siblings did great-grandpa have". Enable it per role in the app's user settings; answers go through Wonton's model gateway, no API keys to set up.
+
+      The map on place pages loads its background from the internet and stays blank without it; the tree itself works offline.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: grampsweb
+    port: 5000
+    sso: oidc
+    oidc:
+      # 上游自定义 provider 的回调固定为 BASE_URL + /api/oidc/callback/custom（源码 oidc.py）。
+      redirect_paths: [/api/oidc/callback/custom]
+  tabs:
+    - id: home
+      title: { zh: 家谱, en: Tree }
+      icon: tabs/tree.svg
+      icon_selected: tabs/tree-fill.svg
+      path: /
+  secrets:
+    # Flask 的会话签名密钥；换值会让所有人重新登录，由核心生成、保留数据重装沿用。
+    secret_key:
+      generate: { bytes: 32 }
+  permissions:
+    # AI 问答经模型网关；没接上网关时聊天如实报不可用，其余功能不受影响。
+    - models
+  requirements:
+    # 两个镜像都有 amd64 和 arm64（docker buildx imagetools inspect 实测）。
+    arch: [amd64, arm64]
+    # 上游没写最低内存；本机空闲实测三个服务合计约 670M（web 356M、celery 307M、valkey 5M），取 1G。
+    memory: 1G

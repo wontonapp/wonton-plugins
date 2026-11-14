@@ -1,0 +1,116 @@
+# changedetection.io：盯着网页的变化，变了就提醒。JS 渲染的抓取由同插件的 sockpuppetbrowser 完成。
+services:
+  changedetection:
+    # 上游官方镜像，按清单列表摘要固定（amd64/arm64/arm），标签只给人看。
+    image: dgtlmoon/changedetection.io:0.70.3@sha256:47b1e9cc3eff820e6022b655e3fcc948625f60c1770ae8b9c30aa3bf104dc255
+    # 镜像不挑 uid：实测以 ${PUID} 启动可写数据目录，数据归主人的用户。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      # 通知正文里的链接指回经网关的插件地址。
+      BASE_URL: ${WONTON_APP_URL}
+      # 设置页和监控页的"添加邮件通知"输入行按这个前缀拼 URL，{TO} 换成填的地址（上游 notification-setup.js
+      # 的 buildEmailUrl）。上游默认给 mailtos:// 会强制 STARTTLS，内部 SMTP 不加密，得用 mailto://。
+      NOTIFICATION_MAIL_BUTTON_PREFIX: "mailto://${WONTON_SMTP_HOST}:${WONTON_SMTP_PORT}/?from=${WONTON_MAIL_FROM}&to={TO}"
+      # "Playwright Chrome" 抓取方式连上游 compose 推荐的 sockpuppetbrowser：每个连接起一个独立
+      # Chrome。stealth 和 --disable-web-security 是上游 wiki 给这条 URL 的推荐参数。
+      PLAYWRIGHT_DRIVER_URL: ws://browser-sockpuppet-chrome:3000/?stealth=1&--disable-web-security=true
+    volumes:
+      # 配置、每个网页的抓取历史和截图（上游用 JSON 文件存储），卸载保留数据时不删除。
+      - ${WONTON_APP_DATA}:/datastore
+    healthcheck:
+      # 上游没有健康端点：首页 200 表示 Flask 应用加载数据目录后真正起来了，不是只有进程。
+      # ProxyHandler({})：出网代理的环境变量不拦本机请求。
+      test: ["CMD", "python3", "-c", "import urllib.request as r; r.build_opener(r.ProxyHandler({})).open('http://127.0.0.1:5000/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      start_interval: 2s
+
+  browser-sockpuppet-chrome:
+    # 上游 compose 推荐的 Chrome 抓取后端（旧 playwright-chrome 镜像的继任者）。上游只发
+    # latest 和更旧的版本 tag，没有更新的版本号，按清单列表摘要固定。init 收割退出的 Chrome 进程。
+    image: dgtlmoon/sockpuppetbrowser:latest@sha256:1d8f72d2ce2085faed4232e5ae1e65c02efe5b831a18e127829b267c260b4fb2
+    init: true
+    # Chrome 的 /dev/shm 用量；不预占内存。
+    shm_size: 1g
+    healthcheck:
+      # /stats 报告实际探测到的 chrome_version：unknown 说明浏览器起不来，不算健康。
+      test: ["CMD", "python3", "-c", "import json,urllib.request as r; s=json.load(r.build_opener(r.ProxyHandler({})).open('http://127.0.0.1:8080/stats', timeout=5)); assert s.get('chrome_version','unknown') != 'unknown'"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      start_interval: 2s
+
+  # 一次性初始化：把全局邮件通知指到主人的内部邮箱，监控到变化就发信进 Wonton 私聊。等应用健康后调它
+  # 自己的 REST API（见 config/configure-mail.py），datastore 里留标记，之后不再动用户改过的配置。
+  mail-init:
+    image: dgtlmoon/changedetection.io:0.70.3@sha256:47b1e9cc3eff820e6022b655e3fcc948625f60c1770ae8b9c30aa3bf104dc255
+    # 只读写 datastore（读 API 密钥、写标记），和应用同一属主。
+    user: "${PUID}:${PGID}"
+    command: ["python3", "/init/configure-mail.py"]
+    environment:
+      WONTON_SMTP_HOST: ${WONTON_SMTP_HOST}
+      WONTON_SMTP_PORT: ${WONTON_SMTP_PORT}
+      WONTON_MAIL_FROM: ${WONTON_MAIL_FROM}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL}
+    volumes:
+      - ${WONTON_APP_DATA}:/datastore
+    configs:
+      - source: configure_mail
+        target: /init/configure-mail.py
+    depends_on:
+      changedetection:
+        condition: service_healthy
+    restart: "no"
+
+configs:
+  configure_mail:
+    file: config/configure-mail.py
+
+x-wonton:
+  spec: "0.11"
+  id: io.changedetection
+  version: 0.1.1
+  kind: app
+  title: { zh: 网页变化提醒（changedetection.io）, en: Web Page Change Alerts (changedetection.io) }
+  description: { zh: 给在意的网页定个闹钟：降价、补货、新公告，它定时去看，页面一变就提醒你。, en: "Set an alarm on any web page — price drops, restocks, new announcements: it checks on a schedule and tells you as soon as the page changes." }
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/watch-list.png, screenshots/edit.png, screenshots/diff.png, screenshots/settings.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://changedetection.io
+  license: Apache-2.0
+  tags: { zh: [监控, 工具], en: [Monitoring, Tools] }
+  about:
+    zh: |
+      把要盯的网页加进来，它定期去检查内容变化，变了就按你配的渠道提醒（邮件、Apprise、Webhook 等）。
+
+      支持"Playwright Chrome"抓取方式：跑 JavaScript、看渲染后的页面、截图对比；也可以抓静态 HTML、RSS/JSON。重排后的网页在差异页里逐条看变化。
+
+      监控到变化默认发邮件提醒，信会出现在你的 Wonton 私聊里；发往外部邮箱的会被拒收，应用会报发送失败。
+
+      网页只经云吞网关进来，网关已经认了你：应用本身不用登录（上游默认没有访问口令）。想再加一道口令，在应用的"设置"里开。
+    en: |
+      Add the pages you want to watch; it rechecks them on a schedule and alerts you through the channels you configure (email, Apprise, webhooks and more).
+
+      The "Playwright Chrome" fetcher runs JavaScript, sees the rendered page and takes screenshots; plain HTML and RSS/JSON are also supported. Changes are shown one by one on the diff page.
+
+      By default a change sends an email alert, which shows up in your Wonton chat; mail to outside addresses is rejected and reported as failed by the app.
+
+      The page is only reachable through the Wonton gateway, which already authenticates you: no app sign-in (upstream ships with no access password). To add one, set it in the app's Settings and keep it yourself.
+  release_notes:
+    zh: 邮件提醒开箱即用——装好就把全局邮件通知配到云吞的内部邮箱，监控到变化信进你的 Wonton 私聊，设置页的添加邮件通知也预填了内部服务器；发往外部邮箱的会被拒收。
+    en: Email alerts work out of the box — watch changes land in your Wonton chat, and the Add email notification box comes prewired for the built-in mail server. Mail to outside addresses is rejected.
+  webui:
+    service: changedetection
+    port: 5000
+    # 上游没有 OIDC，也不认代登录头；上游默认无访问口令，经网关打开直接可用，没有第二次登录。
+    sso: none
+  # 监控目标在公网上，普通和 Playwright 抓取都要出网（也意味着能访问局域网，安装确认会写明）。
+  # owner.identity 拿主人的内部邮箱当告警收件地址；notify 让应用发的信走核心的内部 SMTP。
+  permissions: [network.egress, owner.identity, notify]
+  # 上游没写最低内存；本机空闲实测两个服务合计约 140M，Chrome 渲染高峰更高，取 1G。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 1G

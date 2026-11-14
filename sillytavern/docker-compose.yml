@@ -1,0 +1,107 @@
+# SillyTavern：角色扮演 AI 聊天前端。上游官方镜像，一次写入模型网关的连接，别的不改上游。
+services:
+  seed-model:
+    # 一次性服务：把模型网关的连接写进默认用户的设置（只写在用户还没配置过的时候，见 seed-model.js）。
+    image: ghcr.io/sillytavern/sillytavern:1.19.0@sha256:eef27ff0c7961f1a2f488400f581f48ff38f8b910c5d3b8d389138d71791bb14
+    entrypoint: ["node", "/seed/seed-model.js"]
+    environment:
+      WONTON_MODEL_BASE_URL: ${WONTON_MODEL_BASE_URL}
+      WONTON_MODEL_API_KEY: ${WONTON_MODEL_API_KEY}
+      WONTON_MODEL_DEFAULT: ${WONTON_MODEL_DEFAULT}
+    volumes:
+      - ${WONTON_APP_DATA}/data:/home/node/app/data
+    configs:
+      - source: seed-model
+        target: /seed/seed-model.js
+    network_mode: none
+    restart: "no"
+
+  sillytavern:
+    image: ghcr.io/sillytavern/sillytavern:1.19.0@sha256:eef27ff0c7961f1a2f488400f581f48ff38f8b910c5d3b8d389138d71791bb14
+    depends_on:
+      seed-model:
+        condition: service_completed_successfully
+    environment:
+      TZ: ${TZ}
+      # 多用户由应用自己管：没有用户时应用自动建 default-user（管理员、无密码，唯一用户且无密码时打开
+      # 即自动登录），家人们的账号由管理员在应用的用户设置里建。白名单关掉是因为请求都来自核心网关，
+      # 只认网关地址在这里又拿不到（WONTON_CORE_ADDRESS 只注入给 sso: proxy 的插件）；
+      # securityOverride 是上游给“反向代理挡在前面”的部署留的开关，不加它启动安全检查会退出。
+      SILLYTAVERN_ENABLEUSERACCOUNTS: "true"
+      SILLYTAVERN_WHITELISTMODE: "false"
+      SILLYTAVERN_SECURITYOVERRIDE: "true"
+      # 心跳文件给健康检查用：src/healthcheck.js 读同一个变量，检查的是服务真的在响应，不只是进程活着。
+      SILLYTAVERN_HEARTBEATINTERVAL: "30"
+    volumes:
+      # config.yaml 和多用户的数据都在这两个目录；backups 是应用的全量备份；第三方扩展装在这里，
+      # 升级重建容器后不丢。四个目录和上游 docker-compose.yml 的挂载一致（backups 是补上的）。
+      - ${WONTON_APP_DATA}/config:/home/node/app/config
+      - ${WONTON_APP_DATA}/data:/home/node/app/data
+      - ${WONTON_APP_DATA}/backups:/home/node/app/backups
+      - ${WONTON_APP_DATA}/extensions:/home/node/app/public/scripts/extensions/third-party
+    healthcheck:
+      test: ["CMD", "node", "src/healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      start_interval: 2s
+
+configs:
+  seed-model:
+    file: seed-model.js
+
+x-wonton:
+  spec: "0.12"
+  id: com.sillytavern.sillytavern
+  version: 0.1.1
+  kind: app
+  title: { zh: AI 角色扮演（SillyTavern）, en: AI Roleplay (SillyTavern) }
+  description:
+    zh: 和 AI 扮演的角色聊天、玩文字冒险：自带角色可以直接聊，也能自己捏角色、写世界观。想认真玩角色卡、跑长篇故事的用它。
+    en: "Chat with characters played by AI or run text adventures: pick a ready-made character or write your own. For character cards and long-running stories."
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/characters.png]
+  author: { name: geraldpeng6 }
+  homepage: https://github.com/SillyTavern/SillyTavern
+  # 上游应用的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: AGPL-3.0-only
+  tags:
+    zh: [AI, 角色扮演]
+    en: [AI, Roleplay]
+  about:
+    zh: |
+      和 AI 扮演的角色聊天、玩文字冒险：自带角色可以直接聊，也能自己捏角色、写世界观。想认真玩角色卡、跑长篇故事的用它。
+
+      模型默认走云吞的模型网关，装好就能用，不用填 key；换了别的接口或服务商，在应用的“API 连接”里自己配。
+
+      第一个账号装好时已经建好并自动登录，建议第一次打开后在用户设置里设一个密码，再在同一个地方给家人建各自的账号。家里每个人有自己的聊天记录和角色。
+
+      注意：角色卡是别人写的内容，可能包含成人情节，装哪个、给谁玩由你自己决定；聊天内容都留在这台服务器上。
+    en: |
+      Chat with characters played by AI or run text adventures: pick a ready-made character or write your own. For character cards and long-running stories.
+
+      The model goes through Wonton's model gateway by default, so there is no key to fill in; to use another provider, set it up under "API Connections" in the app.
+
+      The first account is created and signed in automatically. Set a password for it in the user settings on first open, then create accounts for your family in the same place. Everyone keeps their own chats and characters.
+
+      Note: character cards are content written by others and may include adult themes; what you install and who plays it is up to you. Chats stay on this server.
+  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  webui:
+    service: sillytavern
+    port: 8000
+    # 应用有自己的多用户登录（default-user 自动登录，家人各自登录），网关照常校验会话。
+    sso: none
+  permissions:
+    # 模型只走模型网关。
+    # Models go through the model gateway only.
+    - models
+    # 角色卡、扩展、分词器和语音模型从网上下载；接别的模型服务商也要出网。
+    # Character cards, extensions, tokenizers and speech models are downloaded from the internet;
+    # other model providers need outbound access too.
+    - network.egress
+  # 上游没写最低内存；本机空闲实测约 142M，取 512M。镜像支持 amd64 和 arm64（docker buildx imagetools inspect）。
+  requirements:
+    arch: [amd64, arm64]
+    memory: 512M

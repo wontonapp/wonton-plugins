@@ -1,0 +1,146 @@
+# vLLM：本地大模型推理，OpenAI 兼容接口。模型放插件数据目录（规范只允许挂
+# ${WONTON_APP_DATA} 和共享文件夹，宿主的共用模型目录挂不进来，见 PR“底座的问题”）。
+# 模型在首次启动时从 Hugging Face 下载，所以申请 network.egress；下载和加载要几十分钟，
+# start_period 相应放宽。
+services:
+  vllm:
+    # 官方镜像，多架构清单列表摘要固定（两台独立镜像源核对一致）；上游双架构都有。
+    image: vllm/vllm-openai:v0.33.0@sha256:d825baf9ce4b1b6bfc5ecc7b79880c7e6748c65a72d697ce3d47607aafa84c6e
+    command:
+      - --model
+      - Qwen/Qwen3-8B
+      - --max-model-len
+      - "8192"
+      - --gpu-memory-utilization
+      - "0.8"
+      # 免掉 CUDA 图捕获：装载时长从不可控（图捕获 1-2 分钟，挤爆核心 300 秒
+      # 安装健康门）变成确定；本地推理吞吐略降，README 写明。
+      - --enforce-eager
+      # /docs 用镜像自带的静态资源，不依赖外网 CDN（小程序 WebView 里也能打开）
+      - --enable-offline-docs
+    environment:
+      # 网关代登录：vLLM 认固定 API key（--api-key 的环境变量写法），核心把密钥
+      # 注入已登录用户的请求；vLLM 自己不认识用户。
+      VLLM_API_KEY: ${WONTON_SECRET_API_KEY}
+      # torch/OMP 默认按宿主核数起全核线程池：上百核主机上装载权重时上百线程
+      # 全部 futex 等待（实测 137 线程死锁、CPU 零推进）。限 8 线程，装载走
+      # PCIe 并行 8 流本就够，与核数解耦。
+      OMP_NUM_THREADS: "8"
+      HF_HOME: /data/models/huggingface
+      # 直连 huggingface.co 超时的主机（本机实测超时，hf-mirror.com 200）走国内镜像站；
+      # 配了核心出口代理的主机也可以改回上游默认。
+      HF_ENDPOINT: https://hf-mirror.com
+      # hf-mirror 不支持 xet 协议（CAS 走 xethub.hf.co），缓存命中时 xet 客户端仍会
+      # 出网校验并挂死（本机实测装载卡 10 分钟）；禁掉后首跑下载与缓存装载都走 HTTP。
+      HF_HUB_DISABLE_XET: "1"
+    # 模型缓存完整则离线装载、缺失则在线首跑下载，判定逻辑见 entrypoint 脚本
+    # （实测缓存命中时 hf-mirror 远端校验仍会发起大文件下载并挂死，装载几小时不结束）
+    entrypoint: [/bin/sh, /wonton-entrypoint/entrypoint.sh]
+    configs:
+      - source: entrypoint
+        target: /wonton-entrypoint/entrypoint.sh
+    volumes:
+      - ${WONTON_APP_DATA}/models:/data/models
+      # torch.compile 缓存：容器重建后不重编译（上游文档 Faster Startup 一节）
+      - ${WONTON_APP_DATA}/cache:/root/.cache/vllm
+    # 单卡不需要 ipc: host（最高级权限），加共享内存给 PyTorch 就够
+    shm_size: 1g
+    healthcheck:
+      # /health 不要求 API key，查的是服务真的能应答，不只是进程活着。
+      # urllib 和 curl 一样会读 http_proxy 环境变量（本机配了出口代理时会把
+      # 127.0.0.1 的请求送进代理），用空代理表的 opener；urlopen 本身没有
+      # opener 参数，要走 opener.open。
+      test: ["CMD", "python3", "-c", "import urllib.request as u; u.build_opener(u.ProxyHandler({})).open('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 60s
+      timeout: 10s
+      start_period: 45m
+      start_interval: 15s
+  # vLLM 0.32 没有根路由（/ 返回 404），探针和小程序打开的都是 /：
+  # 一个反代侧车把 / 跳到 /docs，其余转发 vLLM（规范 ComfyUI 例子的同款形态）。
+  web:
+    image: nginx:1.31.8-alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
+    configs:
+      - source: nginx
+        target: /etc/nginx/conf.d/default.conf
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 1s
+
+configs:
+  nginx:
+    file: web/default.conf
+  entrypoint:
+    file: web/entrypoint.sh
+
+x-wonton:
+  spec: "0.6"
+  id: ai.vllm.vllm
+  version: 0.1.1
+  kind: model
+  title: { zh: 高速 AI 模型（vLLM）, en: High-Speed AI Models (vLLM) }
+  description:
+    zh: 在家里服务器的 NVIDIA 显卡上高速运行 AI 模型，多人同时用也不卡；默认模型要 24 GB 以上显存，适合显卡好、用的人多的家庭。
+    en: Run AI models fast on your home server's NVIDIA graphics card, smooth even with many people at once. The default model needs 24 GB or more of video memory, so it suits homes with a powerful card.
+  icon: icon.png
+  notices: [NOTICE]
+  screenshots: [screenshots/api-docs.png, screenshots/models.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://vllm.ai
+  # 上游 vLLM 的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
+  license: Apache-2.0
+  tags:
+    zh: [AI]
+    en: [AI]
+  about:
+    zh: |
+      在自己家里跑 vLLM，用本机 NVIDIA 显卡运行 AI 模型，数据不出门。
+
+      默认加载 Qwen3-8B（下载约 16.4 GB，需要 24 GB 以上显存），首次启动时下载到
+      插件数据目录，之后不再重复下载。打开插件网页就是 OpenAI 兼容接口的文档页，
+      可以直接试对话；程序里把插件网页地址加 /v1 当作 OpenAI base URL 用即可，
+      请求要带云吞的登录会话（浏览器里已登录就行），API 密钥由网关自动注入。
+
+      以后可在“模型设置”（模型网关）里把这个地址注册成自定义 provider，让所有
+      Bot 都用上本地模型；前提是网关容器能访问插件网络，见插件 PR 的说明。
+    en: |
+      Run vLLM at home and serve AI models from your own NVIDIA graphics card, with
+      data staying on your machine.
+
+      It loads Qwen3-8B by default (about 16.4 GB download, needs 24 GB+ of VRAM)
+      into the plugin data directory on first start. The plugin page is the
+      OpenAI-compatible API docs, where you can try a chat right away; in code,
+      use the plugin URL with /v1 as the OpenAI base URL. Requests go through the
+      core gateway with your Wonton session, and the gateway injects the API key
+      automatically — no key to configure in the app.
+
+      Later, register this URL as a custom provider in “Models” (the model
+      gateway) so every bot can use the local model; that needs the gateway
+      container to reach the plugin network, see the plugin PR for details.
+  release_notes: { zh: 模型缓存改成按要装载的模型核对权重分片，半截下载不再被当成完整模型（避免反复重启）；vLLM 镜像升级到 v0.33.0。插件包迁入官方插件合仓。, en: "Model cache completeness is now verified per model against its weight-shard index, so half-finished downloads no longer pass as complete (no more restart loops); vLLM image bumped to v0.33.0. Package moved into the official Wonton plugin monorepo." }
+  webui:
+    service: web
+    port: 80
+    sso: proxy
+    proxy:
+      headers:
+        Authorization: "Bearer {secret:api_key}"
+  permissions:
+    - devices.gpu
+    - network.egress
+  secrets:
+    api_key:
+      generate: { bytes: 32 }
+  gpu:
+    services: [vllm]
+  requirements:
+    arch: [amd64, arm64]
+    # 上游没写最低内存，按加载 8B 权重的余量取 8G
+    memory: 8G
+    gpu:
+      need: required
+      vendors: [nvidia]
+      # 权重 16.4 GB 加运行开销；24 GB 卡按 90% 判够
+      memory: 24G
