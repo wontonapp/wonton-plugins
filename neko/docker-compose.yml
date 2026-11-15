@@ -25,7 +25,7 @@ services:
 x-wonton:
   spec: "0.14"
   id: app.neko.browser
-  version: 0.1.0
+  version: 0.1.1
   kind: app
   title: { zh: 云端浏览器（Neko）, en: Virtual Browser (Neko) }
   description:
@@ -44,18 +44,22 @@ x-wonton:
     zh: |
       像把一台浏览器放在家里：网页在服务器上打开，手机只传回画面和操作，不把浏览记录留在手机浏览器里。
 
+      第一次打开：用插件详情页显示的普通用户密码登录 Neko；管理员密码只给需要管理房间的人。
+
       适合临时查资料、打开家里网络才能访问的网页，或和家人一起看同一个页面。它用 WebRTC 传画面和声音，操作比逐张截图更顺滑。
 
-      第一次打开时，用插件详情页显示的普通用户密码登录 Neko；管理员密码只给需要管理房间的人。映射到手机本机的端口只在插件页面可见时自动开启，离开页面就释放。
+      映射到手机本机的端口只在插件页面可见时自动开启，离开页面就释放。
     en: |
       Put a browser at home: pages open on the server, while your phone receives the view and sends back controls instead of keeping the browsing session in its local browser.
 
+      First open: sign in to Neko with the regular-user password shown in the plugin details; the admin password is for room administration.
+
       Use it to reach pages available only from home or to look at the same page together. WebRTC carries the video and audio for smoother interaction than a sequence of screenshots.
 
-      On first open, sign in to Neko with the regular-user password shown in the plugin details. The admin password is for room administration. The device mapping is enabled while the plugin page is visible and released when you leave it.
+      The device mapping is enabled while the plugin page is visible and released when you leave it.
   release_notes:
-    zh: 首次提供 Neko v3.2.0 虚拟浏览器，使用单 UDP 端口复用以支持云吞隧道映射。
-    en: Initial Neko v3.2.0 virtual browser with a single UDP mux port for Wonton tunnel mapping.
+    zh: 介绍重写：首次登录提示单独成段放在最前。
+    en: "Rewritten store copy: the first-open sign-in note stands alone up front."
   setup:
     zh: 打开插件详情页查看普通用户密码，然后在 Neko 页面登录；需要管理房间时使用管理员密码。
     en: Open the plugin details to view the regular-user password, then sign in on the Neko page; use the admin password to manage the room.

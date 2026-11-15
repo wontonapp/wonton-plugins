@@ -54,7 +54,7 @@ configs:
 x-wonton:
   spec: "0.11"
   id: run.halo.halo
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: 个人博客（Halo）, en: Blog (Halo) }
   description:
@@ -73,20 +73,20 @@ x-wonton:
     zh: |
       家里的博客：写日记、记游记、发照片，读者打开就是一页排好版的文章。
 
+      第一次打开：管理员账号已建好——用户名是你的云吞用户名（下划线写成连字符），密码在插件详情页的“管理员密码”里查看；用这个账号登录后台就能改博客标题、外观（在“系统 - 设置”里）。
+
       写文章在后台完成，家人从网页就能看；Bot 也能帮你查文章、发文章。
 
       博客只有家里人能看：读者必须是能打开你家云吞的人，外网的陌生人进不来。
-
-      管理员账号已建好：用户名是你的云吞用户名（下划线写成连字符），密码在插件详情页的“管理员密码”里查看。想改博客标题、外观，用这个账号登录后台，在“系统 - 设置”里改。
     en: |
       A blog for the household: write diary entries, travel notes and posts, and readers open a clean, typeset page.
+
+      First open: the admin account is ready — the username is your Wonton username (underscores become hyphens) and the password is under “Admin password” in the plugin details. Sign in with it to edit the site title and appearance under System - Settings in the console.
 
       Writing happens in the console, family reads it on the web, and the bot can look up or publish posts for you.
 
       Only your household can read the blog: readers must be able to open your Wonton; strangers from the public internet cannot get in.
-
-      The admin account is ready: the username is your Wonton username (underscores become hyphens), and the password is under “Admin password” in the plugin details. Sign in with it to edit the site under System - Settings in the console.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  release_notes: { zh: 介绍重写：管理员账号和密码的查看方式单独成段放在最前。, en: "Rewritten store copy: the admin account and where to find its password now stand alone up front." }
   webui:
     service: halo
     port: 8090

@@ -77,7 +77,7 @@ configs:
 x-wonton:
   spec: "0.13"
   id: com.lidarr.lidarr
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: 音乐雷达（Lidarr）, en: Lidarr }
   description:
@@ -97,12 +97,16 @@ x-wonton:
     zh: |
       像帮你追专辑的助手：把你喜欢的歌手加进来，出新专辑、有新歌单时它自动搜索并下载，整理好文件名和封面，放进家里共享的音乐文件夹，手机上的音乐应用直接就能听到。
 
-      第一次打开时应用会要求设置管理员账号和密码（自己定，之后在应用的 设置 → 通用 → 安全 里改）；网页始终在云吞网关的登录后面。歌手名单和已下载的音乐都保存在家里，重装不丢。搜索和元数据需要能访问外网。配上 qBittorrent 插件后，下载自动进它的队列；下载完成和健康问题会出现在收件人的 Wonton 私聊里。
+      第一次打开：应用会请你设置管理员账号和密码（自己定，之后在应用的 设置 → 通用 → 安全 里改）；网页始终在云吞网关的登录后面。
+
+      歌手名单和已下载的音乐都保存在家里，重装不丢。搜索和补全专辑资料需要能访问外网。配上 qBittorrent 插件后，下载自动进它的队列；下载完成和健康问题会出现在收件人的 Wonton 私聊里。
     en: |
       Like an assistant that follows albums for you: add the artists you like, and new releases are searched for and downloaded automatically, with names and covers tidied up into the shared music folder, ready in the music app on your phone.
 
-      On first open the app asks you to set an admin username and password (your choice, change later under Settings → General → Security); the web stays behind the Wonton gateway login. Your artist list and downloaded music live at home and survive reinstalls. Search and metadata need internet access. With the qBittorrent plugin installed, downloads go straight into its queue; completed imports and health issues land in the recipient's Wonton chat.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      First open: the app asks you to set an admin username and password (your choice, change later under Settings → General → Security); the web stays behind the Wonton gateway login.
+
+      Your artist list and downloaded music live at home and survive reinstalls. Searching and album details need internet access. With the qBittorrent plugin installed, downloads go straight into its queue; completed imports and health issues land in the recipient's Wonton chat.
+  release_notes: { zh: 介绍重写：首次登录提示单独成段放在最前。, en: "Rewritten store copy: the first-open sign-in note stands alone up front." }
   webui:
     service: lidarr
     port: 8686

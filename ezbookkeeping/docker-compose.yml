@@ -71,7 +71,7 @@ configs:
 x-wonton:
   spec: "0.11"
   id: net.mayswind.ezbookkeeping
-  version: 0.1.2
+  version: 0.1.3
   kind: app
   title: { zh: 家庭记账（ezBookkeeping）, en: Home Bookkeeping (ezBookkeeping) }
   description:
@@ -90,9 +90,9 @@ x-wonton:
     zh: |
       记一笔只要几秒：选类别、输金额，花销收入一目了然。像百度网盘存照片一样，账目都在自己家里，不交给任何公司。
 
-      可以导入支付宝、微信导出的账单对账；拍下小票让助手识别金额和商家。家人各自注册各自的账本，数据互相独立。
+      第一次打开：用云吞的用户名登录，初始密码在插件设置里能查看，登录后马上改成自己的。
 
-      打开应用用云吞的用户名登录，初始密码在插件设置里能查看，登录后可以改成自己的。你的账本默认就是中文和人民币。
+      可以导入支付宝、微信导出的账单对账；拍下小票让助手识别金额和商家。家人各自注册各自的账本，数据互相独立。你的账本默认就是中文和人民币。
 
       助手（Bot）装好就能帮你记账和查账，看到的是你的账本；在应用里吊销 MCP 令牌后，重建容器时会自动重新签发。
 
@@ -100,14 +100,14 @@ x-wonton:
     en: |
       Record an expense in seconds: pick a category, type an amount, and see where the money goes. Like keeping photos in your own cloud, the books live at home, not with any company.
 
-      Import Alipay and WeChat statement exports to reconcile; snap a receipt and let the assistant read the amount and vendor. Each family member registers their own books, independent of others.
+      First open: sign in with your Wonton username; the initial password is in this plugin's settings — change it to your own right after signing in.
 
-      Sign in with your Wonton username; the initial password is in this plugin's settings and can be changed after signing in. Your books start in Chinese with CNY as the default currency.
+      Import Alipay and WeChat statement exports to reconcile; snap a receipt and let the assistant read the amount and vendor. Each family member registers their own books, independent of others. Your books start in Chinese with CNY as the default currency.
 
       The assistant (bot) can record and look up transactions for you right after install, seeing your books; if you revoke the MCP token in the app, a container rebuild re-issues it.
 
       Exchange rates and AI recognition need internet access; without a model gateway the AI features report as unavailable in the app.
-  release_notes: { zh: 一次性初始化服务的 curl 镜像升级到 8.23.0（上游安全更新）。, en: "Bumps the curl image of the one-shot init service to 8.23.0 (upstream security update)." }
+  release_notes: { zh: 介绍重写：首次登录提示单独成段放在最前。, en: "Rewritten store copy: the first-open sign-in note stands alone up front." }
   # 主人的账号是装好时按云吞用户名预建的（登录方式见 about）；初始密码在这里查看。
   setup:
     zh: 打开应用，用云吞的用户名登录；初始密码在插件设置里查看。

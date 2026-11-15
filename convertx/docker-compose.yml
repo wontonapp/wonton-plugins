@@ -39,7 +39,7 @@ x-wonton:
   # 0.12：settings 是 0.12 的字段；核心 PR #242 合入前不注入设置值，compose 里都写了 :- 默认值兜底。
   spec: "0.12"
   id: app.convertx.convertx
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: 文件格式转换（ConvertX）, en: ConvertX }
   description:
@@ -56,16 +56,20 @@ x-wonton:
     zh: |
       把文件转成想要的格式：打开网页、拖进文件、选好目标格式，转完直接下载。
 
+      第一次打开：注册的第一个账号就是管理员，之后注册自动关闭，家里人共用这个账号。
+
       图片、文档、电子书、音视频、表格的常用互转都有：Heic 照片转 JPG、Markdown 转 PDF、Word 转 PDF、WAV 转 MP3 这类事都在网页上完成。文件在家里服务器上转换，不经过任何外部网站。
 
-      第一个注册的账号是管理员，之后注册自动关闭，家里人共用这个账号。转换结果默认保留 24 小时，同时转换的任务数和日期格式都能在插件设置里改。
+      转换结果默认保留 24 小时，同时转换的任务数和日期格式都能在插件设置里改。
     en: |
       Convert files to the format you need: open the web page, drop in a file, pick the target format and download the result.
 
+      First open: the first account registered becomes the admin; registration then closes and the household shares that account.
+
       Common conversions for images, documents, e-books, audio and video are all there: Heic photos to JPG, Markdown to PDF, Word to PDF, WAV to MP3 — everything happens on your own server, no outside website involved.
 
-      The first account registered becomes the admin; registration then closes and the household shares that account. Converted files are kept for 24 hours by default; concurrency and date format are adjustable in the plugin settings.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Converted files are kept for 24 hours by default; concurrency and date format are adjustable in the plugin settings.
+  release_notes: { zh: 介绍重写：首个注册账号即管理员的提示单独成段放在最前。, en: "Rewritten store copy: the first-registered-account-becomes-admin note stands alone up front." }
   setup:
     zh: 打开应用，注册第一个账号：它就是管理员账号，之后注册会自动关闭。
     en: "Open the app and create the first account: it becomes the admin, and registration closes after that."
