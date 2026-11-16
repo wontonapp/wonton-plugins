@@ -17,7 +17,7 @@
 # 两边一致。浏览器直传（预签名 PUT）和 v3 下载（预签名 GET）都走这条路。
 services:
   proxy:
-    image: nginx:1.31.8-alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
+    image: nginx:1.31.8-alpine@sha256:fed7e14be83cbd2661a75cdc5b872d936cf155d46c327084d30b8df19ae88d72
     configs:
       # 覆盖镜像自带的 default.conf：按路径分三路（见文件头注释）。
       - source: proxy-conf
