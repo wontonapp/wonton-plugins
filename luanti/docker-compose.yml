@@ -83,7 +83,7 @@ configs:
 x-wonton:
   spec: "0.12"
   id: org.luanti.luanti
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: 沙盒游戏服务器（Luanti）, en: Luanti server }
   description: { zh: 自己的体素沙盒游戏服务器，家人用 Luanti 客户端连上来一起玩, en: "Your own voxel sandbox game server, join together from Luanti clients" }
@@ -100,16 +100,20 @@ x-wonton:
     zh: |
       像 Minecraft 一样挖矿、盖房子、探险的开源体素沙盒（Luanti，原 Minetest），完全免费。装好就是一个属于自己家的多人服务器，孩子和家人用电脑或手机上的 Luanti 客户端连进来一起玩。
 
-      客户端在 luanti.org 下载（电脑、安卓、iPhone 都有）。加入时在「加入游戏」的地址栏填这台主机的局域网地址（安装确认页写明了端口开放在哪个地址上），端口 30000；在外面时经云吞的隧道连本机端口。第一次进入时自己起名字、设密码，之后用同一名字进入。
+      第一次打开：客户端在 luanti.org 下载（电脑、安卓、iPhone 都有）；第一次进游戏时自己起名字、设密码，之后用同一个名字进入。
+
+      加入时在「加入游戏」的地址栏填这台主机的局域网地址（安装确认页写明了端口开放在哪个地址上），端口 30000；在外面时经云吞的隧道连本机端口。
 
       不用网页，设置里的选项都在云吞的插件详情里改：选游戏（默认 Mineclonia，类 Minecraft）、建筑模式、伤害、人数上限。想当管理员，就把「管理员玩家名」填成你进游戏用的名字。换「游戏」会另开一个新世界，原来的世界还在。
     en: |
       An open-source voxel sandbox like Minecraft (Luanti, formerly Minetest), completely free. This installs a multiplayer server for your household; family members join from Luanti clients on PC, Android or iPhone.
 
-      Get the client from luanti.org. To join, enter this host's LAN address (shown in the install confirmation) in the client's "Join Game" tab, port 30000; away from home, connect through the Wonton tunnel. The first time you join, pick a name and set your own password.
+      First open: get the client from luanti.org; the first time you join, pick a name and set your own password, then sign in with the same name every time.
+
+      To join, enter this host's LAN address (shown in the install confirmation) in the client's "Join Game" tab, port 30000; away from home, connect through the Wonton tunnel.
 
       There is no web UI; all options live in the plugin details: choose the game (default Mineclonia, a Minecraft-like), creative mode, damage and player limit. To become the admin, set the admin player name to the name you join with. Switching the game starts a fresh world; the old world is kept.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  release_notes: { zh: 介绍重写：下载客户端和起名设密码的提示单独成段放在最前。, en: "Rewritten store copy: the get-the-client and pick-a-name notes stand alone up front." }
   permissions:
     # 引擎不自带游戏，一次性服务要从 content.luanti.org 下载选中的游戏。
     # 规范的出网开关不分服务，主服务用不到出网，见 PR 说明。

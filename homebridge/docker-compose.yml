@@ -48,7 +48,7 @@ x-wonton:
   spec: "0.12"
   # 反向域名：上游官网 homebridge.io。
   id: io.homebridge.homebridge
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: 家庭桥接器（Homebridge）, en: Homebridge }
   description:
@@ -69,9 +69,9 @@ x-wonton:
       在家里跑一个 Homebridge 桥：不支持 HomeKit 的设备（米家、涂鸦等）装上对应的接入插件后，
       会出现在苹果"家庭"App 里，能用 Siri 和自动化控制，和原生支持 HomeKit 的设备放在同一个家里。
 
-      装好后打开插件网页，按首次设置向导创建管理员账号；在网页的"插件"页里搜索安装设备插件
-      （比如 homebridge-mi-hygrothermograph、homebridge-tuya 之类），配好后在"家庭"App 里
-      用网页上显示的配对码添加桥。
+      第一次打开：打开插件网页，按首次设置向导创建管理员账号。
+
+      然后在网页的"插件"页里搜索安装设备插件（比如 homebridge-mi-hygrothermograph、homebridge-tuya 之类），配好后在"家庭"App 里用网页上显示的配对码添加桥。
 
       网页只监听本机回环，经云吞网关访问，局域网绕不过登录；HomeKit 桥端口和设备发现走宿主网络，
       同一局域网里的 iPhone 才能配对和控制，这是 HomeKit 的工作方式（mDNS 广播）。
@@ -80,14 +80,15 @@ x-wonton:
       in the Apple Home app once you install their plugins, so you can control them with Siri and
       automations alongside native HomeKit accessories.
 
-      After install, open the plugin's web page and create the admin account in the first-run wizard;
-      search and install device plugins in the Plugins tab (homebridge-mi-hygrothermograph,
-      homebridge-tuya, …), then add the bridge in the Home app with the pairing code shown in the UI.
+      First open: open the plugin's web page and create the admin account in the first-run wizard.
+
+      Then search and install device plugins in the Plugins tab (homebridge-mi-hygrothermograph,
+      homebridge-tuya, …), and add the bridge in the Home app with the pairing code shown in the UI.
 
       The web UI listens on loopback only and is reached through the Wonton gateway, so the LAN cannot
       bypass its login. The HomeKit bridge port and device discovery use host networking so iPhones on
       the same LAN can pair and control — that is how HomeKit works (mDNS).
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  release_notes: { zh: 介绍重写：首次打开建管理员账号的提示单独成段放在最前。, en: "Rewritten store copy: the create-the-admin-account note stands alone up front." }
   setup:
     zh: 装好后打开插件网页，按首次设置向导创建管理员账号，再在网页里安装你设备对应的接入插件。
     en: Open the plugin's web page after install, create the admin account in the first-run wizard, then install a plugin for your devices in the web UI.

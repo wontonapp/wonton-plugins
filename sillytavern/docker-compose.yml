@@ -54,7 +54,7 @@ configs:
 x-wonton:
   spec: "0.12"
   id: com.sillytavern.sillytavern
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: AI 角色扮演（SillyTavern）, en: AI Roleplay (SillyTavern) }
   description:
@@ -74,20 +74,20 @@ x-wonton:
     zh: |
       和 AI 扮演的角色聊天、玩文字冒险：自带角色可以直接聊，也能自己捏角色、写世界观。想认真玩角色卡、跑长篇故事的用它。
 
-      模型默认走云吞的模型网关，装好就能用，不用填 key；换了别的接口或服务商，在应用的“API 连接”里自己配。
+      第一次打开：第一个账号已经建好并自动登录，建议先在用户设置里给它设一个密码，再在同一个地方给家人建各自的账号。家里每个人有自己的聊天记录和角色。
 
-      第一个账号装好时已经建好并自动登录，建议第一次打开后在用户设置里设一个密码，再在同一个地方给家人建各自的账号。家里每个人有自己的聊天记录和角色。
+      模型默认走云吞的模型网关，装好就能用，不用填 key；换了别的接口或服务商，在应用的“API 连接”里自己配。
 
       注意：角色卡是别人写的内容，可能包含成人情节，装哪个、给谁玩由你自己决定；聊天内容都留在这台服务器上。
     en: |
       Chat with characters played by AI or run text adventures: pick a ready-made character or write your own. For character cards and long-running stories.
 
+      First open: the first account is created and signed in automatically. Set a password for it in the user settings, then create accounts for your family in the same place. Everyone keeps their own chats and characters.
+
       The model goes through Wonton's model gateway by default, so there is no key to fill in; to use another provider, set it up under "API Connections" in the app.
 
-      The first account is created and signed in automatically. Set a password for it in the user settings on first open, then create accounts for your family in the same place. Everyone keeps their own chats and characters.
-
       Note: character cards are content written by others and may include adult themes; what you install and who plays it is up to you. Chats stay on this server.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+  release_notes: { zh: 介绍重写：账号与密码的建议单独成段放在最前。, en: "Rewritten store copy: the account-and-password advice stands alone up front." }
   webui:
     service: sillytavern
     port: 8000

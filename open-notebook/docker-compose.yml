@@ -47,7 +47,7 @@ services:
 x-wonton:
   spec: "0.11"
   id: com.github.lfnovo.opennotebook
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: AI 资料笔记本（Open Notebook）, en: AI Notebook (Open Notebook) }
   description:
@@ -69,24 +69,26 @@ x-wonton:
       把网址、文件、视频链接丢进一本本"笔记本"，AI 读完这些资料后帮你：回答提问（只按你给的资料答）、写摘要和笔记，
       还能把一本笔记本做成一档播客节目（两个人聊你资料里的内容）。
 
+      第一次打开：应用没有账号体系，家里谁打开都是同一份笔记本；进去时要输入应用密码，在云吞 App 这个插件的详情页点开「应用密码」查看。
+
       可以拿来追更（丢进去一组 YouTube 链接，让它总结每一期）、整理课程或论文。所有资料和记录都留在这台机器上。
 
       问问题和生成播客要用大模型：默认走云吞的模型网关，装好后在上游设置的 Models 页把网关里的模型加进来并设为默认
       （对话和嵌入；嵌入模型是把资料存进笔记本时用的）。网关里没有语音合成模型时播客做不了，应用会如实报错。
-      应用没有账号体系，家里谁打开都是同一份笔记本，进去时输入应用密码（装好后在这里的"装好后要做的一步"里说去哪看）。
     en: |
       Add links, files and videos to notebooks; the AI reads them and answers questions (grounded in your sources), writes summaries and notes, and can turn a notebook into a podcast episode (two hosts discussing your material).
+
+      First open: the app has no accounts — everyone in the family shares the same notebooks. Signing in takes the app password; view it under "App password" on this plugin's detail page in the Wonton app.
 
       Use it to follow YouTube channels, or to organize courses and papers. Everything stays on this machine.
 
       Chat and podcasts need large models: they go through Wonton's model gateway by default. After installing, add the gateway's models on the upstream Models settings page and pick defaults (chat and embedding; the embedding model is what stores your sources). Without a speech-synthesis model on the gateway, podcast generation fails with a clear error.
-      The app has no accounts: everyone in the family shares the same notebooks, and signing in takes the app password (see "setup" below for where to find it).
   setup:
     zh: 打开应用后，在登录页输入应用密码：在云吞 App 这个插件的详情页点开「应用密码」查看。
     en: >-
       After opening the app, enter the app password on the sign-in page: view it under "App password"
       on this plugin's detail page in the Wonton app.
-  release_notes: { zh: 插件包迁入官方插件合仓，功能与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; functionality is unchanged." }
+  release_notes: { zh: 介绍重写：应用密码的提示单独成段放在最前。, en: "Rewritten store copy: the app-password note stands alone up front." }
   webui:
     service: notebook
     port: 8502

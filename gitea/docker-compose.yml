@@ -93,12 +93,12 @@ configs:
 x-wonton:
   spec: "0.11"
   id: io.gitea.gitea
-  version: 0.2.0
+  version: 0.2.1
   kind: app
   title: { en: Gitea }
   description:
-    zh: 私有 Git 代码托管：网页经云吞账号登录，局域网 SSH 推拉代码
-    en: "Private Git hosting: sign in with your Wonton account, push and pull over LAN SSH"
+    zh: 自己家的代码仓库（Git）：写代码的家人把项目存在家里，网页上一起看代码、提修改，电脑上的开发工具也能连进来用
+    en: "Your own Git server at home: keep code projects at home, work with them on the web, and connect your coding tools directly"
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/dashboard.png, screenshots/repo.png, screenshots/file.png]
@@ -111,7 +111,7 @@ x-wonton:
     en: [Developer, Git]
   about:
     zh: |
-      自己家里的 Git 服务：建仓库、提 issue、审 PR、看代码，手机网页都能用。
+      自己家里的 Git 服务：代码仓库放在家里，网页上看代码、提修改、审改动，手机和电脑都能用。
 
       网页用云吞账号打开，第一次登录自动建号；你（云吞的主人）在这个实例里是管理员。
       本地注册是关掉的，家人要用就在云吞里换账号登录一次。
@@ -122,14 +122,14 @@ x-wonton:
       git clone ssh://git@<这台主机的局域网地址>:2222/<用户>/<仓库>.git。
       多个局域网地址时克隆地址按设置里显示的改一台。
     en: |
-      Your own Git service at home: create repos, file issues, review PRs and read code from the phone.
+      Your own Git service at home: keep your repositories at home, and read code, propose changes and review them on the web from any phone or computer.
 
       The web opens with your Wonton account and the account is created on first sign-in; you (the Wonton owner) are the admin of this instance. Local sign-up is disabled — family members sign in once with their Wonton account.
 
       Emails the app sends (password resets, issue and PR notifications) go through the Wonton internal mailbox and land in the recipient's Wonton chat.
 
       Git push and pull go over LAN SSH, not the web: add your SSH public key in the Gitea web settings, then git clone ssh://git@<server LAN address>:2222/<user>/<repo>.git. With several LAN addresses, use the one shown in the settings.
-  release_notes: { zh: "插件包迁入官方插件合仓，保留当前分支的内部邮箱通知和主人账号邮箱对齐支持。", en: "Moved the plugin package into the official Wonton plugin monorepo; retains internal-mail notifications and owner-account email alignment from the current branch." }
+  release_notes: { zh: "介绍重写：一句话介绍改成日常说法，登录方式不再写进介绍。", en: "Rewritten store copy: the one-line description uses everyday words and no longer duplicates the sign-in details." }
   webui:
     service: gitea
     port: 3000

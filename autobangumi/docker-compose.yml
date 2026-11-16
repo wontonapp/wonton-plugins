@@ -69,7 +69,7 @@ configs:
 x-wonton:
   spec: "0.13"
   id: org.autobangumi.autobangumi
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: 自动追番（AutoBangumi）, en: Anime Auto-Downloader (AutoBangumi) }
   description:
@@ -87,18 +87,22 @@ x-wonton:
     en: [Downloads, Anime]
   about:
     zh: |
-      把想看的番加进来，之后不用管：到了更新时间自动从 RSS 抓种子、交给下载工具下载，改好名字放进媒体库文件夹。
+      把想看的番加进来，之后不用管：到了更新时间自动下载新一集，改好名字放进媒体库文件夹。
 
-      第一次打开用账号 admin、密码 adminadmin 登录，登录后请马上在设置里改密码。装了下载工具（qBittorrent）插件的话，下载器已经配好，直接粘贴蜜柑计划的 RSS 链接就能用。在设置的插件页可以打开「硬链接到媒体库」，整理好的剧集会以硬链接放进媒体库共享文件夹（Jellyfin 直接能看），下载目录继续做种不受影响。
+      第一次打开：用账号 admin、密码 adminadmin 登录，登录后马上在设置里改密码。
 
-      机器人能查追番列表、搜番、订阅和退订、看下载进度。追番需要访问外网（RSS、番剧资料和海报），家里断网时它会把失败如实标出来。
+      装了下载工具（qBittorrent）插件的话，下载器已经配好，把蜜柑计划给你的 RSS 订阅链接粘进来就能自动下载。在设置的插件页可以打开「硬链接到媒体库」：下载完的剧集会以同一份文件放进媒体库共享文件夹（Jellyfin 直接能看，不占双份空间），下载目录继续做种（别人也能从你这里下到）不受影响。
+
+      机器人能查追番列表、搜番、订阅和退订、看下载进度。追番需要访问外网（订阅源、番剧资料和海报），家里断网时它会把失败如实标出来。
     en: |
-      Add a show once and leave it: AutoBangumi grabs new episodes from RSS at air time, sends them to your download app, and renames and files them into your media library folder.
+      Add a show once and leave it: when a new episode airs it is downloaded, renamed and filed into your media library folder automatically.
 
-      Sign in the first time with admin / adminadmin and change the password right away in settings. With the qBittorrent plugin installed the downloader is already configured — paste your Mikan RSS link and you are done. In Settings → Plugins you can enable "Hardlink to media library": finished episodes are hardlinked into the media shared folder (Jellyfin picks them up) while the download directory keeps seeding.
+      First open: sign in with admin / adminadmin and change the password right away in settings.
 
-      A bot can list your subscriptions, search anime, subscribe or unsubscribe, and check download progress. Needs internet access for RSS, anime metadata and posters; failures are reported honestly when offline.
-  release_notes: { zh: 插件包迁入官方插件合仓，保留 RSS 自动追番、自动整理和 qBittorrent 配置。, en: "Moved into the official Wonton plugin monorepo; keeps RSS anime tracking, automatic organization and qBittorrent integration." }
+      With the qBittorrent plugin installed the downloader is already configured — paste the RSS link Mikan gives you and new episodes download themselves. In Settings → Plugins you can enable "Hardlink to media library": finished episodes appear in the media shared folder as the same file (Jellyfin picks them up, no duplicate space) while the download directory keeps seeding.
+
+      A bot can list your subscriptions, search anime, subscribe or unsubscribe, and check download progress. Needs internet access for feeds, anime info and posters; failures are reported honestly when offline.
+  release_notes: { zh: 介绍重写：首次登录提示单独成段放在最前，硬链接、RSS 抓种子等说法改成日常用语。, en: "Rewritten store copy: the first-open sign-in note stands alone up front, and jargon like hardlinks and RSS is explained in everyday words." }
   setup:
     zh: 第一次打开用 admin / adminadmin 登录并马上改密码，然后粘贴你的蜜柑计划 RSS 链接。
     en: Sign in with admin / adminadmin, change the password, then paste your Mikan RSS link.

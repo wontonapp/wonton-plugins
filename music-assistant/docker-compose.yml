@@ -29,12 +29,12 @@ services:
 x-wonton:
   spec: "0.12"
   id: io.music-assistant.server
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: 全屋音乐（Music Assistant）, en: Music Assistant }
   description:
-    zh: 把家里的音箱连成一个音响系统：本地音乐和各种流媒体合成一个曲库，推到每个房间的音箱播放，还能多房间同步
-    en: "Turn your speakers into one sound system: local music and streaming services in a single library, played on speakers in every room, in sync"
+    zh: 把家里的音箱连成一个音响系统：本地音乐和各家在线音乐合成一个曲库，推到每个房间的音箱播放，还能多房间同步
+    en: "Turn your speakers into one sound system: local music and online music services in a single library, played on speakers in every room, in sync"
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/setup.png, screenshots/library.png]
@@ -47,18 +47,22 @@ x-wonton:
     en: [Music, Home]
   about:
     zh: |
-      把本地音乐和各种流媒体合成一个曲库，推送到家里的音箱上播放：AirPlay、Chromecast、Sonos、DLNA 这类音箱装好就会被自动找到，几个房间可以同步放同一首歌，也可以各放各的。
+      把本地音乐和各家的在线音乐合成一个曲库，推送到家里的音箱上播放：AirPlay、Chromecast、Sonos、DLNA 这类音箱装好就会被自动找到，几个房间可以同步放同一首歌，也可以各放各的。
 
-      第一次打开要先设管理员账号和密码（务必记牢，忘了没有找回的办法，只能清空数据重来），然后在设置里添加音乐源：本地文件夹的路径填 /music（共享文件夹 music 里的内容，只读，不会被改动），流媒体服务也在同一页登录添加。
+      第一次打开：先设管理员账号和密码，务必记牢——忘了没有找回的办法，只能清空数据重来。
 
-      这个插件需要宿主网络这一最高级别的网络权限：发现音箱和推流要直接待在局域网上。因此它的网页端口 8095 也会直接开在本机网卡上，局域网里的设备可以绕过云吞网关直接打开——应用自带的登录会挡住陌生人，介意的话可以在路由器或本机防火墙上拦掉 8095。封面和元数据要连外网，走宿主自己的网络出去，不经云吞的出口代理。
+      然后在设置里添加音乐源：本地文件夹的路径填 /music（共享文件夹 music 里的内容，只读，不会被改动），在线音乐服务也在同一页登录添加。
+
+      这个插件需要宿主网络这一最高级别的网络权限：发现音箱和推流要直接待在局域网上。因此它的网页端口 8095 也会直接开在本机网卡上，局域网里的设备可以绕过云吞网关直接打开——应用自带的登录会挡住陌生人，介意的话可以在路由器或本机防火墙上拦掉 8095。封面和专辑资料要连外网，走本机自己的网络出去，不经云吞的出口代理。
     en: |
-      Combine local music and streaming services into one library and play it on the speakers around your home: AirPlay, Chromecast, Sonos and DLNA speakers are found automatically, several rooms can play the same song in sync, or each its own.
+      Combine local music and online music services into one library and play it on the speakers around your home: AirPlay, Chromecast, Sonos and DLNA speakers are found automatically, several rooms can play the same song in sync, or each its own.
 
-      On first open, set the administrator account and password (remember them: there is no recovery, a wipe is the only reset), then add music sources in the settings: for the local folder provider enter the path /music (the music shared folder, read-only, never modified); streaming services are added on the same page.
+      First open: set the administrator account and password, and remember them — there is no recovery, a wipe is the only reset.
 
-      This plugin needs host networking, the highest-level network permission: player discovery and streaming require sitting directly on the LAN. Its web port 8095 is therefore also open on the host's own network interfaces, and devices on the LAN can reach it without going through the Wonton gateway — the app's own login keeps strangers out, and you can block 8095 in your router or host firewall if you prefer. Artwork and metadata are fetched from the internet via the host's own routing, not through the Wonton egress proxy.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Then add music sources in the settings: for the local folder provider enter the path /music (the music shared folder, read-only, never modified); online music services are added on the same page.
+
+      This plugin needs host networking, the highest-level network permission: player discovery and streaming require sitting directly on the LAN. Its web port 8095 is therefore also open on the host's own network interfaces, and devices on the LAN can reach it without going through the Wonton gateway — the app's own login keeps strangers out, and you can block 8095 in your router or host firewall if you prefer. Artwork and album details are fetched from the internet via the host's own routing, not through the Wonton egress proxy.
+  release_notes: { zh: 介绍重写：首次登录提示单独成段放在最前，「流媒体」改成「在线音乐」。, en: "Rewritten store copy: the first-open sign-in note stands alone up front, and streaming services are called online music services." }
   setup:
     zh: 打开网页先设管理员账号和密码，再到「设置 → 音乐源」添加"本地文件夹"，路径填 /music
     en: Open the page, set the admin account first, then add a "Local filesystem" music source with the path /music

@@ -27,7 +27,7 @@ services:
 x-wonton:
   spec: "0.6"
   id: org.cloudreve.cloudreve
-  version: 0.1.1
+  version: 0.1.2
   kind: app
   title: { zh: 私人网盘（Cloudreve）, en: Personal Cloud Drive (Cloudreve) }
   description:
@@ -47,16 +47,16 @@ x-wonton:
     zh: |
       住在自己服务器上的网盘：手机里的照片视频随手备份，文档、压缩包在线预览，文件夹一键生成分享外链。
 
-      把链接或种子交给离线下载，Cloudreve 用自带的 aria2 拉回来，回来就在你的网盘里。
+      第一次打开：用自己注册的账号登录——第一个注册的账号就是管理员；注册入口只有登录过云吞的你能看到。
 
-      打开网页要用 Cloudreve 自己的账号登录；第一次打开时注册的账号就是管理员，注册入口只有登录过云吞的你能看到。
+      把链接或种子交给离线下载，它自己把文件拉回来，回来就在你的网盘里。
     en: |
       A cloud drive that lives on your own server: back up photos and videos from your phone, preview documents and archives, and turn any folder into a share link.
 
-      Hand a link or a torrent to the offline downloader and Cloudreve fetches it with the bundled aria2; it lands straight in your drive.
+      First open: sign in with an account you register — the first account registered is the admin, and the sign-up page is only reachable through the Wonton gateway.
 
-      The web UI signs in with its own Cloudreve account. The account you register on first open is the admin, and the sign-up page is only reachable through the Wonton gateway.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Hand a link or a torrent to the offline downloader and Cloudreve fetches it for you; it lands straight in your drive.
+  release_notes: { zh: 介绍重写：注册管理员账号的提示单独成段放在最前。, en: "Rewritten store copy: the register-the-admin-account note stands alone up front." }
   webui:
     service: cloudreve
     port: 5212

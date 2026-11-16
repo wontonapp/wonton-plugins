@@ -71,7 +71,7 @@ configs:
 x-wonton:
   spec: "0.11"
   id: com.prowlarr.prowlarr
-  version: 0.2.0
+  version: 0.2.1
   kind: app
   title: { zh: 资源站管理（Prowlarr）, en: Torrent Site Manager (Prowlarr) }
   description:
@@ -91,14 +91,18 @@ x-wonton:
     zh: |
       Prowlarr 把你找资源的网站集中到一处：从内置的几百个网站里添加，测能不能连上，自动同步给 Radarr、Sonarr、qBittorrent 这类应用，也能直接搜索、把种子送进下载队列。
 
-      第一次打开时应用会要求设置管理员账号和密码（自己定，之后在应用的 设置 → 通用 → 安全 里改）；网页始终在云吞网关的登录后面。索引器和设置都保存在家里，重装不丢。搜索索引站需要能访问外网；配了 qBittorrent 插件后，抓取会直接进它的下载队列。应用的通知（健康问题、健康恢复、应用更新）出现在收件人的 Wonton 私聊里；收件人只能是家里人，改成外部邮箱会发送失败。
+      第一次打开：应用会请你设置管理员账号和密码（自己定，之后在应用的 设置 → 通用 → 安全 里改）；网页始终在云吞网关的登录后面。
+
+      索引站配置都保存在家里，重装不丢。搜索资源站需要能访问外网；配了 qBittorrent 插件后，抓取会直接进它的下载队列。应用的通知（健康问题、健康恢复、应用更新）出现在收件人的 Wonton 私聊里；收件人只能是家里人，改成外部邮箱会发送失败。
     en: |
       Prowlarr keeps the sites you search for downloads in one place: add them from a few hundred built-in definitions, test them, sync them to apps like Radarr, Sonarr or qBittorrent, and search and send torrents straight to your download queue.
 
-      On first open the app asks you to set an admin username and password (your choice, change later under Settings → General → Security); the web stays behind the Wonton gateway login. Indexers and settings live at home and survive reinstalls. Searching index sites needs internet access. With the qBittorrent plugin installed, grabs go straight into its download queue. App notifications (health issues, health restored, app updates) land in the recipient's Wonton chat; recipients must be household members — sending to an external address fails.
+      First open: the app asks you to set an admin username and password (your choice, change later under Settings → General → Security); the web stays behind the Wonton gateway login.
+
+      Indexer settings live at home and survive reinstalls. Searching index sites needs internet access. With the qBittorrent plugin installed, grabs go straight into its download queue. App notifications (health issues, health restored, app updates) land in the recipient's Wonton chat; recipients must be household members — sending to an external address fails.
   release_notes:
-    zh: 应用发的通知接上了云吞的内部邮箱：装好即建好 Email 通知连接，健康问题、健康恢复、应用更新出现在收件人的 Wonton 私聊里；要收每次抓取的信，在连接设置里打开"抓取"。
-    en: "App notifications now go through Wonton's internal mailbox: an Email connection is set up on install, and health-issue, health-restored and app-update notices land in the recipient's Wonton chat. Turn on \"Grab\" in the connection settings to also get one mail per grab."
+    zh: 介绍重写：首次登录提示单独成段放在最前。
+    en: "Rewritten store copy: the first-open sign-in note stands alone up front."
   webui:
     service: prowlarr
     port: 9696
