@@ -3,7 +3,7 @@
 # crypto store 和 Matrix 令牌不给 agent。
 services:
   agent:
-    image: ghcr.io/wontonapp/wonton-plugins/agent-orchestrator/wonton-plugin-agent-orchestrator:0.1.3@sha256:6c5238e97292eb3272797e8dd0c6e35ce2863b65afcc5007759f42dc43698fee
+    image: ghcr.io/wontonapp/wonton-plugins/agent-orchestrator/wonton-plugin-agent-orchestrator:0.1.3@sha256:32007746f4bce25edc487d15124e343af96cacab312bfc0b2b7baec97c0a6c65
     user: "65532:65532"
     restart: unless-stopped
     environment:
