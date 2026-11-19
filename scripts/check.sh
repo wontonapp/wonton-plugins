@@ -4,7 +4,7 @@
 #
 #   scripts/check.sh              不合格时退出码 1；只有提醒时照常通过
 #   scripts/check.sh --official   按官方索引的要求：镜像按摘要固定、长期运行的服务有健康检查、写了标签、许可证、作者和声明
-# 一个仓库放多家插件时，WONTON_PLUGIN 指定插件目录（如 WONTON_PLUGIN=agents/<名>）。
+# 一个仓库放多家插件时，WONTON_PLUGIN 指定插件目录（如 WONTON_PLUGIN=<名>）。
 set -euo pipefail
 # shellcheck source=scripts/lib.sh
 . "$(dirname "$0")/lib.sh"
