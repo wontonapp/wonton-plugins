@@ -44,7 +44,7 @@
 # 默认地址池（只有约 30 个网络，几套栈共用一台 Docker 时会用光）；写进 .wonton/compose.subnet.yaml，栈拆掉之前一直沿用。
 # WONTON_DEV_STATE（如 ~/.w/<插件名>）把 .wonton 整个换到别处，每次执行都要带上：宿主网络插件的中继套接字在
 # <它>/data/apps/<插件 id>/relay/webui.sock，unix 套接字路径最多 107 字节，仓库放得深时核心会拒装。
-# 一个仓库放多家插件：WONTON_PLUGIN 指到插件目录（如 WONTON_PLUGIN=agents/<名>），状态放在 .wonton/<目录名>。
+# 一个仓库放多家插件：WONTON_PLUGIN 指到插件目录（如 WONTON_PLUGIN=<名>），状态放在 .wonton/<目录名>。
 set -euo pipefail
 # forget_environment 会清掉所有 WONTON_*，先留一份。
 core_subnet="${WONTON_DEV_CORE_SUBNET:-}"
@@ -727,7 +727,7 @@ approve_pending() {
   cards="$(python3 - "$list" <<'PY'
 import json, sys
 
-# 权限确认卡（ACP session/request_permission 转来的）每个选项都带 choice_id，核心按
+# 权限确认卡（Agent 经核心 /agent/permissions 请的）每个选项都带 choice_id，核心按
 # answer + choice_id 匹配卡片上的按钮，只发 answer 会被 400 invalid_input 拒掉：从卡片
 # 挑第一个「允许」类选项，把它自己的 answer 和 choice_id 原样发回去。核心认 approve、
 # approve_wider、allow_window 三种 answer 为同意（答别的等同拒绝）。

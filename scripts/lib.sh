@@ -2,7 +2,7 @@
 # shellcheck shell=bash
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# 一个仓库放多家插件（如 agents/<名>/ 各是一个插件包）时，套件在仓库根的 scripts/，WONTON_PLUGIN 指到插件包目录
+# 一个仓库放多家插件（如每个 <名>/ 各是一个插件包）时，套件在仓库根的 scripts/，WONTON_PLUGIN 指到插件包目录
 # （相对仓库根）；不设就是仓库根。plugin_rel 是相对路径，单插件仓库是“.”。
 plugin="${WONTON_PLUGIN:-.}"
 [[ "$plugin" == /* ]] || plugin="$root/${plugin#./}"
@@ -123,7 +123,7 @@ running_container() {
 # 插件包目录里要有清单：单插件仓库的根目录，或 WONTON_PLUGIN 指的子目录。
 need_plugin() {
   [[ -f "$plugin/docker-compose.yml" ]] ||
-    die "没有 $plugin_rel/docker-compose.yml：一个仓库放多家插件时用 WONTON_PLUGIN 指到插件目录，如 WONTON_PLUGIN=agents/<名>"
+    die "没有 $plugin_rel/docker-compose.yml：一个仓库放多家插件时用 WONTON_PLUGIN 指到插件目录，如 WONTON_PLUGIN=<名>"
 }
 
 # 插件包在某个 git 引用里的树：单插件仓库是引用本身，多插件仓库是 <引用>:<插件目录>（给 git archive 用）。
@@ -183,29 +183,4 @@ PY
   cp -a "$docker_config/." "$target/"
   printf '%s\n' "$stripped" >"$target/config.json"
   export DOCKER_CONFIG="$target"
-}
-
-# 换掉 Compose 文件里某个服务的 image 行：<文件> <服务名> <镜像>。只认 services 下一层的服务键和它下面直写的 image，
-# 找不到时返回 1、文件不动；换完是否生效由调用方用 docker compose config 核对。
-replace_service_image() {
-  local file="$1" service="$2" image="$3" tmp
-  tmp="$(mktemp "$file.XXXXXX")" || return 1
-  if awk -v svc="$service" -v img="$image" '
-    function indent(line) { match(line, /^ */); return RLENGTH }
-    /^services:[[:space:]]*$/ { in_services = 1; print; next }
-    in_services && /^[^ #]/ { in_services = 0; in_svc = 0 }
-    in_services && /^ +[^ #][^:]*:[[:space:]]*$/ && (child == 0 || indent($0) == child) {
-      child = indent($0); name = $1; sub(/:$/, "", name); gsub(/["\047]/, "", name)
-      in_svc = (name == svc); print; next
-    }
-    in_svc && !done && /^ +image:/ && indent($0) > child {
-      match($0, /^ +/); $0 = substr($0, 1, RLENGTH) "image: " img; done = 1
-    }
-    { print }
-    END { exit !done }' "$file" >"$tmp"; then
-    mv "$tmp" "$file"
-  else
-    rm -f "$tmp"
-    return 1
-  fi
 }

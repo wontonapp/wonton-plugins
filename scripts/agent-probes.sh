@@ -8,14 +8,13 @@
 #     agent_check_chat '请用一句话回答：冒烟。记住暗号：青杏。'
 #     agent_check_model
 #     agent_check_mcp_bus
-#     agent_check_restart agent bridge
+#     agent_check_restart gateway
 #     agent_check_resume 青杏
 #     agent_check_outsider
 #   }
 #
 # 按 Agent 的行为选参数：agent_check_mcp_chat card（调 MCP 工具前也要确认）、agent_check_card <服务>（只读命令
-# 不出卡片，改成在工作区建文件、看那个服务容器里的文件）。有登录的 Agent 再加 agent_check_login <方式[,方式…]> <正则…>、
-# agent_check_login_web <方式…>、agent_check_login_redact。
+# 不出卡片，改成在工作区建文件、看那个服务容器里的文件）。
 #
 # 扮演手机的两个验收工具是核心仓库 deploy/dev/core/Dockerfile 的 tunnel-client、echo-bot 两个构建目标，由调用方
 # 给镜像：WONTON_SMOKE_TUNNEL_CLIENT_IMAGE、WONTON_SMOKE_ECHO_BOT_IMAGE。没给时要手机的子项记 N/A 并写原因。
@@ -124,45 +123,22 @@ agent_need() {
 agent_tmp() { mktemp "${SMOKE_STATE%/*}/agent.XXXXXX"; }
 
 # 诊断辅助：名单外窗口出现 Bot 消息时把现场抓全，误报时不用重跑——原始房间事件（加密事件没有正文，
-# 但 sender/ts/type/relations 齐）、桥和 agent 容器日志、AO 会话列表、核心注入给桥的名单。
+# 但 sender/ts/type/relations 齐）和插件每个容器的日志。
 agent_outsider_hit_dump() { # <owner_token> <room_url> <since 毫秒> <outsider 用户 ID>
   local ot="$1" room_url="$2" since="$3" outsider="$4" outdir ts c
   ts="$(date +%H%M%S)"
-  outdir="${AO_DBG_DIR:-${SMOKE_STATE%/*}}/outsider-hit-$ts"
+  outdir="${SMOKE_STATE%/*}/outsider-hit-$ts"
   mkdir -p "$outdir"
   echo "== 诊断：名单外窗口出现 Bot 消息（since=$since outsider=$outsider），现场在 $outdir"
   agent_matrix "$ot" GET "/_matrix/client/v3/rooms/$room_url/messages?dir=b&limit=100" \
     >"$outdir/room-events.json" 2>&1 || true
   jq -c '.chunk[]? | {ts: .origin_server_ts, sender, type, event_id, content, relates: (.content["m.relates_to"] // empty)}' \
     "$outdir/room-events.json" 2>/dev/null | head -40 | sed 's/^/事件 /' || true
-  c="$(running_container "wonton-$SMOKE_INSTANCE--$SMOKE_SLUG--bridge")"
-  if [[ -n "$c" ]]; then
-    docker inspect "$c" --format '{{range .Config.Env}}{{println .}}{{end}}' |
-      grep -E "WONTON_MATRIX_(ALLOWED_USERS|HOME_ROOM|USER_ID|HOMESERVER)" | sed 's/^/桥env /'
-    docker logs --tail 500 --timestamps "$c" >"$outdir/bridge.log" 2>&1 || true
-    echo "== 桥日志尾部 50 行 =="; tail -50 "$outdir/bridge.log"
-  fi
-  c="$(running_container "wonton-$SMOKE_INSTANCE--$SMOKE_SLUG--agent")"
-  if [[ -n "$c" ]]; then
-    docker logs --tail 500 --timestamps "$c" >"$outdir/agent.log" 2>&1 || true
-    echo "== agent 日志尾部 50 行 =="; tail -50 "$outdir/agent.log"
-    docker exec "$c" curl -sS --noproxy '*' --max-time 10 http://127.0.0.1:3001/api/v1/orchestrators \
-      >"$outdir/ao-sessions.json" 2>&1 || true
-    echo "== AO 会话列表 =="; head -c 4000 "$outdir/ao-sessions.json"; echo
-    # 每个会话的最近对话：outsider 文本到没到 Agent，看转录里有没有它。
-    jq -r '.sessions[]?.id // empty' "$outdir/ao-sessions.json" 2>/dev/null | sort -u | head -8 |
-      while IFS= read -r sid; do
-        [[ -n "$sid" ]] || continue
-        docker exec "$c" curl -sS --noproxy '*' --max-time 15 \
-          "http://127.0.0.1:3001/api/v1/sessions/$sid/conversation?limit=50" \
-          >"$outdir/ao-conv-$sid.json" 2>&1 || true
-      done
-    echo "== AO 转录关键词扫描（outsider/请用一句话/同一个房间/诊断） =="
-    grep -l . "$outdir"/ao-conv-*.json 2>/dev/null | while IFS= read -r f; do
-      grep -o -E "outsider smoke[^\"]{0,80}|请用一句话[^\"]{0,60}|同一个房间[^\"]{0,60}|诊断：[^\"]{0,60}" "$f" |
-        sed "s|^|$(basename "$f") |" | head -6
+  docker container ls --filter "name=wonton-$SMOKE_INSTANCE--$SMOKE_SLUG--" --format '{{.Names}}' |
+    while IFS= read -r c; do
+      docker logs --tail 500 --timestamps "$c" >"$outdir/$c.log" 2>&1 || true
+      echo "== $c 日志尾部 50 行 =="; tail -50 "$outdir/$c.log"
     done
-  fi
   if [[ -n "${WONTON_DEV_MODEL_BASE_URL:-}" ]]; then
     echo "== 诊断：让 Agent 复述最近收到的用户消息 =="
     agent_say --reply any --settle 8 --wait 150 --text '诊断：请逐字复述你最近一次收到的用户消息的原文，只输出原文，不要解释。' 2>&1 | tail -15
@@ -188,7 +164,7 @@ agent_check_model() {
   local file bg out rc=0
   agent_need 模型能回话 model || return 0
   file="$(agent_tmp)"
-  # --match 只认带答案的那条：桥的状态消息（m.notice 带状态对象的“在想”“等你确认”，probe 看不到对象只看
+  # --match 只认带答案的那条：Bot 的状态消息（m.notice 带状态对象的“在想”“等你确认”，probe 看不到对象只看
   # 得到正文）不算回答，不然 Agent 一出权限卡片这项就提前 PASS，卡片从此没人答，轮次 600 秒超时，后面的
   # 子项全顺延。等的时候冒出确认卡片就同意（这一项要的是回答，让 Agent 把活干完），不让它堵着。
   agent_say --reply any --match '模型验收通过' --wait "${AGENT_WAIT:-240}" \
@@ -272,7 +248,7 @@ agent_confirmations() { # [curl 参数…]
 # 等一张标题、说明或参数里含 <文字>（空 = 任意一张）的确认卡片，按 <approve|reject> 回答；卡片没出现返回 1。
 # [秒数]（默认 AGENT_CARD_WAIT 或 120）是 Bot 安静多久才放弃：它还在发消息就一直等，另受 AGENT_CARD_MAX（默认
 # 1800 秒）的绝对上限兜底。后台积压几分钟才轮到的 Agent 靠这个不丢卡片窗口。
-# 选项带 choice_id 的（ACP 的权限卡）要把那个选项自己的 answer 和 choice_id 一起发回去。
+# 选项带 choice_id 的（Agent 经核心 /agent/permissions 请的权限卡）要把那个选项自己的 answer 和 choice_id 一起发回去。
 agent_card_answer() {
   local want="$1" needle="$2" seconds="${3:-${AGENT_CARD_WAIT:-120}}" max="${AGENT_CARD_MAX:-1800}"
   local list id body owner room_url start now idle=0 tick=0 last_ts=0 ts want_kind
@@ -605,7 +581,7 @@ agent_check_restart() {
 agent_check_resume() { # <暗号>
   local out rc=0
   agent_need 续聊 model || return 0
-  # 只认含暗号的那条：桥的提示（如话题冲突）可能抢在模型的回答前到。
+  # 只认含暗号的那条：Bot 自己的提示可能抢在模型的回答前到。
   out="$(agent_say --reply any --match "$1" --wait "${AGENT_WAIT:-240}" --text '我们第一次说话时留的暗号是什么？只回答暗号。' 2>&1)" || rc=$?
   printf '%s\n' "$out"
   if ((rc == 0)) && grep -qF "$1" <<<"$out"; then
@@ -613,76 +589,6 @@ agent_check_resume() { # <暗号>
   else
     extra_item FAIL 续聊 "问不回暗号 $1：$(agent_tail "$out")"
   fi
-}
-
-# 聊天登录：/wonton login 要列出 <方式>（逗号分隔的几种都要在，发起第一种）；发起后聊天里每个 <正则> 都要命中
-# （链接、设备码或输入提示），到此为止，不真登录；再 /wonton login cancel 回到待命。这些都是桥自己回的，不要模型。
-agent_check_login() { # <方式[,方式…]> <正则…>
-  local methods method out m re missing
-  IFS=, read -ra methods <<<"$1"
-  method="${methods[0]}"
-  agent_need 登录方式 || return 0
-  out="$(agent_say --reply any --settle 10 --wait 60 --text '/wonton login' 2>&1)"
-  printf '%s\n' "$out"
-  for m in "${methods[@]}"; do
-    grep -qF "/wonton login $m" <<<"$out" ||
-      { extra_item FAIL 登录方式 "/wonton login 的回答里没有 $m：$(agent_tail "$out")"; return 0; }
-  done
-  extra_item PASS 登录方式 "聊天里列出登录方式 ${methods[*]}"
-  out="$(agent_say --reply any --settle 10 --wait 90 --text "/wonton login $method" 2>&1)"
-  printf '%s\n' "$out"
-  missing=""
-  for re in "${@:2}"; do
-    grep -Eq "$re" <<<"$out" || missing="$missing $re"
-  done
-  if [[ -z "$missing" ]]; then
-    extra_item PASS 登录链接 "发起 $method 后聊天里出现了登录链接或输入提示（到这为止，不真登录）"
-  else
-    extra_item FAIL 登录链接 "发起 $method 后聊天里没有$missing：$(agent_tail "$out")"
-  fi
-  out="$(agent_say --reply any --settle 10 --wait 60 --text '/wonton login cancel' 2>&1)"
-  printf '%s\n' "$out"
-  if grep -q '登录已取消' <<<"$out"; then
-    extra_item PASS 登录取消 "取消登录，回到待命"
-  else
-    extra_item FAIL 登录取消 "取消登录没确认：$(agent_tail "$out")"
-  fi
-}
-
-# 登录网页（插件的网页入口，用户会话）的 /api/logins 列出的方式 id 正好是 <方式…>（不计顺序）。
-agent_check_login_web() { # <方式…>
-  local out want
-  want="$(printf '%s\n' "$@" | jq -Rsc 'split("\n") | map(select(. != "")) | sort')"
-  if [[ -z "${SMOKE_WEB_URL:-}" ]]; then
-    extra_item FAIL 登录网页 "没有网页入口（清单的 webui）"
-  elif ! out="$(web_get /api/logins 2>&1)"; then
-    extra_item FAIL 登录网页 "登录网页的 /api/logins 请求失败：$(agent_tail "$out")"
-  elif jq -e --argjson w "$want" '([.logins[].id] | sort) == $w' <<<"$out" >/dev/null 2>&1; then
-    extra_item PASS 登录网页 "登录网页列出 $*"
-  else
-    extra_item FAIL 登录网页 "登录网页列出的方式不是 $*：$(agent_tail "$out")"
-  fi
-}
-
-# 登录密钥撤回：/wonton login api-key 后在聊天里贴一个假 key，桥转交给 Agent 后要撤回那条消息，服务器上的
-# content 是空对象。贴完取消登录。
-agent_check_login_redact() {
-  local out
-  agent_need 登录密钥撤回 || return 0
-  out="$(agent_say --reply any --settle 10 --wait 60 --text '/wonton login api-key' 2>&1)"
-  printf '%s\n' "$out"
-  if ! grep -Eiq 'api key|api-key|key' <<<"$out"; then
-    extra_item FAIL 登录密钥撤回 "/wonton login api-key 没回出输入提示：$(agent_tail "$out")"
-    return 0
-  fi
-  out="$(agent_say --reply any --wait 30 --print-event-id 1 --redacted 60 --text "sk-smoke-$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')" 2>&1)"
-  printf '%s\n' "$out"
-  if grep -q '已撤回：content={}' <<<"$out"; then
-    extra_item PASS 登录密钥撤回 "桥撤回了贴 key 的消息，服务器上的 content 是空对象"
-  else
-    extra_item FAIL 登录密钥撤回 "贴 key 的消息没撤回：$(agent_tail "$out")"
-  fi
-  agent_say --reply any --settle 10 --wait 60 --text '/wonton login cancel' 2>&1
 }
 
 # Matrix 客户端接口：<令牌> <方法> <路径> [JSON 正文]，在核心容器里发（同 probes_matrix），正文只用 ASCII。
@@ -693,7 +599,7 @@ agent_matrix() {
 # 名单外不应答：Bot 只听名单里的人。名单外的临时用户在主房间里发一条，<等待秒>（默认 30）内 Bot 不许回；模型慢、
 # 上一轮还没说完的 Agent 给长一点；踢掉他以后用户在
 # 同一个房间发一条，Bot 必须回：说明 Bot 在收这个房间的消息，前一条是看到了不答，不是没在跑。
-# 开窗前先用主人的一台新设备打一个往返（ping），确认没有轮次还在跑：桥对被打断的轮次会发超时通知，
+# 开窗前先用主人的一台新设备打一个往返（ping），确认没有轮次还在跑：Bot 对超时的轮次可能发通知，
 # 那是不针对谁的插话，上一轮还在跑时会被算到外人头上。往返没回答时预检不过，这一项记 N/A。
 # [silent]：只断言名单外的人得不到回答，不做踢人后的对照（“Bot 在听且会回用户”由别的子项承担）。
 # 临时用户用 Matrix 服务器的注册共享密钥建；邀请、踢人、读消息用用户本人的身份（管理接口代登录，用完退出），
@@ -702,9 +608,8 @@ agent_check_outsider() { # [silent] [等多少秒，默认 30]
   local admin owner owner_token secret nonce pass name mac reg outsider outsider_token room_url since seen out rc=0 expect
   local wait="${2:-30}"
   agent_need 名单外不应答 || return 0
-  # 桥的轮次超时通知（单轮 10 分钟）不针对谁：上一轮还在跑时，它的超时通知会落进下面的无声窗口，被算成
-  # “Bot 回了外人”。先打一个往返：Bot 回了话就说明在跑的轮次已经结束（桥按轮次排队，回话前不会再开新的
-  # 未完成轮次），再开窗。往返没回答说明可能有轮次还在跑，窗口判定不可信，这一项记 N/A。
+  # Bot 的轮次超时通知不针对谁：上一轮还在跑时，它的超时通知会落进下面的无声窗口，被算成“Bot 回了外人”。
+  # 先打一个往返：Bot 按轮次排队，回了话就说明在跑的轮次已经结束，再开窗。往返没回答说明可能有轮次还在跑，窗口判定不可信，这一项记 N/A。
   if out="$(agent_say --reply any --settle 5 --wait "${AGENT_WAIT:-120}" --text '冒烟：请只回答 ping，不要调用工具。' 2>&1)"; then
     sleep 10
   else
