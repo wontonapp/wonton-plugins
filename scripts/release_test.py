@@ -17,6 +17,14 @@ REPO_DIR = Path(__file__).resolve().parent.parent
 BASE = Path(tempfile.mkdtemp(prefix="release-test."))
 PASSED = 0
 FAILED = []
+# CI 的 runner 没配 git 身份，测试里的 commit 会以 128 退出；测试和被测脚本（子进程继承环境）都用这个固定身份。
+for _key, _value in {
+    "GIT_AUTHOR_NAME": "release-test",
+    "GIT_AUTHOR_EMAIL": "release-test@example.com",
+    "GIT_COMMITTER_NAME": "release-test",
+    "GIT_COMMITTER_EMAIL": "release-test@example.com",
+}.items():
+    os.environ[_key] = _value
 
 COMPOSE = """\
 services:
