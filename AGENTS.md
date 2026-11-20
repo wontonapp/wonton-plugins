@@ -103,13 +103,16 @@ PR 描述写清改了什么、为什么、上面哪几步做了、结果是什�
 - 提交信息用 Conventional Commits：`type(scope): 摘要`，`type` 取 `feat`、`fix`、`docs`、`refactor`、
   `chore`、`build`、`ci`；摘要说清行为变化。
 - 不提交 `.wonton/`、密钥和调试产物（截图、日志）。截图只有商店用的放在子目录的 `screenshots/`。
-- 发布：改子目录清单的 `version`、写好 `release_notes`、提交进 `main` 并合 PR，然后在有 `gh` 登录、
-  旁边有 wonton-store 检出的地方跑 `scripts/release.py <id>… --store ../wonton-store`。它先确认那个提交
-  来自已合的 PR、插件检查和 `check 汇总` 全绿、版本比上一个 tag 新，再逐个推 tag、等发布把摘要写回，
+- 发布：改子目录清单的 `version`、写好 `release_notes`、提交进 `main` 并合 PR，然后在仓库根目录、有 `gh`
+  登录、旁边有 wonton-store 检出的地方跑 `scripts/release.py <id>… --store ../wonton-store`。它先确认那个
+  提交来自已合的 PR、插件检查和 `check 汇总` 全绿、版本比上一个 tag 新，再逐个推 tag、等发布把摘要写回，
   最后改商店、等检查绿了合并。任一步失败就停，报哪一步；修好原因重跑同一条命令，已发过的插件跳过。
+- 命令只发本仓库的插件。商店里还指向私有仓库（`wonton-plugin-<id>` 之类）的条目会顺带迁到本仓库路径，
+  这类 PR 带 `remove-plugin` 标签。
 - 发布过的 tag 不移动、不删除；发错了就发一个新版本。仅用上游镜像的插件没有摘要提交，tag 直接打在清单
   版本的提交上。
-- `scripts/release.py --dry-run` 只打印计划和预检结果，不发写请求；`--upgrade-steps` 额外打印升级测试机的步骤。
+- `scripts/release.py --dry-run` 只打印计划和预检结果：不推远端、不改商店，但会 `git fetch --tags`、可能删掉
+  本地遗留的同名 tag；`--upgrade-steps` 额外打印升级测试机的步骤。
 - 提交作者用 GitHub 的 noreply 邮箱：`git config user.email "<数字 ID>+<用户名>@users.noreply.github.com"`。
 
 ## 在公开仓库开发

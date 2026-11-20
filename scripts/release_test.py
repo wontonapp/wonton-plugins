@@ -354,7 +354,9 @@ def pr_view(number):
     if data["views"] < SCENARIO["store_checks"]["green_after"]:
         rolls = [{"name": "重新生成并对比", "status": "IN_PROGRESS", "conclusion": None}]
     else:
-        rolls = [{"name": "重新生成并对比", "status": "COMPLETED", "conclusion": "SUCCESS"}]
+        verdict = SCENARIO["store_checks"].get("conclusion", "success")
+        rolls = [{"name": "重新生成并对比", "status": "COMPLETED",
+                  "conclusion": "SUCCESS" if verdict == "success" else "FAILURE"}]
     return {"statusCheckRollup": rolls, "headRefOid": data["head"]}
 
 
@@ -523,6 +525,17 @@ def already_released_only_updates_store() -> None:
     check("files@files/v0.2.4" in update, "商店更新到发过的版本")
 
 
+def store_check_failure_keeps_pr() -> None:
+    fixture = Fixture("store-red")
+    fixture.scenario["store_checks"] = {"green_after": 1, "conclusion": "failure"}
+    result = fixture.run("files")
+    expect_stop(result, "商店检查没绿")
+    check("https://github.com/wontonapp/wonton-store/pull/1" in result.stderr, "报错要带 PR 地址")
+    check(not (fixture.state / "merged").exists(), "检查红了不该合并")
+    branches = git("--git-dir", str(fixture.store_origin), "for-each-ref", "refs/heads/", cwd=fixture.dir)
+    check("chore/release-files-v0.2.4" in branches, "分支要留着，PR 还在")
+
+
 def rerun_is_noop() -> None:
     fixture = Fixture("rerun")
     check(fixture.run("files").returncode == 0, "第一次应该成功")
@@ -577,6 +590,7 @@ CASES = [
     full_flow_updates_store_and_merges,
     upgrade_steps_are_printed,
     already_released_only_updates_store,
+    store_check_failure_keeps_pr,
     rerun_is_noop,
     main_moved_refuses,
     unknown_plugin_refuses,

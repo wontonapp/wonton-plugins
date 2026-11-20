@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """一条命令发版：确认插件在 main 上的版本已经合入、检查全绿，再串行打 tag、等发布成功、把版本收录进商店。
 
+在 wonton-plugins 仓库根目录跑，只发本仓库的插件。商店里还指向私有仓库（`wonton-plugin-<id>` 之类）的条目
+会顺带迁到本仓库路径，所以这类 PR 带 remove-plugin 标签。
+
     scripts/release.py <插件id>… --store ../wonton-store [--dry-run] [--upgrade-steps]
 
 顺序（任意一步失败就停，报哪一步、为什么，不往下走）：
@@ -10,6 +13,7 @@
   4. --upgrade-steps 额外打印升级测试机的步骤（不碰服务器）。
 
 发布过的 tag 不移动、不删除；失败后修好原因，重跑同一条命令接着做。
+--dry-run 不推远端、不改商店，但会 git fetch --tags，并可能删掉本地遗留的同名 tag（远端没有它时）。
 """
 
 import argparse
@@ -417,7 +421,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("plugins", nargs="+", help="要发版的插件 id（顶层目录名）")
     parser.add_argument("--store", default=os.environ.get("WONTON_STORE"),
                         help="wonton-store 的检出目录，也可以设 WONTON_STORE")
-    parser.add_argument("--dry-run", action="store_true", help="只打印计划，不发任何写请求")
+    parser.add_argument("--dry-run", action="store_true", help="只打印计划：不推远端、不改商店（仍会 git fetch --tags，并可能删掉本地遗留的同名 tag）")
     parser.add_argument("--upgrade-steps", action="store_true", help="最后打印升级测试机的步骤")
     parser.add_argument("--poll", type=float, default=20, help="轮询间隔秒数")
     parser.add_argument("--timeout", type=float, default=3600, help="单步等待秒数（发布、商店检查）")
@@ -437,7 +441,7 @@ def main(argv: list[str]) -> int:
             print(f"  打并推 {plan.tag}（{plan.commit[:7]}），等发布跑完并确认摘要写回")
         print(f"  在商店把 {len(plans)} 个插件的版本改成上面的 tag，跑 update.sh，开 PR，检查绿后合并")
         if args.dry_run:
-            print("\n--dry-run：没发写请求，也没改商店")
+            print("\n--dry-run：没推远端，也没改商店")
             if args.upgrade_steps:
                 print("\n" + UPGRADE_STEPS)
             return 0
