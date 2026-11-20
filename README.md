@@ -50,7 +50,22 @@ ShellCheck。仓库级检查（源文件行数、泄漏检查、ADR 编号）每
 
 ## 发布
 
-把子目录清单的 `version` 改成新版本、写好 `release_notes`，提交进 `main`，然后推 `<id>/v<版本>` 的 tag：
+把子目录清单的 `version` 改成新版本、写好 `release_notes`，提交进 `main` 并合 PR。然后在仓库根目录、
+有 `gh` 登录、旁边有 wonton-store 检出的地方跑：
+
+```sh
+scripts/release.py <id>… --store ../wonton-store
+```
+
+它先做预检（那个提交来自已合的 PR、插件检查和 `check 汇总` 全绿、版本比上一个 tag 新），再逐个推 tag、
+等发布工作流成功并把镜像摘要写回，最后在商店改条目、开 PR、等检查绿了合并。任一步失败就停，报出哪一步和
+原因；修好后重跑同一条命令，已发过的插件跳过、不碰它的 tag。
+
+命令只发本仓库的插件。商店里还指向私有仓库（`geraldpeng6/wonton-plugin-<id>` 之类来源）的条目会顺带迁到
+`wontonapp/wonton-plugins/<id>@<id>/v<版本>`，这类 PR 因此带 `remove-plugin` 标签。
+
+`--dry-run` 只打印计划和预检结果：不推远端、不改商店，但会 `git fetch --tags`，并可能删掉本地遗留的同名
+tag（远端没有它时）。`--upgrade-steps` 在最后打印升级测试机的步骤。预检和商店两段也可以手动做，推 tag 就是：
 
 ```sh
 git tag -a <id>/v<版本> -m <id>/v<版本> && git push origin <id>/v<版本>
@@ -58,7 +73,7 @@ git tag -a <id>/v<版本> -m <id>/v<版本> && git push origin <id>/v<版本>
 
 发布工作流校验 tag 和清单版本一致，按官方索引的要求检查插件包；有自建镜像（`<id>/images/`）的先构建
 多架构镜像、推送到 ghcr.io、把摘要写回 compose，tag 移到摘要提交上。之后向 `wontonapp/wonton-store`
-提 PR 把商店条目改成新版本。
+提 PR 把商店条目改成新版本；`scripts/release_test.py` 用本地裸库和假 `gh` 跑这些行为，不连网。
 
 ## Dependabot
 

@@ -214,6 +214,9 @@ jobs:
       # 套件自己的命令（logs、diag）的用例：用假 docker，不碰真的 Docker。
       - name: dev.sh 的 logs 和 diag（假 docker，不用真的 Docker）
         run: scripts/dev_test.sh
+      # 发版命令的用例：本地裸库、假 gh、假的商店 update.sh，不连网、不发真请求。
+      - name: release.py（本地裸库和假 gh）
+        run: python3 scripts/release_test.py
 
   plugin:
     name: 插件 ${{ matrix.plugin }}
