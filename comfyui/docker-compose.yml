@@ -4,7 +4,7 @@
 services:
   init:
     # 同一镜像各写一遍，不用锚点。启动前在数据目录建好模型目录树，属主跟 user 走（PUID:PGID）。
-    image: ghcr.io/geraldpeng6/comfyui:0.1.0@sha256:fe5414a78d362139c0d98b594aaf95d323bbb17f23939c2236429f49502b4e76
+    image: ghcr.io/wontonapp/wonton-plugins/comfyui/comfyui:0.1.1@sha256:fe5414a78d362139c0d98b594aaf95d323bbb17f23939c2236429f49502b4e76
     user: "${PUID}:${PGID}"
     entrypoint: ["mkdir", "-p"]
     command:
@@ -27,7 +27,7 @@ services:
     network_mode: none
     restart: "no"
   comfyui:
-    image: ghcr.io/geraldpeng6/comfyui:0.1.0@sha256:fe5414a78d362139c0d98b594aaf95d323bbb17f23939c2236429f49502b4e76
+    image: ghcr.io/wontonapp/wonton-plugins/comfyui/comfyui:0.1.1@sha256:fe5414a78d362139c0d98b594aaf95d323bbb17f23939c2236429f49502b4e76
     # ComfyUI 是纯 Python 应用，以任意 uid 运行；数据目录文件归用户的用户。
     user: "${PUID}:${PGID}"
     environment:
