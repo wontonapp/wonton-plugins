@@ -131,12 +131,16 @@ configs:
     content: "${WONTON_SECRET_SAMBA_PASSWORD}"
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: org.samba.samba
-  version: 0.1.3
+  version: 0.1.4
   kind: app
-  title: { zh: 电脑共享盘（Samba）, en: Network Drive (Samba) }
-  description: { zh: 让家里的电脑像打开 U 盘一样打开共享文件夹：在 Windows 资源管理器、Mac 访达里直接用，不用装软件。只在家里的网络能用，出门连不上。, en: "Open the shared folders from your computer's own file manager, like a USB drive: works in Windows File Explorer and Mac Finder with nothing to install. Only works on your home network." }
+  title: { zh: "电脑共享盘（Samba）", en: "Network Drive (Samba)", zh-Hant: "電腦共享磁碟（Samba）", ja: "共有ドライブ（Samba）" }
+  description:
+    zh: 让家里的电脑像打开 U 盘一样打开共享文件夹：在 Windows 资源管理器、Mac 访达里直接用，不用装软件。只在家里的网络能用，出门连不上。
+    en: "Open the shared folders from your computer's own file manager, like a USB drive: works in Windows File Explorer and Mac Finder with nothing to install. Only works on your home network."
+    zh-Hant: 讓家裡的電腦像開啟隨身碟一樣開啟共享資料夾：在 Windows 檔案總管、Mac Finder 裡直接用，不用裝軟體。只在家裡的網路能用，出門連不上。
+    ja: 家のパソコンから USB メモリのように共有フォルダを開けます。Windows エクスプローラーや Mac Finder でそのまま使え、ソフトのインストールも要りません。家のネットワーク内だけで、外出先からはつながりません。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/web.png, screenshots/web-dark.png]
@@ -146,16 +150,39 @@ x-wonton:
   tags:
     zh: [文件, 网络]
     en: [Files, Network]
+  setup:
+    zh: 打开插件网页，地址、用户名和密码都在页面上，点一下就能复制。Mac 在访达的「连接服务器」里填地址，Windows 在资源管理器地址栏填。只在局域网开放，不通互联网。
+    en: "Open the plugin page: the address, user name and password are all there, each with one-tap copy. On Mac, paste the address into Finder's Connect to Server; on Windows, into the Explorer address bar. It only opens on your network, never to the internet."
+    zh-Hant: 開啟外掛網頁，位址、使用者名稱和密碼都在頁面上，點一下就能複製。Mac 在 Finder 的「連接伺服器」裡填位址，Windows 在檔案總管位址列填。只在區域網路開放，不通網際網路。
+    ja: プラグインページを開くと、アドレス・ユーザー名・パスワードが表示され、ワンタップでコピーできます。Mac は Finder の「サーバへ接続」に、Windows はエクスプローラーのアドレスバーに入力します。LAN のみで、インターネットには出ません。
   about:
     zh: |
-      让局域网里的电脑直接打开家里的共享文件夹：macOS 在 Finder 的“连接服务器”里输 smb://地址，Windows 在资源管理器输 \\地址。
+      让家里的电脑直接打开家里的共享文件夹，像插上 U 盘一样往里拷、往外拿，不用网页也不用装软件。
 
-      插件网页给出地址、用户名和密码，点一下就能复制。只在局域网开放，不通互联网。
+      文件夹和里面能做什么由云吞的共享文件夹规则决定；改了规则，已有连接要断开重连才生效。
     en: |
-      Open your shared folders from a computer on your network: use smb://address in macOS Finder's Connect to Server, or \\address in Windows Explorer.
+      Open your shared folders from a computer at home and copy files in and out like a USB drive — no web page and no extra software.
 
-      The plugin page shows the address, user name and password, each with one-tap copy. It only opens on your network, never to the internet.
-  release_notes: { zh: 连接信息页的运行时镜像升到 Python 3.15。, en: "The connection-info page's runtime image moves to Python 3.15." }
+      Which folders and what is allowed there follow Wonton's shared-folder rules; after changing them, reconnect existing connections to pick up the change.
+    zh-Hant: |
+      讓家裡的電腦直接開啟家裡的共享資料夾，像插上隨身碟一樣往裡拷、往外拿，不用網頁也不用裝軟體。
+
+      資料夾和裡面能做什麼由雲吞的共享資料夾規則決定；改了規則，已有連線要斷開重連才生效。
+    ja: |
+      家のパソコンから共有フォルダを直接開き、USB メモリのように出し入れできます。Web ページも追加ソフトも不要です。
+
+      使えるフォルダと操作は Wonton の共有フォルダ設定に従います。設定を変えた後は、既存の接続をやり直すと反映されます。
+  release_notes:
+    zh: |
+      连接信息页的运行时镜像升到 Python 3.15。
+
+      商店介绍重写：连接步骤移到「安装后要做的事」，局域网、地址等说法换成日常用语；补繁体中文和日文。
+    en: |
+      The connection-info page's runtime image moves to Python 3.15.
+
+      Store copy rewritten: connection steps moved to the pre-install notice, with LAN/address wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "連線資訊頁的執行時映象升到 Python 3.15。\n\n商店介紹重寫：連線步驟移到「安裝後要做的事」，區域網路、位址等說法換成日常用語；補繁體中文和日文。"
+    ja: "接続情報ページのランタイムイメージを Python 3.15 に上げました。\n\nストア紹介を書き直し、接続手順を「インストール後の手順」に移し、LAN やアドレスなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: web
     port: 8080

@@ -124,12 +124,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: org.gramps-project.grampsweb
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 家谱（Gramps Web）, en: Family Tree (Gramps Web) }
+  title: { zh: "家谱（Gramps Web）", en: "Family Tree (Gramps Web)", zh-Hant: "家譜（Gramps Web）", ja: "家系図（Gramps Web）" }
   description:
     zh: 把家谱放到网上，和亲戚一起补充：加人、写生平、传老照片，谁打开都是最新的。
     en: Put your family tree online and build it together — add relatives, stories and photos, always up to date for everyone.
+    zh-Hant: 把家譜放到網上，和親戚一起補充：加人、寫生平、傳老照片，誰開啟都是最新的。
+    ja: 家系図をオンラインに置き、親戚と一緒に育てます。人を足し、生涯を書き、古い写真を載せられ、誰が開いても最新です。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/person.png]
@@ -139,24 +141,47 @@ x-wonton:
   tags:
     zh: [家谱, 家庭]
     en: [Genealogy, Family]
+  setup:
+    zh: 打开就用云吞账号登录，不用再注册；能看、能改的人由你在应用的用户管理里按人指定。要用问答助手，先在用户管理里给对应角色打开。
+    en: Opening the page signs you in with your Wonton account — no sign-up. You decide per person who may view or edit under the app's user management. To use the question assistant, enable it for the roles there.
+    zh-Hant: 開啟就用雲吞帳號登入，不用再註冊；能看、能改的人由你在應用的使用者管理裡按人指定。要用問答助手，先在使用者管理裡給對應角色開啟。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。誰が見られて誰が編集できるかは、アプリのユーザー管理で人ごとに決めます。質問アシスタントを使うには、そこで役割ごとに有効にします。
   about:
     zh: |
       把家里的家谱搬到网上，亲戚们用手机或电脑打开就能一起补充：加人、写生平、传老照片，改动互相看得到。
 
-      登录用云吞的账号，打开就进来了，不用再注册一遍。想给谁看、给谁改，在应用里随时调整。
+      可以问助手关于家谱的问题，比如“太爷爷有几个兄弟姐妹”；回答由云吞自带的 AI 服务给出，不用填任何密钥。
 
-      可以问 AI 关于家谱的问题，比如"太爷爷有几个兄弟姐妹"。在应用的用户管理里按角色开启后可用，AI 经云吞的模型网关回答，不用填任何密钥。
-
-      地名页面的地图底图要从网上取，没有外网时地图是空白的，家谱本身不受影响。
+      地名页面的地图底图要从网上取，断了外网地图是空白的，家谱本身不受影响。
     en: |
       Put the family tree online so relatives can build it together from a phone or computer: add people, life stories and old photos, with everyone's changes visible.
 
-      Sign-in uses your Wonton account — the app opens straight in, no second sign-up. Who may view or edit is up to you, per person.
-
-      You can ask the AI assistant about the tree, like "how many siblings did great-grandpa have". Enable it per role in the app's user settings; answers go through Wonton's model gateway, no API keys to set up.
+      You can ask the assistant about the tree, like "how many siblings did great-grandpa have"; answers come from the AI service built into Wonton, with no keys to fill in.
 
       The map on place pages loads its background from the internet and stays blank without it; the tree itself works offline.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+    zh-Hant: |
+      把家裡的家譜搬到網上，親戚們用手機或電腦開啟就能一起補充：加人、寫生平、傳老照片，改動互相看得到。
+
+      可以問助手關於家譜的問題，例如「太爺爺有幾個兄弟姐妹」；回答由雲吞內建的 AI 服務給出，不用填任何金鑰。
+
+      地名頁面的地圖底圖要從網上取，斷了外網地圖是空白的，家譜本身不受影響。
+    ja: |
+      家系図をオンラインに置き、親戚がスマホやパソコンから一緒に育てられます。人を足し、生涯を書き、古い写真を載せられ、変更は互いに見えます。
+
+      アシスタントに「曾祖父に兄弟は何人いたか」のように家系図のことを聞けます。答えは Wonton 内蔵の AI サービスが出すので、キーの入力は不要です。
+
+      地名ページの地図は背景をインターネットから取るため、切れていると空白になります。家系図自体は影響を受けません。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：登录和权限的内容移到「安装后要做的事」，模型网关、密钥等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: sign-in and permissions moved to the pre-install notice, with model-gateway/API-key wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：登入和權限的內容移到「安裝後要做的事」，模型閘道、金鑰等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、サインインと権限の説明を「インストール後の手順」に移し、モデルゲートウェイや API キーなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: grampsweb
     port: 5000

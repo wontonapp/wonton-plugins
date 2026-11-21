@@ -62,10 +62,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: app.audiobookshelf
-  version: 0.2.0
+  version: 0.2.1
   kind: app
-  title: { zh: 有声书架（Audiobookshelf）, en: Audiobooks & Podcasts (Audiobookshelf) }
-  description: { zh: 像自家的喜马拉雅：共享文件夹里的有声书排成书架，听到哪记到哪，手机和网页之间接着听，还能订阅播客。适合睡前、通勤听书的人。, en: "Like your own Audible: the audiobooks in your shared folder sit on a shelf that remembers where you stopped, so you can switch between phone and browser — with podcast subscriptions too. Great for bedtime and commutes." }
+  title: { zh: "有声书架（Audiobookshelf）", en: "Audiobooks & Podcasts (Audiobookshelf)", zh-Hant: "有聲書架（Audiobookshelf）", ja: "オーディオブック棚（Audiobookshelf）" }
+  description:
+    zh: 像自家的喜马拉雅：共享文件夹里的有声书排成书架，听到哪记到哪，手机和网页之间接着听，还能订阅播客。适合睡前、通勤听书的人。
+    en: "Like your own Audible: the audiobooks in your shared folder sit on a shelf that remembers where you stopped, so you can switch between phone and browser — with podcast subscriptions too. Great for bedtime and commutes."
+    zh-Hant: 像自家的喜馬拉雅：共享資料夾裡的有聲書排成書架，聽到哪記到哪，手機和網頁之間接著聽，還能訂閱播客。適合睡前、通勤聽書的人。
+    ja: 自前のオーディオブックサービスです。共有フォルダのオーディオブックが棚に並び、どこまで聞いたかを覚えてくれるので、スマホとブラウザを行き来して続きを聞けます。ポッドキャストの購読もできます。寝る前や通勤で聞く人向け。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/library.png, screenshots/book.png, screenshots/player.png]
@@ -76,36 +80,59 @@ x-wonton:
   tags:
     zh: [有声书, 播客, 阅读]
     en: [Audiobooks, Podcasts, Reading]
+  setup:
+    zh: 第一次打开会引导你建一个有声书库，目录选 /audiobooks，共享文件夹里的书就都在书架上了。
+    en: The first open walks you through creating a library; pick /audiobooks to scan the books in the shared folder.
+    zh-Hant: 第一次開啟會引導你建立一個有聲書庫，目錄選 /audiobooks，共享資料夾裡的書就都在書架上了。
+    ja: 初回起動でライブラリ作成の案内が出ます。ディレクトリには /audiobooks を選ぶと、共有フォルダの本が棚に並びます。
   about:
     zh: |
-      把共享文件夹 audiobooks 里的有声书整理成自己的书架：按书名、作者和系列浏览，播放进度在手机和网页之间同步。
+      把共享文件夹 audiobooks 里的有声书整理成自己的书架：按书名、作者和系列浏览，播放进度在手机和网页之间同步。打开就是你的账号，不用再登录一次。
 
-      打开就是你的账号，不用再登录一次。有声书文件只读，不会被改动；播客由应用按 RSS 订阅下载，存在应用自己的数据目录里。
+      有声书文件只读，不会被改动；播客在应用里按订阅地址下载，存在插件自己的空间里。
 
-      第一次打开会引导你建一个有声书库，目录选 /audiobooks 就能扫到共享文件夹里的书。
+      应用发的测试信会出现在你的 Wonton 私聊里；“发送到阅读器”这类发到外部邮箱（Kindle 等）的信投不出去，应用会报发送失败。
 
-      核心升级后，插件容器会按新的签发方自动重建，打开照常，不用重装。
-
-      应用发的测试信会出现在你的 Wonton 私聊里；「发送到阅读器」这类发到外部邮箱（Kindle 等）的信投不出去，应用会报发送失败。
+      云吞更新后插件会跟着自动重建，打开照常，不用重装。
     en: |
-      Turn the audiobooks in your shared folder into your own library: browse by title, author and series, and keep playback progress in sync between your phone and the web.
+      Turn the audiobooks in your shared folder into your own library: browse by title, author and series, and keep playback progress in sync between your phone and the web. Opening the page is enough, there is no second login.
 
-      Opening the page is enough, there is no second login. Audiobook files are read-only and never modified. Podcasts are downloaded from RSS inside the app and stored in the plugin's own data directory.
-
-      On first open the app walks you through creating a library; pick /audiobooks to scan the shared folder.
-
-      After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
+      Audiobook files are read-only and never modified. Podcasts are downloaded from their subscription addresses inside the app and kept in the plugin's own space.
 
       Test emails the app sends land in your Wonton chat; mail addressed outside home, like "Send to e-reader" to a Kindle, cannot be delivered and the app reports a send failure.
+
+      After a Wonton update the plugin is rebuilt automatically; pages open as before, with nothing to reinstall.
+    zh-Hant: |
+      把共享資料夾 audiobooks 裡的有聲書整理成自己的書架：按書名、作者和系列瀏覽，播放進度在手機和網頁之間同步。開啟就是你的帳號，不用再登入一次。
+
+      有聲書檔案唯讀，不會被改動；播客在應用裡按訂閱網址下載，存在外掛自己的空間裡。
+
+      應用寄的測試信會出現在你的 Wonton 私聊裡；「傳送到閱讀器」這類寄到外部信箱（Kindle 等）的信送不出去，應用會回報傳送失敗。
+
+      雲吞更新後外掛會跟著自動重建，開啟照常，不用重裝。
+    ja: |
+      共有フォルダ audiobooks のオーディオブックを自分の棚にまとめます。タイトル・著者・シリーズで探せて、再生位置はスマホとブラウザの間で引き継ぎます。開けば自分のアカウントなので、もう一度サインインする必要はありません。
+
+      オーディオブックのファイルは読み取り専用で変更されません。ポッドキャストはアプリ内で購読アドレスからダウンロードし、プラグイン専用の領域に保存します。
+
+      アプリが送るテストメールは Wonton の個別チャットに届きます。「リーダーへ送る」のように外部メール（Kindle など）宛てのメールは送れず、アプリが送信失敗を表示します。
+
+      Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
   release_notes:
     zh: |
       接入云吞的内部邮箱：安装时自动把应用的发信服务器配好，应用里的「发送测试邮件」会寄进你的 Wonton 私聊。
 
       「发送到阅读器」这类发到外部邮箱的信（Kindle 等）发不出去，云吞只投递家里人的地址。
+
+      商店介绍重写：首次建库步骤移到「安装后要做的事」，RSS、容器这类说法换成日常用语；补繁体中文和日文。
     en: |
       Wires the app to Wonton's internal mailbox: the outgoing mail server is configured on install, and "Send test email" in the app lands in your Wonton chat.
 
       Mail to outside addresses ("Send to e-reader" to a Kindle) cannot be delivered; Wonton only accepts mail for your household.
+
+      Store copy rewritten: the first-run library step moved to the pre-install notice, and RSS/container wording replaced with everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "接入雲吞的內部郵箱：安裝時自動把應用的發信伺服器配好，應用裡的「傳送測試郵件」會寄進你的 Wonton 私聊。\n\n      「傳送到閱讀器」這類發到外部郵箱的信（Kindle 等）發不出去，雲吞只投遞家裡人的地址。\n\n商店介紹重寫：首次建庫步驟移到「安裝後要做的事」，RSS、容器這類說法換成日常用語；補繁體中文和日文。"
+    ja: "Wonton の内部メールにつなぎました。インストール時にアプリの送信サーバー設定を自動で済ませ、アプリ内の「テストメール送信」はあなたの Wonton ダイレクトメッセージに届きます。\n\n「リーダーへ送信」のように外部メールアドレスへ送るメール（Kindle など）は送れません。Wonton は家族のアドレスにだけ配信します。\n\nストア紹介を書き直し、初回のライブラリ作成手順を「インストール後の手順」に移し、RSS やコンテナなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: audiobookshelf
     port: 80

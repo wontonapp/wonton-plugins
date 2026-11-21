@@ -39,12 +39,14 @@ x-wonton:
   # 0.12：settings 是 0.12 的字段；核心 PR #242 合入前不注入设置值，compose 里都写了 :- 默认值兜底。
   spec: "0.12"
   id: app.convertx.convertx
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 文件格式转换（ConvertX）, en: ConvertX }
+  title: { zh: "文件格式转换（ConvertX）", en: "File Converter (ConvertX)", zh-Hant: "檔案格式轉換（ConvertX）", ja: "ファイル形式変換（ConvertX）" }
   description:
-    zh: 像格式工厂：网页上传文件、选目标格式，转完直接下载，上千种格式都能转。偶尔把 Heic 照片转 JPG、Markdown 转 PDF、视频转音频，不用在电脑上装软件。
-    en: "Like Format Factory: upload a file, pick the target format and download the result — over a thousand formats supported. Convert Heic photos to JPG, Markdown to PDF or video to audio without installing anything."
+    zh: 像格式工厂：网页上传文件、选目标格式，转完直接下载，上千种格式都能转。偶尔把手机照片转成 JPG、把文稿转成 PDF、把视频转成音频，不用在电脑上装软件。
+    en: "Like Format Factory: upload a file, pick the target format and download the result — over a thousand formats supported. Convert phone photos to JPG, documents to PDF or video to audio without installing anything."
+    zh-Hant: 像格式工廠：網頁上傳檔案、選目標格式，轉完直接下載，上千種格式都能轉。偶爾把手機照片轉成 JPG、把文稿轉成 PDF、把影片轉成音訊，不用在電腦上裝軟體。
+    ja: いわゆるファイル変換サイトです。アップロードして変換先の形式を選べば、そのままダウンロードできます。千種類以上の形式に対応。スマホの写真を JPG に、文書を PDF に、動画を音声に、ソフトを入れずに変換できます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/convert.png, screenshots/result.png]
@@ -56,23 +58,43 @@ x-wonton:
     zh: |
       把文件转成想要的格式：打开网页、拖进文件、选好目标格式，转完直接下载。
 
-      第一次打开：注册的第一个账号就是管理员，之后注册自动关闭，家里人共用这个账号。
-
-      图片、文档、电子书、音视频、表格的常用互转都有：Heic 照片转 JPG、Markdown 转 PDF、Word 转 PDF、WAV 转 MP3 这类事都在网页上完成。文件在家里服务器上转换，不经过任何外部网站。
+      图片、文档、电子书、音视频、表格的常用互转都有：手机照片转 JPG、文稿转 PDF、Word 转 PDF、WAV 转 MP3 这类事都在网页上完成。文件在家里服务器上转换，不经过任何外部网站。
 
       转换结果默认保留 24 小时，同时转换的任务数和日期格式都能在插件设置里改。
     en: |
       Convert files to the format you need: open the web page, drop in a file, pick the target format and download the result.
 
-      First open: the first account registered becomes the admin; registration then closes and the household shares that account.
+      Common conversions for images, documents, e-books, audio and video are all there: phone photos to JPG, documents to PDF, Word to PDF, WAV to MP3 — everything happens on your own server, no outside website involved.
 
-      Common conversions for images, documents, e-books, audio and video are all there: Heic photos to JPG, Markdown to PDF, Word to PDF, WAV to MP3 — everything happens on your own server, no outside website involved.
+      Converted files are kept for 24 hours by default; the number of parallel jobs and the date format are adjustable in the plugin settings.
+    zh-Hant: |
+      把檔案轉成想要的格式：開啟網頁、拖進檔案、選好目標格式，轉完直接下載。
 
-      Converted files are kept for 24 hours by default; concurrency and date format are adjustable in the plugin settings.
-  release_notes: { zh: 介绍重写：首个注册账号即管理员的提示单独成段放在最前。, en: "Rewritten store copy: the first-registered-account-becomes-admin note stands alone up front." }
+      圖片、文件、電子書、影音、試算表的常用互轉都有：手機照片轉 JPG、文稿轉 PDF、Word 轉 PDF、WAV 轉 MP3 這類事都在網頁上完成。檔案在家裡伺服器上轉換，不經過任何外部網站。
+
+      轉換結果預設保留 24 小時，同時轉換的工作數和日期格式都能在外掛設定裡改。
+    ja: |
+      ファイルを好きな形式に変換します。Web ページでファイルをドロップし、変換先を選べばそのままダウンロードできます。
+
+      画像・文書・電子書籍・音声動画・表計算のよく使う変換が揃っています。スマホ写真を JPG に、文書を PDF に、Word を PDF に、WAV を MP3 に、すべてページ上で完結します。変換は家のサーバーで行い、外部サイトを経由しません。
+
+      変換結果は既定で 24 時間残ります。同時に変換する件数と日付形式はプラグイン設定で変えられます。
+  release_notes:
+    zh: |
+      介绍重写：首个注册账号即管理员的提示单独成段放在最前。
+
+      商店介绍重写：首次注册步骤只留在「安装后要做的事」，Markdown 等术语换成日常说法；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the first-registered-account-becomes-admin note stands alone up front.
+
+      Store copy rewritten: the first-run registration now lives only in the pre-install notice, and terms like Markdown are in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：首個註冊賬號即管理員的提示單獨成段放在最前。\n\n商店介紹重寫：首次註冊步驟只留在「安裝後要做的事」，Markdown 等術語換成日常說法；補繁體中文和日文。"
+    ja: "紹介を書き直し、最初に登録したアカウントが管理者になる注意を最初の段落に分けました。\n\nストア紹介を書き直し、初回登録の手順を「インストール後の手順」にだけ残し、Markdown などの用語を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   setup:
     zh: 打开应用，注册第一个账号：它就是管理员账号，之后注册会自动关闭。
     en: "Open the app and create the first account: it becomes the admin, and registration closes after that."
+    zh-Hant: 開啟應用，註冊第一個帳號：它就是管理員帳號，之後註冊會自動關閉。
+    ja: アプリを開き、最初のアカウントを登録します。それが管理者アカウントになり、以後の登録は自動で閉じられます。
   settings: settings.schema.json
   webui:
     service: convertx

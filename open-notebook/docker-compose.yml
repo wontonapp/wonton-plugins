@@ -47,13 +47,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: com.github.lfnovo.opennotebook
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: AI 资料笔记本（Open Notebook）, en: AI Notebook (Open Notebook) }
+  title: { zh: "AI 资料笔记本（Open Notebook）", en: "AI Notebook (Open Notebook)", zh-Hant: "AI 資料筆記本（Open Notebook）", ja: "AI 資料ノート（Open Notebook）" }
   description:
     zh: 把网址、文件丢进去，AI 读完帮你答题、写摘要，还能把资料做成一档播客。
-    en: >-
-      Add links and files, and the AI reads them to answer questions, write summaries, and turn your material into a podcast.
+    en: Add links and files, and the AI reads them to answer questions, write summaries, and turn your material into a podcast.
+    zh-Hant: 把網址、檔案丟進去，AI 讀完幫你答題、寫摘要，還能讓資料變成一集播客。
+    ja: リンクやファイルを入れると、AI が読んで質問に答え、要約を書き、資料をポッドキャストにまでもできます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/notebooks.png, screenshots/notebook.png, screenshots/models.png]
@@ -66,29 +67,45 @@ x-wonton:
     en: [AI, Notes]
   about:
     zh: |
-      把网址、文件、视频链接丢进一本本"笔记本"，AI 读完这些资料后帮你：回答提问（只按你给的资料答）、写摘要和笔记，
-      还能把一本笔记本做成一档播客节目（两个人聊你资料里的内容）。
+      把网址、文件、视频链接丢进一本本“笔记本”，AI 读完这些资料后帮你：回答提问（只按你给的资料答）、写摘要和笔记，还能把一本笔记本做成一集播客（两个人聊你资料里的内容）。
 
-      第一次打开：应用没有账号体系，家里谁打开都是同一份笔记本；进去时要输入应用密码，在云吞 App 这个插件的详情页点开「应用密码」查看。
+      可以拿来追更（丢进去一组视频链接，让它总结每一期）、整理课程或论文。所有资料和记录都留在这台机器上。
 
-      可以拿来追更（丢进去一组 YouTube 链接，让它总结每一期）、整理课程或论文。所有资料和记录都留在这台机器上。
-
-      问问题和生成播客要用大模型：默认走云吞的模型网关，装好后在上游设置的 Models 页把网关里的模型加进来并设为默认
-      （对话和嵌入；嵌入模型是把资料存进笔记本时用的）。网关里没有语音合成模型时播客做不了，应用会如实报错。
+      问问题和生成播客要用大模型，默认走云吞的模型服务，不用填密钥；模型里没有语音合成时播客做不了，应用会如实报错。
     en: |
       Add links, files and videos to notebooks; the AI reads them and answers questions (grounded in your sources), writes summaries and notes, and can turn a notebook into a podcast episode (two hosts discussing your material).
 
-      First open: the app has no accounts — everyone in the family shares the same notebooks. Signing in takes the app password; view it under "App password" on this plugin's detail page in the Wonton app.
+      Use it to follow channels, or to organize courses and papers. Everything stays on this machine.
 
-      Use it to follow YouTube channels, or to organize courses and papers. Everything stays on this machine.
+      Chat and podcasts need large models and use Wonton's model service by default, no key to fill in; without a speech-synthesis model podcast generation fails with a clear error.
+    zh-Hant: |
+      把網址、檔案、影片連結丟進一本本「筆記本」，AI 讀完這些資料後幫你：回答提問（只按你給的資料答）、寫摘要和筆記，還能讓一本筆記本變成一集播客（兩個人聊你資料裡的內容）。
 
-      Chat and podcasts need large models: they go through Wonton's model gateway by default. After installing, add the gateway's models on the upstream Models settings page and pick defaults (chat and embedding; the embedding model is what stores your sources). Without a speech-synthesis model on the gateway, podcast generation fails with a clear error.
+      可以拿來追更（丟進去一組影片連結，讓它總結每一期）、整理課程或論文。所有資料和紀錄都留在這台機器上。
+
+      問問題和生成播客要用大模型，預設走雲吞的模型服務，不用填金鑰；模型裡沒有語音合成時播客做不了，應用會如實報錯。
+    ja: |
+      リンク・ファイル・動画をノートに入れると、AI が読んで質問に答え（渡した資料だけに基づく）、要約とノートを書き、ノートをポッドキャストの 1 話にすることもできます（2 人が資料について話す形式）。
+
+      チャンネルの追いかけや、講座・論文の整理に使えます。資料も記録もこのマシンに残ります。
+
+      質問とポッドキャストには大きなモデルが必要で、既定では Wonton のモデルサービスを使うためキーの入力は不要です。音声合成モデルがないとポッドキャストは作れず、アプリがきちんとエラーを出します。
   setup:
-    zh: 打开应用后，在登录页输入应用密码：在云吞 App 这个插件的详情页点开「应用密码」查看。
-    en: >-
-      After opening the app, enter the app password on the sign-in page: view it under "App password"
-      on this plugin's detail page in the Wonton app.
-  release_notes: { zh: 介绍重写：应用密码的提示单独成段放在最前。, en: "Rewritten store copy: the app-password note stands alone up front." }
+    zh: 应用没有账号，家里谁打开都是同一份笔记；进门前在登录页输入「应用密码」，密码在插件详情页里查看。再在设置的模型页把云吞提供的模型加进来、设为默认（对话和存资料各要一个）。
+    en: The app has no accounts — everyone at home shares the notebooks. Enter the app password on the sign-in page (it is in the plugin details). Then add the models Wonton provides on the settings Models page and set defaults, one for chat and one for storing sources.
+    zh-Hant: 應用沒有帳號，家裡誰開啟都是同一份筆記；進門前在登入頁輸入「應用密碼」，密碼在外掛詳情頁裡查看。再在設定的模型頁把雲吞提供的模型加進來、設為預設（對話和存資料各要一個）。
+    ja: アカウントはなく、家族全員が同じノートを共有します。入る前にサインインページで「アプリのパスワード」を入力します（プラグイン詳細にあります）。次に設定のモデルページで Wonton が提供するモデルを追加し、既定に設定します（会話用と資料保存用に 1 つずつ）。
+  release_notes:
+    zh: |
+      介绍重写：应用密码的提示单独成段放在最前。
+
+      商店介绍重写：应用密码和加模型两步移到「安装后要做的事」，Models 页、嵌入模型等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the app-password note stands alone up front.
+
+      Store copy rewritten: the app password and model setup moved to the pre-install notice, with Models-page/embedding-model wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：應用密碼的提示單獨成段放在最前。\n\n商店介紹重寫：應用密碼和加模型兩步移到「安裝後要做的事」，Models 頁、嵌入模型等說法換成日常用語；補繁體中文和日文。"
+    ja: "紹介を書き直し、アプリパスワードの注意を最初の段落に分けました。\n\nストア紹介を書き直し、アプリのパスワードとモデル設定を「インストール後の手順」に移し、Models ページや埋め込みモデルなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: notebook
     port: 8502

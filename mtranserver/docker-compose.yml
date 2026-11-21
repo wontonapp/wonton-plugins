@@ -69,12 +69,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: app.github.xxnuo.mtranserver
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 离线翻译（MTranServer）, en: Offline Translation (MTranServer) }
+  title: { zh: "离线翻译（MTranServer）", en: "Offline Translation (MTranServer)", zh-Hant: "離線翻譯（MTranServer）", ja: "オフライン翻訳（MTranServer）" }
   description:
-    zh: 在自己家里跑的翻译服务，像翻译网站一样好用：浏览器翻译扩展接上它，整页、划词都能翻，文字不出家门。
+    zh: 在自己家里跑的翻译服务，像翻译网站一样好用：装上浏览器翻译扩展接上它，整页、划词都能翻，文字不出家门。
     en: "A translation service running at home, like the online ones: browser translate extensions plug into it, and your text never leaves home."
+    zh-Hant: 在自己家裡跑的翻譯服務，像翻譯網站一樣好用：裝上瀏覽器翻譯擴充接上它，整頁、劃詞都能翻，文字不出家門。
+    ja: 家で動く翻訳サービスで、オンラインのものと同じように使えます。ブラウザの翻訳拡張をこれにつなげば、ページ全体も選択部分も翻訳でき、文章は家から出ません。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/history.png]
@@ -85,24 +87,55 @@ x-wonton:
   tags:
     zh: [工具, 翻译]
     en: [Tools, Translation]
+  setup:
+    zh: 网页里直接就能翻，不用设置。浏览器扩展要连的话：先在插件详情里打开「在局域网开放」，把地址和「连接密码」按扩展的要求填进去。
+    en: The web page translates as is, no setup. For a browser extension, first turn on "Open on LAN" in the plugin details, then fill its address and the connection password into the extension.
+    zh-Hant: 網頁裡直接就能翻，不用設定。瀏覽器擴充要連的話：先在外掛詳情裡開啟「在區域網路開放」，把位址和「連線密碼」照擴充的要求填進去。
+    ja: Web ページは設定なしでそのまま翻訳できます。ブラウザ拡張からつなぐ場合は、先にプラグイン詳細で「LAN で公開」をオンにし、アドレスと「接続パスワード」を拡張の指示に従って入力します。
   about:
     zh: |
-      翻译在自己家里的 CPU 上完成，不用显卡：速度取决于电脑配置和文本长度，日常阅读、看懂大意都够快。
+      翻译在自己家里的电脑上完成，不用显卡：速度取决于电脑配置和文本长度，日常阅读、看懂大意都够快。
 
-      打开网页就能翻译；在浏览器里装沉浸式翻译、简约翻译、划词翻译这类扩展，把翻译服务指到这台服务器上，读外文网页就不用一段段复制了。支持 DeepL、DeepLX、Google 翻译接口的软件也能接。
+      在浏览器里装沉浸式翻译、简约翻译、划词翻译这类扩展，指到这台服务器上，读外文网页就不用一段段复制了。支持 DeepL、DeepLX、Google 翻译接口的软件也能接。
 
-      网页里的翻译不用任何设置。浏览器扩展要连的地址在安装时的提示和云吞的局域网设置里，令牌在插件详情页的“API 令牌”里查看，照扩展要求填进去就行。第一次翻某个语言方向时会联网下载翻译文件（几十到一百多 MB），之后这个方向就离线可用。
+      第一次翻某个语言方向时会联网下载语言包（几十到一百多 MB），之后这个方向就不用联网。
 
-      家里的 AI 助手也能帮你翻译：让它翻一段话，它就用家里的翻译服务来翻，文字不出家门。
+      家里的助手也能帮你翻：让它翻一段话，它就用家里的翻译服务来翻。
     en: |
-      Translation runs on your home CPU, no graphics card needed: speed depends on the machine and text length, and everyday reading is plenty fast.
+      Translation runs on your home computer, no graphics card needed: speed depends on the machine and the text length, and everyday reading is plenty fast.
 
-      The web page works out of the box; in a browser with an extension like Immersive Translate, KISS Translator or 划词翻译, point the translation service at this server and read foreign pages without copy-pasting. Software that speaks the DeepL, DeepLX or Google Translate APIs works too.
+      In a browser with an extension like Immersive Translate, KISS Translator or 划词翻译, point the service at this server and read foreign pages without copy-pasting. Software that speaks the DeepL, DeepLX or Google Translate APIs works too.
 
-      Translating on the web page needs no setup. The LAN address for your browser extension is shown at install time and in Wonton's LAN settings, and the token is on the plugin details page under "API token". The first translation in a language pair downloads its model files (tens to over a hundred MB); after that the pair works offline.
+      The first translation in a language pair downloads its pack (tens to over a hundred MB); after that the pair works without internet.
 
-      The home AI assistant can translate for you too: ask it to translate something and it uses the home translation service — your text never leaves home.
-  release_notes: { zh: 插件包迁入官方插件合仓，翻译工具共用官方发布的适配器镜像。, en: "Moved into the official Wonton plugin monorepo; translation tools share the officially published adapter image." }
+      The home assistant can translate for you too: ask it to translate something and it uses the home service.
+    zh-Hant: |
+      翻譯在自己家裡的電腦上完成，不用顯示卡：速度取決於電腦設定和文字長度，日常閱讀、看懂大意都夠快。
+
+      在瀏覽器裡裝沉浸式翻譯、簡約翻譯、劃詞翻譯這類擴充，指到這台伺服器上，讀外文網頁就不用一段段複製了。支援 DeepL、DeepLX、Google 翻譯介面的軟體也能接。
+
+      第一次翻某個語言方向時會連網下載語言包（幾十到一百多 MB），之後這個方向就不用連網。
+
+      家裡的助手也能幫你翻：讓它翻一段話，它就用家裡的翻譯服務來翻。
+    ja: |
+      翻訳は家のパソコン上で完結し、グラフィックカードは不要です。速度はマシンの構成と文章の長さ次第で、普段の読書には十分な速さです。
+
+      Immersive Translate、KISS Translator、劃詞翻訳などの拡張を入れたブラウザからこのサーバを指定すれば、外国語のページをコピペせずに読めます。DeepL・DeepLX・Google 翻訳の API に対応したソフトからも使えます。
+
+      ある言語方向を初めて翻訳するときに言語パックをダウンロードし（数十〜100 MB 以上）、その後はその方向をオフラインで翻訳できます。
+
+      家のアシスタントにも頼めます。翻訳を頼むと家の翻訳サービスを使います。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，翻译工具共用官方发布的适配器镜像。
+
+      商店介绍重写：扩展接入步骤移到「安装后要做的事」，令牌、翻译文件等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo; translation tools share the officially published adapter image.
+
+      Store copy rewritten: extension setup moved to the pre-install notice, with token/model-file wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，翻譯工具共用官方釋出的介面卡映象。\n\n商店介紹重寫：擴充接入步驟移到「安裝後要做的事」，令牌、翻譯檔等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移しました。翻訳ツールが共有するアダプターイメージは公式配布のものを使います。\n\nストア紹介を書き直し、拡張の接続手順を「インストール後の手順」に移し、トークンや翻訳ファイルなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: mtranserver
     port: 8989

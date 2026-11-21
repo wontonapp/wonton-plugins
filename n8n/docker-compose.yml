@@ -68,12 +68,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: io.n8n.n8n
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 工作流自动化（n8n）, en: Workflow Automation (n8n) }
+  title: { zh: "自动流程（n8n）", en: "Workflow Automation (n8n)", zh-Hant: "自動流程（n8n）", ja: "自動ワークフロー（n8n）" }
   description:
-    zh: 像手机的“快捷指令”：把到点抓取、整理、通知这些重复的事串成自动流程，AI 也能参与。自带几百种常用服务的积木，照模板就能搭。n8n 用的是 Sustainable Use License，个人和公司内部免费。
-    en: "Like Shortcuts on your phone: chain repetitive jobs into automatic flows, with AI in the loop. Hundreds of ready-made blocks; start from a template. n8n uses the Sustainable Use License — free for personal and internal company use."
+    zh: 像手机的“快捷指令”：把到点抓取、整理、通知这些重复的事串成自动流程，AI 也能参与。自带几百种常用服务的积木，照模板就能搭。
+    en: "Like Shortcuts on your phone: chain repetitive jobs into automatic flows, with AI in the loop. Hundreds of ready-made blocks; start from a template."
+    zh-Hant: 像手機的「捷徑」：把到點抓取、整理、通知這些重複的事串成自動流程，AI 也能參與。內建幾百種常用服務的積木，照範本就能搭。
+    ja: スマホの「ショートカット」のようなものです。定時の取得・整理・通知といった繰り返しを自動フローにつなぎ、AI も組み込めます。よく使うサービス向けの部品が何百もそろい、テンプレートから作れます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/overview.png, screenshots/workflow-editor.png, screenshots/model-gateway-credential.png]
@@ -86,25 +88,53 @@ x-wonton:
     en: [AI, Productivity, Automation]
   about:
     zh: |
-      像手机的“快捷指令”：把重复的事串成自动流程，到点自动跑。比如每天早上把天气和日程发给你，收到邮件附件自动存下来，监控的网页一有变化就提醒你。
+      把重复的事串成自动流程，到点自动跑。比如每天早上把天气和日程发给你，收到邮件附件自动存下来，监控的网页一有变化就提醒你。
 
-      打开就是搭流程的画布：左边挑积木（几百种常用服务的现成连接），连起来就是一条流程，照现成模板改改就能用。AI 也能加进流程里干活。
+      打开就是搭流程的画布：左边挑积木（几百种常用服务的现成连接），连起来就是一条流程，照现成模板改改就能用。流程里的 AI 步骤默认走云吞的模型服务，不用填密钥；也能用家里其他应用提供的功能，接法见插件文件夹里的 README。
 
-      家里已经在用的能力：流程里的 AI 步骤默认走云吞的模型网关（凭据里已备好“Wonton model gateway”）；流程也能用家里其他应用提供的功能，接法见 README。
+      注意：流程能上网、能运行代码、能调用任何网站，相当于交出管理员权限，装之前请让家里人都知道它是干什么的。别的网站主动来调你的流程需要一个从外网能打开的地址，现在的家门打不开，所以这类流程用不了；手动执行和浏览器里测试不受影响。
 
-      提醒：n8n 能按流程访问外网、运行代码、调用任何网站和服务，相当于交出管理员权限；装它之前请确认家里人都知道它是干什么的。外部服务要主动回调流程时需要公网地址，网关后面的部署收不到这类回调；手动执行、编辑器里的测试和浏览器主动访问不受影响。找回密码的邮件只有注册时填了真实邮箱才收得到。
+      它用的是自己的许可（Sustainable Use License），个人和公司内部使用免费。
     en: |
-      Like Shortcuts on your phone: chain repetitive jobs into automatic flows that run on schedule. Morning weather and calendar in one message, attachments saved as they arrive, a nudge the moment a watched page changes.
+      Chain repetitive jobs into automatic flows that run on schedule: morning weather and calendar in one message, attachments saved as they arrive, a nudge the moment a watched page changes.
 
-      You get a visual canvas: pick blocks on the left (ready-made connections to hundreds of services), wire them into a flow, or start from a template. AI can work inside your flows too.
+      You get a visual canvas: pick blocks on the left (ready-made connections to hundreds of services), wire them into a flow, or start from a template. AI steps use Wonton's model service by default, no key to fill in; flows can also call features your other home apps provide — see the README in the plugin folder.
 
-      What the home already provides: AI steps go through Wonton's model gateway by default (a "Wonton model gateway" credential is prepared for you); flows can also use features your other home apps provide — see the README for how to wire that up.
+      Note: flows can reach the internet, run code and call any service, which is admin-level power — make sure everyone at home knows what it does. A flow that an outside site must call needs an address reachable from the internet, which the current front door cannot offer; manual runs and editor tests are unaffected.
 
-      Please note: n8n runs your code and reaches any website or service, which is admin-level power; make sure everyone at home knows what it does. External services that must call your flows need a public address, which a deployment behind the gateway cannot offer; manual runs, editor test runs and browser access are unaffected. password-reset mail only arrives if you registered with a real mailbox.
-  release_notes: { zh: 插件包迁入官方插件合仓，功能与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; functionality is unchanged." }
+      It uses its own Sustainable Use License: free for personal and internal company use.
+    zh-Hant: |
+      把重複的事串成自動流程，到點自動跑。例如每天早上把天氣和行程發給你，收到信件附件自動存下來，監控的網頁一有變化就提醒你。
+
+      開啟就是搭流程的畫布：左邊挑積木（幾百種常用服務的現成連接），連起來就是一條流程，照現成範本改改就能用。流程裡的 AI 步驟預設走雲吞的模型服務，不用填金鑰；也能用家裡其他應用提供的功能，接法見外掛資料夾裡的 README。
+
+      注意：流程能上網、能執行程式、能呼叫任何網站，相當於交出管理員權限，裝之前請讓家裡人都知道它是幹什麼的。別的網站主動來呼叫你的流程需要一個從外網能開啟的位址，現在的門口打不開，所以這類流程用不了；手動執行和瀏覽器裡測試不受影響。
+
+      它用自己的授權（Sustainable Use License），個人和公司內部使用免費。
+    ja: |
+      繰り返しの作業を自動フローにつなぎ、定時に走らせます。朝の天気と予定を 1 通にまとめる、届いた添付を保存する、監視ページが変わったらすぐ知らせる、といったことができます。
+
+      開くとフローを組むキャンバスになります。左から部品（よく使うサービスへの既製の接続が何百も）を選んでつなぐだけで 1 本のフローになり、テンプレートを直せばすぐ使えます。AI のステップは既定で Wonton のモデルサービスを使い、キーの入力は不要です。家の他のアプリの機能も呼べます。接続方法はプラグインフォルダの README を参照してください。
+
+      注意：フローはインターネットに出てコードを実行し、どんなサイトも呼べるので、管理者権限を渡すのに等しいです。導入前に家族全員に何をするものかを伝えてください。外部サイトからフローを呼ぶには外から届くアドレスが必要ですが、今の玄関では提供できません。手動実行とエディタでのテストは影響を受けません。
+
+      ライセンスは独自の Sustainable Use License で、個人利用と社内利用は無料です。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，功能与上一版相同。
+
+      商店介绍重写：建账号的步骤补进「安装后要做的事」，模型网关、凭据、公网地址等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; functionality is unchanged.
+
+      Store copy rewritten: account creation moved into the pre-install notice, with model-gateway/credential/public-address wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，功能與上一版相同。\n\n商店介紹重寫：建帳號的步驟補進「安裝後要做的事」，模型閘道、憑據、公網位址等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。機能は前版と同じです。\n\nストア紹介を書き直し、アカウント作成を「インストール後の手順」に加え、モデルゲートウェイや認証情報、公開アドレスなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 第一次打开时创建管理员账号：填一个邮箱和自己定的密码（至少 8 位，含数字和大写字母）。
-    en: "On first open, create the admin account: any email plus a password you choose (at least 8 characters, with a digit and an uppercase letter)."
+    zh: 第一次打开时建管理员账号：填一个邮箱和自己定的密码（至少 8 位，要有数字和大写字母）。要收找回密码的信，邮箱得填真的。
+    en: "On first open, create the admin account: any email plus a password you choose (at least 8 characters, with a digit and an uppercase letter). Use a real mailbox if you want password-reset mail."
+    zh-Hant: 第一次開啟時建管理員帳號：填一個信箱和自己定的密碼（至少 8 位，要有數字和大寫字母）。要收找回密碼的信，信箱得填真的。
+    ja: 初回に管理者アカウントを作ります。任意のメールアドレスと自分で決めたパスワード（8 文字以上、数字と大文字を含む）を入力します。パスワード再設定のメールを受け取るなら実在のメールボックスを使ってください。
   webui:
     service: n8n
     port: 5678

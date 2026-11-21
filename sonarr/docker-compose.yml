@@ -91,12 +91,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: tv.sonarr.sonarr
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 剧集追更（Sonarr）, en: TV Shows (Sonarr) }
+  title: { zh: "剧集追更（Sonarr）", en: "TV Show Downloads (Sonarr)", zh-Hant: "劇集追更（Sonarr）", ja: "ドラマ自動取得（Sonarr）" }
   description:
     zh: 追剧自动化：想看的剧加进片单，新一集一出就自动下载进剧集库
     en: "Follow TV shows hands-off: add a series and new episodes download into your library automatically"
+    zh-Hant: 追劇自動化：想看的劇加進片單，新一集一出就自動下載進劇集庫
+    ja: ドラマを自動で追いかけます。見たい作品をリストに入れると、新しい話が出た時点で自動でライブラリへダウンロードします。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -108,18 +110,54 @@ x-wonton:
     zh: [视频, 下载, 追剧]
     en: [Video, Downloads, TV]
   setup:
-    zh: 要自动下载，先装 qBittorrent（下载工具）和 Prowlarr（找片源）插件。
-    en: For automatic downloads, install the qBittorrent (downloads) and Prowlarr (indexers) plugins first.
+    zh: 第一次打开不用登录，直接加剧集。要自动下载，先装 qBittorrent（下载）和 Prowlarr（找片源）插件，Sonarr 会自己接上。
+    en: There's no login on first open — just add series. For automatic downloads, install the qBittorrent (downloads) and Prowlarr (site) plugins first; Sonarr connects to them itself.
+    zh-Hant: 第一次開啟不用登入，直接加劇集。要自動下載，先裝 qBittorrent（下載）和 Prowlarr（找片源）外掛，Sonarr 會自己接上。
+    ja: 初回にログインはなく、そのまま作品を追加できます。自動取得には先に qBittorrent（ダウンロード）と Prowlarr（配信サイト）のプラグインを入れてください。Sonarr が自分で接続します。
   about:
     zh: |
-      把想看的剧加进片单，Sonarr 盯着片源：新一集一出，自动通过下载工具下载、按季集改名归档进剧集库，Jellyfin 里刷新就能看，像给家里请了个追剧助理。
+      把想看的剧加进片单，Sonarr 盯着片源：新一集一出，自动下载、按季集改名归档进剧集库，Jellyfin 里刷新就能看，像给家里请了个追剧助理。
 
-      自动找片源要两样东西：下载工具（qBittorrent 插件，Sonarr 自动把登记的下载客户端接上）和索引器（Prowlarr 插件）。下载的文件在共享文件夹 downloads，剧集整理进共享文件夹 media 下的 tv 文件夹，Sonarr 优先用硬链接，下载完不用再占一份空间。网页经云吞网关打开，应用侧不再设登录。应用的提醒（下载完成、版本升级、健康问题）经云吞的内部邮箱发到主人的 Wonton 私聊里。
+      下载的文件在共享文件夹 downloads，剧集整理进共享文件夹 media 下的 tv 文件夹；整理时只挪不拷，不占两份空间。
+
+      网页从云吞进来，不用再登一次。应用的提醒（下载完成、版本升级、健康问题）经云吞的内部信箱发到你的 Wonton 私聊，收件人只能是家里人。
+
+      搜索和下载要能上网。
     en: |
-      Add the shows you follow, and Sonarr watches for you: when a new episode airs, it downloads via your download client, renames and files it into your TV library by season, ready to stream in Jellyfin — like an assistant that never misses an episode.
+      Add the shows you follow, and Sonarr watches for you: when a new episode airs, it downloads it, renames it by season and files it into your TV library, ready to stream in Jellyfin — like an assistant that never misses an episode.
 
-      Fully automatic downloads need two things: a download client (qBittorrent plugin, registered automatically) and indexers (Prowlarr plugin). Downloads land in the downloads shared folder and are organized into the tv folder of the media shared folder; Sonarr hardlinks when possible so files aren't stored twice. The web stays behind the Wonton gateway login, with no second login in the app. App notices (downloads, upgrades, health issues) reach the owner's Wonton chat via the internal mailbox.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Downloads land in the downloads shared folder and are organized into the tv folder of the media shared folder; organizing moves rather than copies, so files aren't stored twice.
+
+      The web comes in through Wonton, with no second login. App notices (downloads, upgrades, health issues) go through Wonton's internal mailbox to your Wonton chat, household members only.
+
+      Searching and downloading need internet access.
+    zh-Hant: |
+      把想看的劇加進片單，Sonarr 盯著片源：新一集一出，自動下載、按季集改名歸檔進劇集庫，Jellyfin 裡整理就能看，像給家裡請了個追劇助理。
+
+      下載的檔案在共享資料夾 downloads，劇集整理進共享資料夾 media 下的 tv 資料夾；整理時只挪不拷，不佔兩份空間。
+
+      網頁從雲吞進來，不用再登一次。應用的提醒（下載完成、版本升級、健康問題）經雲吞的內部信箱發到你的 Wonton 私聊，收件人只能是家裡人。
+
+      搜尋和下載要能上網。
+    ja: |
+      見たいドラマをリストに入れると、Sonarr が配信元を監視し、新しい話が出た時点でダウンロードし、シーズンと話数で改名してライブラリに整理します。Jellyfin ですぐ見られます。放送を見逃さないアシスタントのようなものです。
+
+      ダウンロードは共有フォルダ downloads に入り、ドラマは共有フォルダ media の tv フォルダに整理されます。整理ではコピーではなく移動するので、二重に容量を取りません。
+
+      Web は Wonton から来るので追加のログインは不要です。アプリの通知（ダウンロード完了、アップグレード、不具合）は Wonton の内部メールボックスを通ってチャットに届き、宛先は家族だけです。
+
+      検索とダウンロードにはインターネットが必要です。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：装 qBittorrent、Prowlarr 的步骤移到「安装后要做的事」，索引器、硬链接、网关等说法换成日常用语，并补全原来被截断的结尾；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: the qBittorrent/Prowlarr prerequisite moved to the pre-install notice, with indexer/hardlink/gateway wording in everyday words, and the truncated ending completed; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：裝 qBittorrent、Prowlarr 的步驟移到「安裝後要做的事」，索引器、硬連結、閘道等說法換成日常用語，並補全原來被截斷的結尾；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、qBittorrent・Prowlarr の導入を「インストール後の手順」に移し、インデクサやハードリンク、ゲートウェイなどの言い方を日常的な言葉にして、途中で切れていた末尾も補いました。繁体字中国語と日本語を追加。"
   webui:
     service: sonarr
     port: 8989

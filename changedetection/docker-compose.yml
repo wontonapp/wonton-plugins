@@ -71,10 +71,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: io.changedetection
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 网页变化提醒（changedetection.io）, en: Web Page Change Alerts (changedetection.io) }
-  description: { zh: 给在意的网页定个闹钟：降价、补货、新公告，它定时去看，页面一变就提醒你。, en: "Set an alarm on any web page — price drops, restocks, new announcements: it checks on a schedule and tells you as soon as the page changes." }
+  title: { zh: "网页变化提醒（changedetection.io）", en: "Web Page Change Alerts (changedetection.io)", zh-Hant: "網頁變化提醒（changedetection.io）", ja: "ページ変化の通知（changedetection.io）" }
+  description:
+    zh: 给在意的网页定个闹钟：降价、补货、新公告，它定时去看，页面一变就提醒你。
+    en: "Set an alarm on any web page — price drops, restocks, new announcements: it checks on a schedule and tells you as soon as the page changes."
+    zh-Hant: 給在意的網頁定個鬧鐘：降價、補貨、新公告，它定時去看，頁面一變就提醒你。
+    ja: 気になるページに目覚まし時計をかけます。値下げ、入荷、新しいお知らせなど、定期的に見て、変わったらすぐ知らせます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/watch-list.png, screenshots/edit.png, screenshots/diff.png, screenshots/settings.png]
@@ -82,26 +86,47 @@ x-wonton:
   homepage: https://changedetection.io
   license: Apache-2.0
   tags: { zh: [监控, 工具], en: [Monitoring, Tools] }
+  setup:
+    zh: 打开网页，把要盯的网页加进来，再选怎么提醒。默认发到你的 Wonton 私聊；要发给外部邮箱会失败，应用会当场报错。想在应用里再加一道自己的口令，在「设置」里开。
+    en: Open the page, add the page to watch, and pick how to be alerted. The default lands in your Wonton chat; sending to external addresses fails and the app reports it. To add your own password on top, turn it on in the app's Settings.
+    zh-Hant: 開啟網頁，把要盯的網頁加進來，再選怎麼提醒。預設發到你的 Wonton 私聊；要發給外部信箱會失敗，應用會當場報錯。想在應用裡再加一道自己的口令，在「設定」裡開。
+    ja: ページを開いて監視するページを追加し、通知方法を選びます。既定では Wonton チャットに届きます。外部アドレスに送ると失敗し、アプリがその場で報告します。アプリ側で独自のパスワードも掛けたい場合は「設定」でオンにします。
   about:
     zh: |
-      把要盯的网页加进来，它定期去检查内容变化，变了就按你配的渠道提醒（邮件、Apprise、Webhook 等）。
+      把要盯的网页加进来，它定期去检查内容，变了就提醒你；重排过的网页可以在差异页里逐条看哪里变了。
 
-      支持"Playwright Chrome"抓取方式：跑 JavaScript、看渲染后的页面、截图对比；也可以抓静态 HTML、RSS/JSON。重排后的网页在差异页里逐条看变化。
+      能按真正在浏览器里打开的方式去看（会跑网页里的程序、能截图对比），也能只看纯文字和订阅源。
 
-      监控到变化默认发邮件提醒，信会出现在你的 Wonton 私聊里；发往外部邮箱的会被拒收，应用会报发送失败。
-
-      网页只经云吞网关进来，网关已经认了你：应用本身不用登录（上游默认没有访问口令）。想再加一道口令，在应用的"设置"里开。
+      网页只从云吞进来，云吞已经替你认了身份，应用自己默认不用登录（上游本来就没有口令）。
     en: |
-      Add the pages you want to watch; it rechecks them on a schedule and alerts you through the channels you configure (email, Apprise, webhooks and more).
+      Add the pages you want to watch; it rechecks them on a schedule and alerts you when they change, with a diff page listing each change one by one.
 
-      The "Playwright Chrome" fetcher runs JavaScript, sees the rendered page and takes screenshots; plain HTML and RSS/JSON are also supported. Changes are shown one by one on the diff page.
+      It can look at pages the way a real browser does (running scripts and comparing screenshots), or watch plain HTML and feeds.
 
-      By default a change sends an email alert, which shows up in your Wonton chat; mail to outside addresses is rejected and reported as failed by the app.
+      The page comes in through Wonton only, and Wonton already authenticates you, so the app needs no sign-in by default (upstream ships with no password).
+    zh-Hant: |
+      把要盯的網頁加進來，它定期去檢查內容，變了就提醒你；重排過的網頁可以在差異頁裡逐條看哪裡變了。
 
-      The page is only reachable through the Wonton gateway, which already authenticates you: no app sign-in (upstream ships with no access password). To add one, set it in the app's Settings and keep it yourself.
+      能按真正在瀏覽器裡開啟的方式去看（會跑網頁裡的程式、能截圖對比），也能只看純文字和訂閱源。
+
+      網頁只從雲吞進來，雲吞已經替你認了身分，應用自己預設不用登入（上游本來就沒有口令）。
+    ja: |
+      監視したいページを追加すると、定期的に確認し、変わったら知らせます。変わった箇所は差分ページで 1 件ずつ確認できます。
+
+      実際のブラウザのように見ることも（スクリプトを実行し、スクリーンショットを比較）、プレーンな HTML やフィードだけを見ることもできます。
+
+      ページは Wonton からしか来ず、Wonton がすでに本人確認をするため、アプリ側のサインインは既定で不要です（上流にパスワードはありません）。
   release_notes:
-    zh: 邮件提醒开箱即用——装好就把全局邮件通知配到云吞的内部邮箱，监控到变化信进你的 Wonton 私聊，设置页的添加邮件通知也预填了内部服务器；发往外部邮箱的会被拒收。
-    en: Email alerts work out of the box — watch changes land in your Wonton chat, and the Add email notification box comes prewired for the built-in mail server. Mail to outside addresses is rejected.
+    zh: |
+      邮件提醒开箱即用——装好就把全局邮件通知配到云吞的内部邮箱，监控到变化信进你的 Wonton 私聊，设置页的添加邮件通知也预填了内部服务器；发往外部邮箱的会被拒收。
+
+      商店介绍重写：添加网页和配提醒移到「安装后要做的事」，Playwright、Webhook、口令等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Email alerts work out of the box — watch changes land in your Wonton chat, and the Add email notification box comes prewired for the built-in mail server. Mail to outside addresses is rejected.
+
+      Store copy rewritten: adding pages and configuring alerts moved to the pre-install notice, with Playwright/webhook/password wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "郵件提醒開箱即用——裝好就把全域性郵件通知配到雲吞的內部郵箱，監控到變化信進你的 Wonton 私聊，設定頁的新增郵件通知也預填了內部伺服器；發往外部郵箱的會被拒收。\n\n商店介紹重寫：新增網頁和配提醒移到「安裝後要做的事」，Playwright、Webhook、口令等說法換成日常用語；補繁體中文和日文。"
+    ja: "メール通知は設定不要です。インストールすると全体のメール通知が Wonton の内部メールにつながり、変更を検知したことを知らせるメールがあなたの Wonton ダイレクトメッセージに届きます。設定ページのメール通知追加も内部サーバー入りで始まります。外部アドレスへのメールは受け付けられません。\n\nストア紹介を書き直し、ページの追加と通知設定を「インストール後の手順」に移し、Playwright や webhook、パスワードなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: changedetection
     port: 5000

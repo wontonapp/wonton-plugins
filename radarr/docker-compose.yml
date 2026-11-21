@@ -95,12 +95,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: video.radarr.radarr
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 电影下载（Radarr）, en: Movie Downloads (Radarr) }
+  title: { zh: "电影下载（Radarr）", en: "Movie Downloads (Radarr)", zh-Hant: "電影下載（Radarr）", ja: "映画ダウンロード（Radarr）" }
   description:
     zh: 把想看的电影加进片单，自动搜索、下载、整理好，在 Jellyfin 里直接看
     en: Add movies to your watchlist and Radarr searches, downloads and organizes them for your media library
+    zh-Hant: 把想看的電影加進片單，自動搜尋、下載、整理好，在 Jellyfin 裡直接看
+    ja: 見たい映画をリストに追加すると、自動で検索・ダウンロード・整理し、Jellyfin ですぐ見られます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/library.png, screenshots/movie.png]
@@ -111,16 +113,47 @@ x-wonton:
   tags:
     zh: [下载, 视频]
     en: [Downloads, Video]
+  setup:
+    zh: 第一次打开时自己定一个管理员账号和密码（之后在“设置 → 通用 → 安全”里改）。要能自动下载，先装 qBittorrent 插件，需要站点管理再装 Prowlarr。
+    en: On first open, set an admin username and password of your choice (change them later under Settings → General → Security). For automatic downloads, install the qBittorrent plugin first; add Prowlarr if you want site management.
+    zh-Hant: 第一次開啟時自己定一個管理員帳號和密碼（之後在「設定 → 一般 → 安全」裡改）。要能自動下載，先裝 qBittorrent 外掛，需要站點管理再裝 Prowlarr。
+    ja: 初回に管理者のユーザー名とパスワードを自分で決めます（後で「設定 → 一般 → セキュリティ」で変更できます）。自動ダウンロードには先に qBittorrent プラグインを入れてください。サイト管理が必要なら Prowlarr も入れます。
   about:
     zh: |
-      Radarr 帮你追电影：把想看的加进片单，它会盯着资源，一有就自动下载、按电影名整理进媒体库，配合 Jellyfin 打开就能看，不用自己到处找种子、改名、挪文件。
+      帮你追电影：把想看的加进片单，它会盯着资源，一有就自动下载、按电影名整理进媒体库，打开 Jellyfin 就能看，不用自己到处找种子、改名、挪文件。
 
-      配了 qBittorrent 插件后下载自动进它的队列；配了 Prowlarr 后索引站一处添加、自动同步过来。电影保存在家的共享文件夹里，重装不丢。搜索和下载需要能访问外网。应用的通知（电影下好了、健康问题）出现在收件人的 Wonton 私聊里；收件人只能是家里人，改成外部邮箱会发送失败。
+      配了 qBittorrent 后下载直接进它的队列；配了 Prowlarr 后站点一处添加、自动同步过来。电影保存在家里的共享文件夹里，重装不丢。
+
+      搜索和下载要能上网。应用的通知（电影下好了、出问题）会出现在收件人的 Wonton 私聊里；收件人只能是家里人，改成外部邮箱会发送失败。
     en: |
-      Radarr keeps an eye on the movies you want: add them to your watchlist and it automatically searches, downloads and renames them into your media library, ready to play in Jellyfin — no more hunting for torrents, renaming files or moving them by hand.
+      Keeps an eye on the movies you want: add them to your watchlist and it automatically searches, downloads and renames them into your media library, ready to play in Jellyfin — no more hunting for torrents, renaming files or moving them by hand.
 
-      With the qBittorrent plugin installed, downloads go straight into its queue; with Prowlarr, index sites are added in one place and synced over automatically. Movies live in your home shared folder and survive reinstalls. Searching and downloading need internet access. App notifications (movie downloaded, health issues) land in the recipient's Wonton chat; recipients must be household members — sending to an external address fails.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      With qBittorrent configured, downloads go straight into its queue; with Prowlarr, sites are added in one place and synced over. Movies live in your home shared folder and survive reinstalls.
+
+      Searching and downloading need internet access. App notifications (movie downloaded, health issues) land in the recipient's Wonton chat; recipients must be household members — sending to an external address fails.
+    zh-Hant: |
+      幫你追電影：把想看的加進片單，它會盯著資源，一有就自動下載、按電影名整理進媒體庫，開啟 Jellyfin 就能看，不用自己到處找種子、改名、挪檔案。
+
+      配了 qBittorrent 後下載直接進它的佇列；配了 Prowlarr 後站點一處新增、自動同步過來。電影保存在家裡的共享資料夾裡，重裝不丟。
+
+      搜尋和下載要能上網。應用的通知（電影下好了、出問題）會出現在收件人的 Wonton 私聊裡；收件人只能是家裡人，改成外部信箱會發送失敗。
+    ja: |
+      見たい映画を追いかけます。リストに追加すると配信元を監視し、見つかれば自動でダウンロードして映画名でライブラリに整理し、Jellyfin ですぐ見られます。トレント探しや改名、ファイル移動は不要です。
+
+      qBittorrent を設定してあればダウンロードはその待ち行列に入り、Prowlarr を設定してあればサイトは 1 か所で追加されて自動で同期されます。映画は家の共有フォルダに残り、入れ直しても消えません。
+
+      検索とダウンロードにはインターネットが必要です。アプリの通知（ダウンロード完了、不具合）は受け取った人の Wonton チャットに届きます。受け取れるのは家族だけで、外部アドレスに変えると送信に失敗します。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：建管理员账号和装 qBittorrent 的步骤移到「安装后要做的事」，索引站等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: admin account creation and installing qBittorrent moved to the pre-install notice, with indexer wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：建管理員帳號和裝 qBittorrent 的步驟移到「安裝後要做的事」，索引站等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、管理者アカウントの作成と qBittorrent の導入を「インストール後の手順」に移し、インデクサなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: radarr
     port: 7878

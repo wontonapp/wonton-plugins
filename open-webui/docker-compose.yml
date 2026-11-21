@@ -181,14 +181,16 @@ configs:
     file: init/owner.py
 
 x-wonton:
-  spec: "0.7"
+  spec: "0.11"
   id: com.openwebui.open-webui
-  version: 0.2.2
+  version: 0.2.3
   kind: app
-  title: { zh: AI 聊天（Open WebUI）, en: AI Chat (Open WebUI) }
+  title: { zh: "AI 聊天（Open WebUI）", en: "AI Chat (Open WebUI)", zh-Hant: "AI 聊天（Open WebUI）", ja: "AI チャット（Open WebUI）" }
   description:
-    zh: 像自家的 ChatGPT 网页：在浏览器里和 AI 聊天，上传 PDF、Word 还能针对文件提问，聊天记录都存在家里。
+    zh: 像自家的 AI 网页：在浏览器里和 AI 聊天，上传 PDF、Word 还能针对文件提问，聊天记录都存在家里。
     en: "Like your own ChatGPT website: chat with AI in the browser, upload PDFs or Word files and ask about them, with your history kept at home."
+    zh-Hant: 像自家的 AI 網頁：在瀏覽器裡和 AI 聊天，上傳 PDF、Word 還能針對檔案提問，聊天紀錄都存在家裡。
+    ja: 自分専用の ChatGPT サイトのようなものです。ブラウザで AI とチャットし、PDF や Word をアップロードしてその内容も質問できます。履歴は家に残ります。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/chat.png, screenshots/knowledge.png]
@@ -199,16 +201,39 @@ x-wonton:
   tags:
     zh: [AI]
     en: [AI]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；模型默认用云吞自带的，不用填密钥。
+    en: Opening the page signs you in with your Wonton account — no sign-up. Models come from Wonton by default, with no key to fill in.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；模型預設用雲吞內建的，不用填金鑰。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。モデルは既定で Wonton のものを使い、キーの入力は要りません。
   about:
     zh: |
       在浏览器里和 AI 聊天，历史留在自己的服务器上。上传 PDF、Word 或文本，针对文档提问，回答带着出处。
 
-      模型默认用云吞的模型网关，不用自己填 key；没接网关时管理员在设置里加自己的模型服务商和 key 也能用。文档的向量用镜像里自带的模型在本地算，不下载模型，也不调用外部服务。
+      没接云吞的模型服务时，管理员也能在设置里加自己的模型服务商和密钥。文档的内容在本地算成可搜索的形式，不下载模型，也不调用外部服务。
     en: |
       Chat with AI in your browser, with the history on your own server. Upload PDFs, Word files or text, ask about them, and get answers with sources.
 
-      The models come from Wonton's model gateway by default, so there is no key to fill in; without a gateway, add your own provider and key in the admin settings. Documents are embedded locally with the model built into the image: no model downloads and no external service.
-  release_notes: { zh: 插件包迁入官方插件合仓，并升级到上游 Open WebUI 0.13.3。, en: "Moved into the official Wonton plugin monorepo and upgraded to upstream Open WebUI 0.13.3." }
+      Without Wonton's model service, an admin can add their own provider and key in the settings. Documents are indexed locally into a searchable form: no model downloads and no external service.
+    zh-Hant: |
+      在瀏覽器裡和 AI 聊天，歷史留在自己的伺服器上。上傳 PDF、Word 或文字，針對文件提問，回答帶著出處。
+
+      沒接雲吞的模型服務時，管理員也能在設定裡加自己的模型服務商和金鑰。文件的內容在本機算成可搜尋的形式，不下載模型，也不呼叫外部服務。
+    ja: |
+      ブラウザで AI とチャットし、履歴は自分のサーバーに残ります。PDF・Word・テキストをアップロードして質問すると、出典付きで答えます。
+
+      Wonton のモデルサービスを使わない場合は、管理者が設定で独自のプロバイダとキーを追加できます。文書はローカルで検索可能な形に処理され、モデルのダウンロードも外部サービスの呼び出しもありません。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，并升级到上游 Open WebUI 0.13.3。
+
+      商店介绍重写：登录说明移到「安装后要做的事」，向量、密钥等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo and upgraded to upstream Open WebUI 0.13.3.
+
+      Store copy rewritten: the sign-in note moved to the pre-install notice, with embedding/key wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，並升級到上游 Open WebUI 0.13.3。\n\n商店介紹重寫：登入說明移到「安裝後要做的事」，向量、金鑰等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動し、上流の Open WebUI 0.13.3 へアップグレードしました。\n\nストア紹介を書き直し、サインインの説明を「インストール後の手順」に移し、埋め込みやキーなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: webui
     port: 8080

@@ -25,14 +25,16 @@ services:
       start_interval: 1s
 
 x-wonton:
-  spec: "0.6"
+  spec: "0.11"
   id: com.jgraph.drawio
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 画图（draw.io）, en: Diagrams (draw.io) }
+  title: { zh: "画图（draw.io）", en: "Diagrams (draw.io)", zh-Hant: "畫圖（draw.io）", ja: "図の作成（draw.io）" }
   description:
     zh: 像一块随开随用的白板，画流程图、架构图、思维导图和平面布置图，浏览器打开就能画。比手绘风的 Excalidraw 更规整，适合要交出去的正式图。
     en: "A whiteboard that is always ready: draw flowcharts, architecture diagrams, mind maps and floor plans right in your browser. Tidier than the hand-drawn style of Excalidraw — a fit for diagrams you present."
+    zh-Hant: 像一塊隨開隨用的白板，畫流程圖、架構圖、思維導圖和平面布置圖，瀏覽器開啟就能畫。比手繪風的 Excalidraw 更規整，適合要交出去的正式圖。
+    ja: いつでも使える白板のようなものです。フローチャート、構成図、マインドマップ、間取り図をブラウザですぐ描けます。手描き風の Excalidraw より整っており、人に見せる正式な図に向きます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/editor.png, screenshots/flow.png]
@@ -43,22 +45,39 @@ x-wonton:
   tags:
     zh: [效率, 工具, 图表]
     en: [Productivity, Tools, Diagrams]
+  setup:
+    zh: 打开就画，不用注册。图存在你打开网页的那台设备上：换一台设备看不到，清除浏览器数据也会丢；要留着或发给别人，用「文件」菜单导出成图片或 .drawio 文件，换设备时把文件带过去打开。
+    en: "Open and draw — no account. Diagrams stay in the browser of the device you opened the page on: other devices cannot see them, and clearing browser data loses them. To keep or share one, export it as an image or .drawio file from the File menu and bring the file to the other device."
+    zh-Hant: 開啟就畫，不用註冊。圖存在你開啟網頁的那台裝置上：換一台裝置看不到，清除瀏覽器資料也會丟；要留著或發給別人，用「檔案」選單匯出成圖片或 .drawio 檔案，換裝置時把檔案帶過去開啟。
+    ja: 開けばすぐ描け、アカウントは不要です。図はページを開いた端末のブラウザに残ります。別の端末では見えず、ブラウザデータを消すと失われます。残したり渡したりするには「ファイル」メニューから画像か .drawio ファイルに書き出し、別の端末へ持っていって開きます。
   about:
     zh: |
       在浏览器里画流程图、软件架构图、思维导图、组织结构图和平面布置图，形状拖进去、连线拉出来，像画在白板上一样。
 
-      画好的图存在你打开网页的那台手机或电脑的浏览器里：换一台设备看不到，清除浏览器数据也会丢。
-      要留着或发给别人，用"文件"菜单导出成图片或 .drawio 文件；换设备时把文件带来打开就行。
-
-      不用注册账号，打开就画。图存在浏览器里，家人各画各的，互不相通。
+      家人各画各的，互不相通；不用账号，也不经过服务器保存。
     en: |
       Draw flowcharts, software architecture diagrams, mind maps, org charts and floor plans in your browser: drag shapes in, pull connectors out, like drawing on a whiteboard.
 
-      Diagrams are stored in the browser of the device you opened the page on: other devices cannot see them, and clearing browser data loses them.
-      To keep or share a diagram, export it as an image or a .drawio file from the File menu; bring the file to another device to open it there.
+      Everyone draws on their own, separately; no account, and nothing is saved on the server.
+    zh-Hant: |
+      在瀏覽器裡畫流程圖、軟體架構圖、思維導圖、組織結構圖和平面布置圖，形狀拖進去、連線拉出來，像畫在白板上。
 
-      No account needed. Diagrams stay in each person's browser, so family members draw separately.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      家人各畫各的，互不相通；不用帳號，也不經過伺服器保存。
+    ja: |
+      ブラウザでフローチャート、ソフト構成図、マインドマップ、組織図、間取り図を描けます。図形をドラッグして入れ、線を引き、白板に描くように使えます。
+
+      家族はそれぞれ別々に描き、つながりはありません。アカウントも不要で、サーバーにも保存しません。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：图的存放位置和导出移到「安装后要做的事」，.drawio 等说法按日常用法说明；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: where diagrams live and how to export moved to the pre-install notice, with the .drawio file explained plainly; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：圖的存放位置和匯出移到「安裝後要做的事」，.drawio 等說法按日常用法說明；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、図の保存場所と書き出しを「インストール後の手順」に移し、.drawio ファイルも平易に説明しました。繁体字中国語と日本語を追加。"
   webui:
     service: drawio
     port: 8080

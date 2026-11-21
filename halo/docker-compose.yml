@@ -54,12 +54,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: run.halo.halo
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 个人博客（Halo）, en: Blog (Halo) }
+  title: { zh: "个人博客（Halo）", en: "Blog (Halo)", zh-Hant: "個人部落格（Halo）", ja: "個人ブログ（Halo）" }
   description:
     zh: 像写日记一样写博客，把文章、游记和照片发成自己的网站
     en: Write posts like a diary and publish them as your own blog
+    zh-Hant: 像寫日記一樣寫部落格，把文章、遊記和照片發成自己的網站
+    ja: 日記を書くようにブログを書き、記事や旅行記、写真を自分のサイトとして公開します。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -69,11 +71,14 @@ x-wonton:
   tags:
     zh: [博客]
     en: [Blog]
+  setup:
+    zh: 管理员账号装好时已建好：用户名是你的云吞用户名（下划线写成连字符），密码在插件详情页的「管理员密码」里查看。用这个账号登录后台，博客标题和外观在“系统 - 设置”里改。
+    en: "The admin account is ready at install: the username is your Wonton username (underscores become hyphens) and the password is under “Admin password” in the plugin details. Sign in with it, then change the title and appearance under System - Settings."
+    zh-Hant: 管理員帳號裝好時已建好：使用者名稱是你的雲吞使用者名稱（底線寫成連字號），密碼在外掛詳情頁的「管理員密碼」裡查看。用這個帳號登入後台，部落格標題和外觀在「系統 - 設定」裡改。
+    ja: 管理者アカウントはインストール時に作成済みです。ユーザー名は Wonton のユーザー名（アンダースコアはハイフン）で、パスワードはプラグイン詳細の「管理者パスワード」にあります。そのアカウントで管理画面にサインインし、タイトルと外観は「システム - 設定」で変更します。
   about:
     zh: |
       家里的博客：写日记、记游记、发照片，读者打开就是一页排好版的文章。
-
-      第一次打开：管理员账号已建好——用户名是你的云吞用户名（下划线写成连字符），密码在插件详情页的“管理员密码”里查看；用这个账号登录后台就能改博客标题、外观（在“系统 - 设置”里）。
 
       写文章在后台完成，家人从网页就能看；Bot 也能帮你查文章、发文章。
 
@@ -81,12 +86,32 @@ x-wonton:
     en: |
       A blog for the household: write diary entries, travel notes and posts, and readers open a clean, typeset page.
 
-      First open: the admin account is ready — the username is your Wonton username (underscores become hyphens) and the password is under “Admin password” in the plugin details. Sign in with it to edit the site title and appearance under System - Settings in the console.
-
       Writing happens in the console, family reads it on the web, and the bot can look up or publish posts for you.
 
       Only your household can read the blog: readers must be able to open your Wonton; strangers from the public internet cannot get in.
-  release_notes: { zh: 介绍重写：管理员账号和密码的查看方式单独成段放在最前。, en: "Rewritten store copy: the admin account and where to find its password now stand alone up front." }
+    zh-Hant: |
+      家裡的部落格：寫日記、記遊記、發照片，讀者開啟就是一頁排好版的文章。
+
+      寫文章在後台完成，家人從網頁就能看；Bot 也能幫你查文章、發文章。
+
+      部落格只有家裡人能看：讀者必須是能開啟你家雲吞的人，外網的陌生人進不來。
+    ja: |
+      家のブログです。日記や旅行記を書き、写真を載せると、読者には整った記事ページが開きます。
+
+      記事は管理画面で書き、家族は Web から読めます。ボットに記事の検索や投稿を頼むこともできます。
+
+      ブログは家族だけが読めます。読者はあなたの Wonton を開ける人に限られ、外のインターネットからは入れません。
+  release_notes:
+    zh: |
+      介绍重写：管理员账号和密码的查看方式单独成段放在最前。
+
+      商店介绍重写：管理员登录步骤移到「安装后要做的事」，同时修掉「详细页」的错字；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the admin account and where to find its password now stand alone up front.
+
+      Store copy rewritten: the admin sign-in moved to the pre-install notice, with the details-page typo fixed; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：管理員賬號和密碼的檢視方式單獨成段放在最前。\n\n商店介紹重寫：管理員登入步驟移到「安裝後要做的事」，同時修掉「詳細頁」的錯字；補繁體中文和日文。"
+    ja: "紹介を書き直し、管理者アカウントとパスワードの確認方法を最初の段落に分けました。\n\nストア紹介を書き直し、管理者サインインの手順を「インストール後の手順」に移し、詳細ページの誤字も直しました。繁体字中国語と日本語を追加。"
   webui:
     service: halo
     port: 8090

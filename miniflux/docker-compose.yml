@@ -185,14 +185,16 @@ configs:
       SELECT 1 / count(*) FROM users WHERE lower(username) = lower(:'owner');
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: app.miniflux.miniflux
-  version: 0.1.3
+  version: 0.1.4
   kind: app
-  title: { en: Miniflux }
+  title: { zh: "订阅阅读器（Miniflux）", en: "Feed Reader (Miniflux)", zh-Hant: "訂閱閱讀器（Miniflux）", ja: "フィードリーダー（Miniflux）" }
   description:
-    zh: 订阅网站和博客，在一个地方读完更新
-    en: Follow sites and blogs and read every update in one place
+    zh: 像一份自己编的报纸：订阅的网站和博客更新都收在一个地方，一页页读完
+    en: "Like a newspaper you put together: every update from the sites and blogs you follow arrives in one place to read through"
+    zh-Hant: 像一份自己編的報紙：訂閱的網站和部落格更新都收在一個地方，一頁頁讀完
+    ja: 自分で作る新聞のようなもの。購読したサイトやブログの更新が 1 か所に届き、順に読めます。
   icon: icon.png
   notices: [NOTICE]
   screenshots:
@@ -205,16 +207,39 @@ x-wonton:
   tags:
     zh: [阅读]
     en: [Reading]
+  setup:
+    zh: 打开就用，不用注册；在设置里加要订阅的网站。
+    en: Open and use it — no sign-up. Add the sites you want to follow in the settings.
+    zh-Hant: 開啟就用，不用註冊；在設定裡加要訂閱的網站。
+    ja: 開けば使え、登録は不要です。設定で購読するサイトを追加します。
   about:
     zh: |
       在一个地方订阅网站和博客，读完更新。可以按规则过滤，也可以标已读、未读。
 
-      Bot 能列出未读、搜索文章和标记已读；工具没有标只读，每次调用都要你确认。
+      助手能列出未读、搜索文章和标记已读；这几项没标明是只读的，每次调用都要你确认一下。
     en: |
       Follow sites and blogs in one place and read their updates. Filter by rules, and mark entries read or unread.
 
-      The bot can list unread entries, search and mark them read; the tools carry no read-only hints, so each call waits for your confirmation.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      The assistant can list unread entries, search and mark them read; those actions are not marked read-only, so each call waits for your confirmation.
+    zh-Hant: |
+      在一個地方訂閱網站和部落格，讀完更新。可以按規則過濾，也可以標已讀、未讀。
+
+      助手能列出未讀、搜尋文章和標記已讀；這幾項沒標明是唯讀的，每次呼叫都要你確認一下。
+    ja: |
+      サイトやブログを 1 か所で購読し、更新を読みます。ルールで絞り込み、既読・未読も付けられます。
+
+      アシスタントは未読の一覧・記事検索・既読付けができます。これらは読み取り専用と示されていないため、呼ぶたびに確認を求められます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：补通俗中文标题，订阅步骤移到「安装后要做的事」；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: added a plain Chinese title and moved the subscribe step to the pre-install notice; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：補通俗中文標題，訂閱步驟移到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、わかりやすい中国語タイトルを付け、購読の手順を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
   webui:
     service: miniflux
     port: 8080

@@ -139,12 +139,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: com.tubearchivist.app
-  version: 0.2.0
+  version: 0.2.1
   kind: app
-  title: { zh: YouTube 频道存档（TubeArchivist）, en: YouTube Channel Archive (TubeArchivist) }
+  title: { zh: "频道存档（TubeArchivist）", en: "YouTube Channel Archive (TubeArchivist)", zh-Hant: "頻道存檔（TubeArchivist）", ja: "チャンネル保存（TubeArchivist）" }
   description:
     zh: 订阅 YouTube 频道后，新视频自动下载到家里，随时离线看，原视频下架也不怕；家庭影院（Jellyfin）也能读到这些视频。适合追频道、想长期留档的人。
-    en: "Subscribe to YouTube channels and new videos download to your home server automatically, ready to watch offline even if the originals disappear; Jellyfin can pick them up too. For following channels and keeping an archive."
+    en: Subscribe to YouTube channels and new videos download to your home server automatically, ready to watch offline even if the originals disappear; Jellyfin can pick them up too. For following channels and keeping an archive.
+    zh-Hant: 訂閱 YouTube 頻道後，新影片自動下載到家裡，隨時離線看，原影片下架也不怕；家庭電影院（Jellyfin）也能讀到這些影片。適合追頻道、想長期留檔的人。
+    ja: YouTube チャンネルを登録すると、新しい動画が家へ自動でダウンロードされ、オフラインでいつでも見られます。元の動画が消えても安心で、Jellyfin からも読めます。チャンネルを追い、長く残したい人向けです。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/channels.png, screenshots/downloads.png]
@@ -155,30 +157,55 @@ x-wonton:
   tags:
     zh: [视频, 下载]
     en: [Video, Downloads]
+  setup:
+    zh: 打开网页订阅频道，新视频就会自动下载。第一次启动要下载和整理，会慢一些；下载要能上 YouTube。下载、订阅更新和整理完成的提醒进你的 Wonton 私聊，收件人只能是家里人。
+    en: Open the page and subscribe to channels; new videos download automatically. The first start downloads and indexes, which takes a while, and downloading needs access to YouTube. Notices for downloads, subscription updates and finished indexing land in your Wonton chat — household members only.
+    zh-Hant: 開啟網頁訂閱頻道，新影片就會自動下載。第一次啟動要下載和整理，會慢一些；下載要能上 YouTube。下載、訂閱更新和整理完成的提醒進你的 Wonton 私聊，收件人只能是家裡人。
+    ja: ページを開いてチャンネルを登録すると、新しい動画は自動でダウンロードされます。初回起動はダウンロードと整理で時間がかかり、YouTube に届く回線が必要です。ダウンロードや登録更新、整理完了の通知は Wonton チャットに届き、宛先は家族だけです。
   about:
     zh: |
       订阅 YouTube 频道，新视频自动下载到家里的主机，网页里浏览、搜索、离线观看。
 
-      下载的视频和元数据存成本地文件，Jellyfin 等媒体库能直接读；下载质量和格式在设置里调。
+      下载的视频和附带信息存成本地文件，Jellyfin 等媒体库能直接读；下载质量和格式在设置里调。
 
-      下载、订阅更新和重建索引完成时的邮件通知进你的 Wonton 私聊，应用设置里可调整；发到外部邮箱的通知会被拒收。
+      设置页里显示的账号名是系统自动生成的，只有能打开这个网页的人看得到。
 
-      首次启动要下载和索引，慢一些；下载视频需要能访问 YouTube 的网络。
-
-      设置页里显示的账号名是系统生成的内部凭据，只有能打开这个网页的人看得到。
+      应用发的信（下载完成、订阅更新、整理完成）可以按需关掉；发给外部邮箱的通知会被拒收。
     en: |
-      Subscribe to YouTube channels; new videos are downloaded to your server automatically, ready to browse, search and watch offline in the web page.
+      Subscribe to YouTube channels; new videos download to your server automatically, ready to browse, search and watch offline in the web page.
 
-      Videos and metadata are stored as local files that media servers like Jellyfin can pick up; download quality and format are set in the app's settings.
+      Videos and their details are stored as local files that media servers like Jellyfin can pick up; download quality and format are set in the app's settings.
 
-      Email notifications when downloads, subscription updates and reindexing finish land in your Wonton chat and can be adjusted in the app's settings; notifications to external addresses are rejected.
+      The account name shown in the app's settings is generated automatically and visible only to people who can open this page.
 
-      The first start downloads and indexes, which takes a while; downloading videos needs a network that can reach YouTube.
+      Emails the app sends (download finished, subscription updates, indexing done) can be turned off; notifications to external addresses are rejected.
+    zh-Hant: |
+      訂閱 YouTube 頻道，新影片自動下載到家裡的伺服器，網頁裡瀏覽、搜尋、離線觀看。
 
-      The account name shown in the app's settings is a system-generated internal credential, visible only to people who can open this page.
+      下載的影片和附帶資訊存成本機檔案，Jellyfin 等媒體庫能直接讀；下載品質和格式在設定裡調。
+
+      設定頁裡顯示的帳號名稱是系統自動產生的，只有能開啟這個網頁的人看得到。
+
+      應用寄的信（下載完成、訂閱更新、整理完成）可以按需關掉；寄給外部信箱的通知會被拒收。
+    ja: |
+      YouTube チャンネルを登録すると、新しい動画が家のサーバーへ自動でダウンロードされ、ページで閲覧・検索・オフライン再生できます。
+
+      動画と付随情報はローカルファイルとして保存され、Jellyfin などのメディアサーバーから読めます。画質と形式はアプリの設定で変えます。
+
+      設定ページに出るアカウント名は自動生成で、このページを開ける人だけが見られます。
+
+      アプリが送るメール（ダウンロード完了、登録更新、整理完了）は必要に応じて切れます。外部アドレスへの通知は拒否されます。
   release_notes:
-    zh: 任务结束的邮件通知接上云吞的内部邮箱：下载、订阅更新和重建索引完成后通知到你的 Wonton 私聊，应用设置里可调整。插件包迁入官方插件合仓。
-    en: "Task-end email notifications now use Wonton's internal mailbox: downloads, subscription updates and reindexing report to your Wonton chat, adjustable in the app's settings. Package moved into the official Wonton plugin monorepo."
+    zh: |
+      任务结束的邮件通知接上云吞的内部邮箱：下载、订阅更新和重建索引完成后通知到你的 Wonton 私聊，应用设置里可调整。插件包迁入官方插件合仓。
+
+      商店介绍重写：订阅和首次启动的说明移到「安装后要做的事」，元数据、重建索引、内部凭据等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Task-end email notifications now use Wonton's internal mailbox: downloads, subscription updates and reindexing report to your Wonton chat, adjustable in the app's settings. Package moved into the official Wonton plugin monorepo.
+
+      Store copy rewritten: subscribing and first-start notes moved to the pre-install notice, with metadata/reindex/internal-credential wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "任務結束的郵件通知接上雲吞的內部郵箱：下載、訂閱更新和重建索引完成後通知到你的 Wonton 私聊，應用設定裡可調整。外掛包遷入官方外掛合倉。\n\n商店介紹重寫：訂閱和首次啟動的說明移到「安裝後要做的事」，中繼資料、重建索引、內部憑據等說法換成日常用語；補繁體中文和日文。"
+    ja: "タスク完了のメール通知を Wonton の内部メールにつなぎました。ダウンロード、購読の更新、索引の再構築が終わるとあなたの Wonton ダイレクトメッセージに届き、アプリの設定で調整できます。プラグインは公式プラグインリポジトリへ移動しました。\n\nストア紹介を書き直し、登録と初回起動の説明を「インストール後の手順」に移し、メタデータや再インデックス、内部資格情報などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: app
     port: 8000

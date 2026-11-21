@@ -73,12 +73,16 @@ configs:
     file: web/patch-search.cjs
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: com.github.itzcrazykns.vane
-  version: 0.2.1
+  version: 0.2.2
   kind: app
-  title: { zh: AI 搜索（Vane）, en: AI Search (Vane) }
-  description: { zh: 会先查资料再回答的 AI：每个问题都先上网搜，再写出标明出处的回答，适合查新闻、找资料。, en: "An AI that searches before it answers: every question goes to the web first, and the answer comes back with its sources. Good for news and research." }
+  title: { zh: "AI 搜索（Vane）", en: "AI Search (Vane)", zh-Hant: "AI 搜尋（Vane）", ja: "AI 検索（Vane）" }
+  description:
+    zh: 会先查资料再回答的 AI：每个问题都先上网搜，再写出标明出处的回答，适合查新闻、找资料。
+    en: "An AI that searches before it answers: every question goes to the web first, and the answer comes back with its sources. Good for news and research."
+    zh-Hant: 會先查資料再回答的 AI：每個問題都先上網搜，再寫出標明出處的回答，適合查新聞、找資料。
+    ja: 調べてから答える AI です。どの質問も先に Web を検索し、出典を示した回答を書きます。ニュースや調べ物に向きます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/01-home.png, screenshots/02-searching.png, screenshots/03-answer.png, screenshots/04-answer-end.png, screenshots/05-library.png]
@@ -88,18 +92,47 @@ x-wonton:
   tags:
     zh: [AI, 搜索]
     en: [AI, Search]
+  setup:
+    zh: 打开直接提问，也能带一份文档提问。模型默认走云吞的模型服务，装好就能用；要换服务商，在设置里填自己的地址和密钥。
+    en: Open it and ask — you can also attach a document. The model goes through Wonton's model service by default, ready to use; to use another provider, enter your own address and key in the settings.
+    zh-Hant: 開啟直接提問，也能帶一份文件提問。模型預設走雲吞的模型服務，裝好就能用；要換服務商，在設定裡填自己的位址和密鑰。
+    ja: 開いてそのまま質問でき、資料を添えることもできます。モデルは既定で Wonton のモデルサービスを通り、すぐ使えます。別のサービスを使うときは、設定で自分のアドレスとキーを入れます。
   about:
     zh: |
       先搜网页，再让 AI 读结果、写出带出处的回答。
 
-      可以只搜网页、论文或社区讨论，也可以带着文档提问。搜索历史留在这台机器上。
-      模型默认走云吞的模型网关；没接网关时在设置里填自己的服务商和 key 也能用。
+      可以只搜网页、论文或社区讨论，也可以带着文档提问，搜到的网页也能自己打开看。
+
+      搜索历史留在这台机器上。搜索本身要能上网。
     en: |
       It searches the web first, then has the AI read the results and write an answer with sources.
 
-      Search the web, papers or discussions only, or attach a document to the question. Search history stays on this machine.
-      The model goes through Wonton's model gateway by default; without a gateway, add your own provider and key in settings.
-  release_notes: { zh: 插件包迁入官方插件合仓，保留当前分支的可选模型网关支持。, en: "Moved the plugin package into the official Wonton plugin monorepo; retains the optional model-gateway support from the current branch." }
+      Search the web, papers or discussions only, or attach a document to the question; you can also open the pages it found yourself.
+
+      Search history stays on this machine. Searching needs internet access.
+    zh-Hant: |
+      先搜網頁，再讓 AI 讀結果、寫出帶出處的回答。
+
+      可以只搜網頁、論文或社群討論，也可以帶著文件提問，搜到的網頁也能自己開啟看。
+
+      搜尋歷史留在這台機器上。搜尋本身要能上網。
+    ja: |
+      先に Web を検索し、その結果を AI に読ませて出典付きの回答を書かせます。
+
+      Web・論文・コミュニティの議論だけを対象にしたり、資料を添えて質問したりでき、見つかったページは自分で開くこともできます。
+
+      検索履歴はこのマシンに残ります。検索にはインターネットが必要です。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，保留当前分支的可选模型网关支持。
+
+      商店介绍重写：模型接法和文档提问移到「安装后要做的事」，模型网关、key 等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved the plugin package into the official Wonton plugin monorepo; retains the optional model-gateway support from the current branch.
+
+      Store copy rewritten: model wiring and document questions moved to the pre-install notice, with model-gateway/key wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，保留當前分支的可選模型閘道器支援。\n\n商店介紹重寫：模型接法和文件提問移到「安裝後要做的事」，模型閘道、key 等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。現行ブランチのオプションのモデルゲートウェイ対応は維持しています。\n\nストア紹介を書き直し、モデル接続と資料付きの質問を「インストール後の手順」に移し、モデルゲートウェイやキーなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: vane
     port: 3000

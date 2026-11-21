@@ -84,12 +84,14 @@ configs:
 x-wonton:
   spec: "0.13"
   id: app.calibre-web-automated.books
-  version: 0.1.3
+  version: 0.1.4
   kind: app
-  title: { zh: 家庭书架（Calibre-Web Automated）, en: Home Book Library (Calibre-Web Automated) }
+  title: { zh: "家庭书架（Calibre-Web Automated）", en: "Home Book Library (Calibre-Web Automated)", zh-Hant: "家庭書架（Calibre-Web Automated）", ja: "家庭の本棚（Calibre-Web Automated）" }
   description:
-    zh: 家里的电子书架：把书丢进去，自动转格式、补封面和简介，全家人在手机、平板和电脑上随时读
+    zh: 家里的电子书架：把书丢进去，自动转好格式、补封面和简介，全家人在手机、平板和电脑上随时读
     en: A bookshelf for the family's ebooks — drop books in and they are converted and catalogued automatically, ready to read on any screen
+    zh-Hant: 家裡的電子書架：把書丟進去，自動轉好格式、補封面和簡介，全家人在手機、平板和電腦上隨時讀
+    ja: 家の電子本棚です。本を入れるだけで形式を整え、表紙や紹介を補い、家族がスマホ・タブレット・パソコンからいつでも読めます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/library.jpg, screenshots/reader.png]
@@ -100,20 +102,47 @@ x-wonton:
   tags:
     zh: [阅读, 书]
     en: [Reading, Books]
+  setup:
+    zh: 打开网页用云吞账号登录，家人第一次打开会自动建号。要把书发到 Kindle，先在应用设置里填自己邮箱的发信设置。阅读器 App 连接前先在插件详情里打开「在局域网开放」，并在网页登录一次，再用显示的地址、账号和密码填进 App。
+    en: Opening the web page signs you in with your Wonton account; family members get an account on their first visit. To send books to a Kindle, enter your own mailbox's sending settings in the app first. Before connecting a reader app, turn on the LAN switch in the plugin details, sign in on the web once, then enter the address, account and password shown there into the app.
+    zh-Hant: 開啟網頁用雲吞帳號登入，家人第一次開啟會自動建號。要把書送到 Kindle，先在應用設定裡填自己信箱的寄信設定。閱讀器 App 連接前先在外掛詳情裡開啟「在區域網路開放」，並在網頁登入一次，再用顯示的位址、帳號和密碼填進 App。
+    ja: Web ページを開くと Wonton アカウントでサインインし、家族は初回アクセスでアカウントが作られます。Kindle へ本を送るには、先にアプリの設定で自分のメールボックスの送信設定を入れてください。リーダーアプリをつなぐ前に、プラグイン詳細で「LAN に公開」をオンにして Web で一度サインインし、表示されたアドレス・アカウント・パスワードをアプリに入力します。
   about:
     zh: |
       把家里的书摆上一个全家人都能打开的书架：手机、平板、电脑的浏览器里直接读，Kindle、Kobo 这类阅读器 App 连上来也能读。
 
-      打开网页就是用云吞的账号登录，不用另外注册；家人第一次打开自动建号，能读书、能下载。把电子书文件放进"待入库"文件夹，或者从网页上传，它会自动转成通用格式、抓封面和简介、摆上书架。书架本身是普通的文件夹（books 共享文件夹），书一直都在那里，卸载插件也不会丢。
+      把电子书文件放进“待入库”文件夹，或者从网页上传，它会自动转成通用格式、抓封面和简介、摆上书架。书架本身是普通的文件夹（books 共享文件夹），书一直都在那里，卸载插件也不会丢。
 
-      发到 Kindle 需要在应用设置里填你自己邮箱的发信服务器（亚马逊只收来自你邮箱的投递）；插件不代填。抓封面和简介需要能访问外网。阅读器 App 怎么连：在插件详情里打开"在局域网开放"，把显示的地址、账号和密码填进 App（先在网页里登录一次，密码才生效）。
+      抓封面和简介要能上外网。
     en: |
       Put your family's books on one shelf everyone can open: read in the browser on phones, tablets and computers, or connect reader apps like Kindle and Kobo.
 
-      Opening the web page signs you in with your Wonton account — no extra registration; family members get an account on their first visit and can read and download. Drop ebook files into the ingest folder or upload them on the web page — they are converted to common formats, enriched with covers and descriptions, and shelved automatically. The library itself is a plain folder (the books shared folder), so your books stay even if the plugin is removed.
+      Drop ebook files into the ingest folder or upload them on the web page — they are converted to common formats, enriched with covers and descriptions, and shelved automatically. The library itself is a plain folder (the books shared folder), so your books stay even if the plugin is removed.
 
-      Sending to Kindle needs your own email account's outgoing mail settings in the app (Amazon only accepts mail from your address); the plugin does not fill them in for you. Fetching covers and descriptions needs internet access. To connect a reader app, turn on the LAN switch in the plugin details and enter the address, account and password shown there (sign in on the web once first, then the password works).
-  release_notes: { zh: 插件包迁入官方插件合仓，保留 admin 组管理员登录配置。, en: "Moved into the official Wonton plugin monorepo; keeps administrator login through the admin group." }
+      Fetching covers and descriptions needs internet access.
+    zh-Hant: |
+      把家裡的書擺上一個全家人都能開啟的書架：手機、平板、電腦的瀏覽器裡直接讀，Kindle、Kobo 這類閱讀器 App 連上來也能讀。
+
+      把電子書檔案放進「待入庫」資料夾，或者從網頁上傳，它會自動轉成通用格式、抓封面和簡介、擺上書架。書架本身是普通的資料夾（books 共享資料夾），書一直都在那裡，移除外掛也不會丟。
+
+      抓封面和簡介要能連上外網。
+    ja: |
+      家族の本を、誰でも開ける一つの棚に並べます。スマホ・タブレット・パソコンのブラウザでそのまま読め、Kindle や Kobo などのリーダーアプリからも読めます。
+
+      電子書籍のファイルを「取り込み待ち」フォルダに入れるか Web からアップロードすると、一般的な形式に変換し、表紙や紹介を取得して棚に並べます。棚自体はただのフォルダ（books 共有フォルダ）なので、本はそこに残り、プラグインを外しても消えません。
+
+      表紙と紹介の取得にはインターネットが必要です。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，保留 admin 组管理员登录配置。
+
+      商店介绍重写：首次登录、Kindle 设置和阅读器 App 连接步骤移到「安装后要做的事」；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo; keeps administrator login through the admin group.
+
+      Store copy rewritten: first sign-in, Kindle mail settings and reader-app steps moved to the pre-install notice; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，保留 admin 組管理員登入配置。\n\n商店介紹重寫：首次登入、Kindle 設定和閱讀器 App 連接步驟移到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。admin グループによる管理者ログイン設定は維持しています。\n\nストア紹介を書き直し、初回サインイン、Kindle のメール設定、リーダーアプリ接続の手順を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
   webui:
     service: calibre-web-automated
     port: 8083

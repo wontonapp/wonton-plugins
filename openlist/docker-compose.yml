@@ -48,14 +48,16 @@ configs:
     file: init-sso.sh
 
 x-wonton:
-  spec: "0.6"
+  spec: "0.11"
   id: app.openlist.drive
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 网盘合集（OpenList）, en: Cloud Drive Hub (OpenList) }
+  title: { zh: "网盘合集（OpenList）", en: "Cloud Drive Hub (OpenList)", zh-Hant: "網盤合集（OpenList）", ja: "クラウドドライブ統合（OpenList）" }
   description:
     zh: 把你在阿里云盘、百度网盘、夸克等各家网盘里的文件放进同一个网页：一处浏览、在线播放、上传下载。适合网盘账号开了好几个、想一处管的人。
     en: "Brings Aliyun Drive, Baidu Netdisk, Quark and your other cloud drives into one web page: browse, stream and upload or download in one place. For anyone juggling several cloud drive accounts."
+    zh-Hant: 把你放在阿里雲盤、百度網盤、夸克等各家網盤裡的檔案放進同一個網頁：一處瀏覽、線上播放、上傳下載。適合網盤帳號開了好幾個、想一處管的人。
+    ja: Aliyun Drive、Baidu Netdisk、Quark などの各クラウドドライブのファイルを 1 つの Web ページにまとめます。閲覧・ストリーミング・アップロード・ダウンロードが 1 か所でできます。複数のドライブを抱える人向けです。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/files.png, screenshots/folder.png, screenshots/manage.png]
@@ -66,20 +68,47 @@ x-wonton:
   tags:
     zh: [文件, 网盘]
     en: [Files, Cloud drives]
+  setup:
+    zh: 打开就是你自己的管理员账号，不用记新密码；进来后在管理里加各家网盘的账号。
+    en: It opens straight into your own admin account, with no extra password; add your drive accounts in the admin area.
+    zh-Hant: 開啟就是你自己的管理員帳號，不用記新密碼；進來後在管理裡加各家網盤的帳號。
+    ja: 開くと自分の管理者アカウントで始まり、新しいパスワードは不要です。管理画面で各ドライブのアカウントを追加します。
   about:
     zh: |
       把阿里云盘、夸克、百度网盘这些网盘放进同一个网页：浏览、在线播放、上传下载、离线下载都在一个界面。
 
-      打开就是你自己的管理员账号，不用再记一个密码；网盘账号在家里添加，数据不经过任何第三方服务器。
+      网盘账号在家里添加，数据不经过任何外面的服务器。
 
-      与 Alist 的关系：OpenList 是 Alist v3 的社区延续分支，由原社区在 Alist 项目易主后继续维护。
+      它是 Alist 的社区延续版：Alist 项目易主后，原来的社区接着维护，改名叫 OpenList。
     en: |
       Put cloud drives such as Aliyun Drive, Quark and Baidu Netdisk into one web page: browse, stream, upload, download and fetch files for later, all in one place.
 
-      It opens straight into your own admin account, with no extra password. Drive accounts are added at home, and your data goes through no third-party server.
+      Drive accounts are added at home, and your data goes through no outside server.
 
-      Relationship to Alist: OpenList is the community continuation fork of Alist v3, maintained by the original community after the Alist project changed hands.
-  release_notes: { zh: 插件包迁入官方插件合仓；初始化脚本用的 curl 镜像升到 8.23.0。, en: "Moved into the official Wonton plugin monorepo; the curl image used by the initialization script is upgraded to 8.23.0." }
+      It is the community continuation of Alist: after that project changed hands, the original community kept it going under the name OpenList.
+    zh-Hant: |
+      把阿里雲盤、夸克、百度網盤這些網盤放進同一個網頁：瀏覽、線上播放、上傳下載、離線下載都在一個介面。
+
+      網盤帳號在家裡新增，資料不經過任何外面的伺服器。
+
+      它是 Alist 的社群延續版：Alist 專案易主後，原本的社群接著維護，改名為 OpenList。
+    ja: |
+      Aliyun Drive、Quark、Baidu Netdisk などのクラウドドライブを 1 つの Web ページに集めます。閲覧・ストリーミング・アップロード・ダウンロード・後で取得する保存がすべて 1 か所でできます。
+
+      ドライブのアカウントは家で追加し、データは外部のサーバを通りません。
+
+      Alist のコミュニティによる後継版です。プロジェクトの持ち主が変わったあと、元のコミュニティが名前を OpenList に変えて続けています。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓；初始化脚本用的 curl 镜像升到 8.23.0。
+
+      商店介绍重写：登录和加网盘账号移到「安装后要做的事」，第三方服务器等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo; the curl image used by the initialization script is upgraded to 8.23.0.
+
+      Store copy rewritten: sign-in and adding drives moved to the pre-install notice, with third-party-server wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉；初始化指令碼用的 curl 映象升到 8.23.0。\n\n商店介紹重寫：登入和加網盤帳號移到「安裝後要做的事」，第三方伺服器等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。初期化スクリプトが使う curl イメージを 8.23.0 に上げました。\n\nストア紹介を書き直し、サインインとドライブ追加を「インストール後の手順」に移し、サードパーティサーバなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: openlist
     port: 5244
