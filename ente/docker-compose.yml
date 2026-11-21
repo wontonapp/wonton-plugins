@@ -202,12 +202,16 @@ configs:
         secret: ${WONTON_SECRET_JWT_SECRET}
 
 x-wonton:
-  spec: "0.6"
+  spec: "0.11"
   id: app.ente.ente
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 加密相册（Ente）, en: Encrypted Photos (Ente) }
-  description: { zh: "像 Google 相册，但照片先加密再存进家里的服务器，连服务器自己都看不到内容：在网页里上传、按时间线翻、建相册。隐私最强，但要另注册 Ente 账号，备份只能在网页里做。", en: "Like Google Photos, but every photo is encrypted before it reaches your home server, so not even the server can see it: upload, browse by timeline and make albums in the browser. The most private option; it needs its own Ente account and backups happen in the browser." }
+  title: { zh: "加密相册（Ente）", en: "Encrypted Photos (Ente)", zh-Hant: "加密相簿（Ente）", ja: "暗号化フォト（Ente）" }
+  description:
+    zh: 像 Google 相册，但照片先加密再存进家里的服务器，连服务器自己都看不到内容：在网页里上传、按时间线翻、建相册。隐私最强，但要另注册 Ente 账号，备份只能在网页里做。
+    en: "Like Google Photos, but every photo is encrypted before it reaches your home server, so not even the server can see it: upload, browse by timeline and make albums in the browser. The most private option, but it needs a separate Ente account and backups happen in the browser only."
+    zh-Hant: 像 Google 相簿，但照片先加密再存進家裡的伺服器，連伺服器自己都看不到內容：在網頁裡上傳、按時間軸翻、建立相簿。隱私最強，但要另外註冊 Ente 帳號，備份只能在網頁裡做。
+    ja: Google フォトのようなものですが、写真は家のサーバーに届く前に暗号化され、サーバー自身も中身を見られません。ブラウザからアップロードし、時系列で見て、アルバムを作れます。最もプライベートですが、Ente のアカウントを別に登録する必要があり、バックアップはブラウザからのみです。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/gallery.jpg, screenshots/viewer.jpg]
@@ -218,28 +222,47 @@ x-wonton:
   tags:
     zh: [相册, 同步]
     en: [Photos, Sync]
+  setup:
+    zh: 第一次打开自己注册 Ente 账号：邮箱填以 @example.org 结尾的地址（比如 you@example.org，它只是账号标识，不会真的收信），验证码填 123456。注册后会给你一串恢复密钥，请抄下来——密码和恢复密钥丢了照片就找不回来。
+    en: "Register an Ente account on first open: use an email ending in @example.org (e.g. you@example.org — only an identifier, nothing is really sent) and enter 123456 as the verification code. You get a recovery key afterwards; write it down — losing the password or the key loses the photos."
+    zh-Hant: 第一次開啟自行註冊 Ente 帳號：信箱填以 @example.org 結尾的位址（例如 you@example.org，它只是帳號標識，不會真的收信），驗證碼填 123456。註冊後會給你一串恢復金鑰，請抄下來——密碼和恢復金鑰丟了照片就找不回來。
+    ja: 初回アクセスで Ente アカウントを登録します。メールは @example.org で終わるアドレス（例：you@example.org。識別子なだけで実際には届きません）を使い、確認コードは 123456 です。登録後に復旧キーが表示されるので書き留めてください。パスワードかキーを失うと写真は戻りません。
   about:
     zh: |
-      照片和视频加密后备份到自己家里：家里的服务器只存加密后的数据，钥匙藏在你的 Ente 账号密码里，服务器读不出内容。时间线、相册、搜索和分享都在网页里。
+      照片和视频加密后备份到自己家里：家里的服务器只存加密后的数据，解开照片的钥匙只在你自己的 Ente 密码里，服务器读不出内容。时间线、相册、搜索和分享都在网页里。
 
-      账号是 Ente 自己的（邮箱 + 密码 + 恢复密钥），第一次打开时自己注册。注册时邮箱请用
-      以 @example.org 结尾的地址（比如 you@example.org，它只是账号标识，不会真的收信），
-      验证码填 123456。密码和恢复密钥丢了照片就找不回来，请把恢复密钥抄下来。
+      账号是 Ente 自己的（邮箱 + 密码 + 恢复密钥），和云吞账号无关。
 
-      有限制：公共相册链接打不开（插件只开放这一个网页入口），Ente 官方手机 App 连不上
-      这里的服务器（它不认云吞的登录），备份请在网页里做。
+      两处限制：公共相册链接打不开（这个插件只开放网页入口这一处），Ente 官方手机 App 也连不上这里的服务器（它不认云吞的登录），备份都要在网页里做。
     en: |
-      Photos and videos are backed up to your home in encrypted form: your home server stores only encrypted data, and the key comes from your Ente password, so the server can't read anything. Timeline, albums, search and sharing are all in the browser.
+      Photos and videos are backed up to your home in encrypted form: the server stores only ciphertext, the key that opens it comes from your own Ente password, and the server cannot read anything. Timeline, albums, search and sharing are all in the browser.
 
-      The account is Ente's own (email + password + recovery key); register on first open.
-      Use an email ending in @example.org (e.g. you@example.org — it is only an identifier,
-      nothing is actually sent) and enter 123456 as the verification code. If you lose the
-      password or the recovery key, the photos are gone; write the recovery key down.
+      The account belongs to Ente (email + password + recovery key) and is separate from your Wonton account.
 
-      Limitations: public album links do not open (this plugin exposes a single web entry),
-      and the official Ente mobile app cannot reach this server (it does not speak Wonton
-      sign-in) — back up from the web page.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Two limits: public album links do not open (this plugin exposes the web entry only), and the official Ente mobile app cannot reach this server (it does not speak Wonton sign-in), so back up from the web page.
+    zh-Hant: |
+      照片和影片加密後備份到自己家裡：家裡的伺服器只存加密後的資料，解開照片的金鑰只在你自己的 Ente 密碼裡，伺服器讀不出內容。時間軸、相簿、搜尋和分享都在網頁裡。
+
+      帳號是 Ente 自己的（信箱 + 密碼 + 恢復金鑰），和雲吞帳號無關。
+
+      兩處限制：公共相簿連結打不開（這個外掛只開放網頁入口這一處），Ente 官方手機 App 也連不上這裡的伺服器（它不認雲吞的登入），備份都要在網頁裡做。
+    ja: |
+      写真と動画は暗号化して家にバックアップします。サーバーは暗号文だけを保存し、開く鍵は自分の Ente パスワードから作られるので、サーバーは中身を読めません。タイムライン・アルバム・検索・共有はすべてブラウザ内です。
+
+      アカウントは Ente 独自のもの（メール＋パスワード＋復旧キー）で、Wonton のアカウントとは別です。
+
+      制限が二つあります。公開アルバムのリンクは開けず（このプラグインは Web 入口だけを公開します）、公式 Ente アプリはこのサーバーに接続できません（Wonton のサインインに対応していないため）。バックアップは Web ページから行ってください。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：注册、假邮箱写法、验证码和恢复密钥的步骤移到「安装后要做的事」，两处限制合并成一段；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: registration, the placeholder email, the code and the recovery key moved to the pre-install notice, and both limits merged into one paragraph; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：註冊、假信箱寫法、驗證碼和恢復金鑰的步驟移到「安裝後要做的事」，兩處限制合併成一段；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、登録・ダミーメールの書き方・確認コード・復旧キーを「インストール後の手順」に移し、二つの制限を一つの段落にまとめました。繁体字中国語と日本語を追加。"
   webui:
     service: proxy
     port: 80

@@ -39,14 +39,14 @@ x-wonton:
   # 0.11：provides 第三方能力（能力依赖），旧核心会如实提示升级。
   spec: "0.11"
   id: app.rsshub.rsshub
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 万物订阅源（RSSHub）, en: Feeds for Anything (RSSHub) }
+  title: { zh: "万物订阅源（RSSHub）", en: "Feeds for Anything (RSSHub)", zh-Hant: "萬物訂閱源（RSSHub）", ja: "あらゆるサイトの購読（RSSHub）" }
   description:
-    zh: 把没有订阅源的网站变成订阅源：B 站UP主、微博、知乎、GitHub 的更新，像订报纸一样送进你的阅读器。要和 RSS 阅读器插件（如 Miniflux）配合使用。
-    en: >-
-      Turns sites without feeds into subscriptions: follow Bilibili uploaders, Weibo, Zhihu and GitHub
-      updates like a newspaper, right inside your RSS reader (e.g. Miniflux).
+    zh: 把没有订阅功能的网站变成能订阅的：B 站 UP 主、微博、知乎、GitHub 的更新，像订报纸一样送进你的阅读器。要和阅读器插件（如 Miniflux）配合使用。
+    en: "Turns sites without feeds into subscriptions: follow Bilibili uploaders, Weibo, Zhihu and GitHub updates like a newspaper, right inside your reader (e.g. Miniflux)."
+    zh-Hant: 把沒有訂閱功能的網站變成能訂閱的：B 站 UP 主、微博、知乎、GitHub 的更新，像訂報紙一樣送進你的閱讀器。要和閱讀器外掛（如 Miniflux）配合使用。
+    ja: フィードのないサイトを購読できるようにします。Bilibili の投稿者、Weibo、Zhihu、GitHub の更新を新聞のようにリーダー（Miniflux など）へ届けます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -57,24 +57,39 @@ x-wonton:
   tags:
     zh: [资讯, 阅读]
     en: [News, Reading]
+  setup:
+    zh: 在阅读器插件里添加要订的地址即可。微博、知乎、B 站的部分内容要登录才能看，在插件的密钥里填上对应账号的 Cookie 才能订；抓不到的订阅会如实报错。
+    en: "Just add the address you want in your reader plugin. Weibo, Zhihu and parts of Bilibili need a login: fill in the matching account cookie in this plugin's secrets to subscribe them. Feeds that cannot be fetched report the error."
+    zh-Hant: 在閱讀器外掛裡新增要訂的地址即可。微博、知乎、B 站的部分內容要登入才能看，在外掛的密鑰裡填上對應帳號的 Cookie 才能訂；抓不到的訂閱會如實報錯。
+    ja: リーダーのプラグインに購読したいアドレスを追加するだけです。Weibo、Zhihu、Bilibili の一部はログインが必要で、該当アカウントの Cookie をプラグインのシークレットに入れると購読できます。取得できないフィードは正直にエラーを出します。
   about:
     zh: |
-      把没有订阅源的网站变成订阅源。在 RSS 阅读器插件里添加订阅地址，这些网站的更新就自动送进来。
+      把没有订阅功能的网站变成订阅：追更 B 站 UP 主的投稿、看 GitHub 项目的发布、盯一个微博账号的动静，不用一个个打开网站。RSSHub 有上千条现成的地址可用，在它的首页能查。
 
-      例子：追更 B 站UP主的投稿、看 GitHub 项目的发布和 Release、盯一个微博账号的动静，不用一个个打开网站。RSSHub 有上千条现成的路由，在它的首页可以查。
-
-      有的网站要登录才能看（微博、知乎、B 站的部分内容），在插件的密钥里填上对应账号的 Cookie 才能订；抓不到的订阅会如实报错，不会假装正常。
-
-      RSS 阅读器插件声明依赖本插件的能力（`wants: [x-wonton.rsshub]`）后，就能按云吞内网地址直接订阅，不用走外网（方法见插件 README）。
+      阅读器插件声明要用本插件的能力后，可以按云吞内部地址直接订阅，不用走外网。
     en: |
-      Turns sites without feeds into subscriptions. Add a feed address in your RSS reader plugin and updates arrive on their own.
+      Turns sites without feeds into subscriptions: follow a Bilibili uploader's posts, watch GitHub releases, or keep an eye on a Weibo account without opening the sites. RSSHub ships thousands of ready-made addresses, browsable from its home page.
 
-      Examples: follow a Bilibili uploader's posts, watch GitHub releases, or keep an eye on a Weibo account without opening the sites. RSSHub ships thousands of ready-made routes, browsable from its home page.
+      A reader plugin that declares it wants this plugin's capability can subscribe over Wonton's internal address instead of the public internet.
+    zh-Hant: |
+      把沒有訂閱功能的網站變成訂閱：追更 B 站 UP 主的投稿、看 GitHub 專案的發布、盯一個微博帳號的動靜，不用一個個開啟網站。RSSHub 有上千條現成的位址可用，在它的首頁能查。
 
-      Some sites need login (Weibo, Zhihu, parts of Bilibili): fill in the matching account cookie in this plugin's secrets to subscribe those. Feeds that cannot be fetched report the error instead of pretending.
+      閱讀器外掛聲明要用本外掛的能力後，可以按雲吞內部位址直接訂閱，不用走外網。
+    ja: |
+      フィードのないサイトを購読に変えます。Bilibili の投稿者を追う、GitHub のリリースを見る、Weibo アカウントの動きを監視する、といったことをサイトを開かずにできます。RSSHub には既製のアドレスが数千あり、ホームページから探せます。
 
-      An RSS reader plugin that declares this capability (`wants: [x-wonton.rsshub]`) can subscribe over Wonton's internal network instead of the public internet (see the plugin README).
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      本プラグインの機能を使うと宣言したリーダーは、外部インターネットではなく Wonton 内部のアドレスで購読できます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：Cookie 和内部订阅的说明移到「安装后要做的事」，路由、README 等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: cookie and internal-feed notes moved to the pre-install notice, with route/README wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：Cookie 和內部訂閱的說明移到「安裝後要做的事」，路由、README 等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、Cookie と内部フィードの説明を「インストール後の手順」に移し、ルートや README などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: rsshub
     port: 1200

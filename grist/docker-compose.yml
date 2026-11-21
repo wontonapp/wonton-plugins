@@ -48,12 +48,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: com.getgrist.grist
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 家庭表格（Grist）, en: Home Spreadsheets (Grist) }
+  title: { zh: "能算的表格（Grist）", en: "Linked Spreadsheets (Grist)", zh-Hant: "能算的表格（Grist）", ja: "連携表計算（Grist）" }
   description:
-    zh: 像会记账的 Excel，又是个小数据库：家里的资产、报销、清单放进互相联动的表格里，还能生成图表
-    en: Like a spreadsheet crossed with a little database — track budgets, inventories and lists in linked tables with charts
+    zh: 像会自动算的 Excel：家里的资产、报销、清单放进互相联动的表格里，汇总自己算好，还能画成图表
+    en: "Like a spreadsheet that recalculates itself: track budgets, inventories and lists in linked tables, with totals and charts for free"
+    zh-Hant: 像會自動算的 Excel：家裡的資產、報銷、清單放進互相聯動的表格裡，彙總自己算好，還能畫成圖表
+    ja: ひとりでに計算し直す表計算ソフトのようなもの。資産・経費・リストを連動する表にまとめると、合計が自動で計算され、グラフにもできます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -63,25 +65,47 @@ x-wonton:
   tags:
     zh: [效率, 记账]
     en: [Productivity, Finance]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；建好一张表格后，家里人都能打开。
+    en: Opening the page signs you in with your Wonton account — no sign-up. Once a document exists, the whole family can open it.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；建好一張表格後，家裡人都能開啟。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。文書を一度作れば、家族みんなが開けます。
   about:
     zh: |
-      把家里的东西记进表格：资产、报销、课程表、藏书清单都行。表格之间能互相引用，
-      汇总自动算，还能画成图表；像 Excel 一样上手，又像数据库一样不乱。
+      把家里的东西记进表格：资产、报销、课程表、藏书清单都行。表格之间能互相引用，汇总自动算，还能画成图表。
 
-      建好一张表格，家里人都能打开；每一行、每一列谁看得到、谁能改，都可以设规则。
+      每一行、每一列谁看得到、谁能改，都可以按人设规则。
 
-      用 Python 写公式的部分直接在本插件里运行，没有隔离保护；所以只导入自己和家人做的表格，
-      不要导入网上陌生人的表格文件。
+      表格里算数的公式是能写程序的那种（Python 语法），在这台机器上直接运行、外面没有隔离，所以只导入自己和家人做的表格，不要导入网上陌生人的文件。
     en: |
-      Put household things into tables: assets, expenses, timetables, book lists. Tables can
-      reference each other, totals recalculate automatically, and everything can become a chart.
-      Easy to start like a spreadsheet, tidy like a database.
+      Put household things into tables: assets, expenses, timetables, book lists. Tables can reference each other, totals recalculate automatically, and everything can become a chart.
 
-      Share a document with the whole family; you decide who can see or edit each table, column and row.
+      You decide who can see or edit each table, column and row, per person.
 
-      Formulas are Python code that runs inside the plugin without isolation, so only import documents
-      made by you or your family — not files from strangers.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Formulas that calculate are written as code (Python syntax) and run directly on this machine without isolation, so only import documents made by you or your family — not files from strangers.
+    zh-Hant: |
+      把家裡的東西記進表格：資產、報銷、課表、藏書清單都行。表格之間能互相引用，彙總自動算，還能畫成圖表。
+
+      每一列、每一行誰看得到、誰能改，都可以按人設規則。
+
+      表裡算數的公式是能寫程式的那種（Python 語法），在這台機器上直接執行、外面沒有隔離，所以只匯入自己和家人做的表格，不要匯入網上陌生人的檔案。
+    ja: |
+      家のものを表に記録します。資産・経費・時間割・蔵書リストなど何でも構いません。表同士は参照でき、合計は自動で計算され、グラフにもできます。
+
+      どの行・列を誰が見られて誰が変更できるかは、人ごとに決められます。
+
+      計算する数式はプログラム（Python 構文）としてこのマシン上で直接実行され、外側の隔離はありません。自分や家族が作った文書だけを取り込み、ネット上の他人のファイルは入れないでください。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：登录和建表说明移到「安装后要做的事」，数据库、隔离等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: sign-in and document setup moved to the pre-install notice, with database/isolation wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：登入和建表說明移到「安裝後要做的事」，資料庫、隔離等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、サインインと文書作成の説明を「インストール後の手順」に移し、データベースや隔離などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: grist
     port: 8484

@@ -211,12 +211,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: com.nextcloud.nextcloud
-  version: 0.2.1
+  version: 0.2.2
   kind: app
-  title: { zh: 网盘全家桶（Nextcloud）, en: All-in-One Cloud (Nextcloud) }
+  title: { zh: "网盘全家桶（Nextcloud）", en: "All-in-One Cloud (Nextcloud)", zh-Hant: "網盤全家桶（Nextcloud）", ja: "オールインワンクラウド（Nextcloud）" }
   description:
     zh: 功能最全的家庭网盘，像 iCloud：手机照片自动备份，电脑文件夹自动同步，网页里还能记笔记，日历、在线文档等可以从它的应用商店再加。适合想把文件、照片、笔记放在一处的人，也最占资源。
     en: "The most complete home cloud, like iCloud: phone photos back up automatically, computer folders stay in sync, notes live in the browser, and calendars or online documents can be added from its own app store. For keeping files, photos and notes in one place — it also needs the most resources."
+    zh-Hant: 功能最全的家庭網盤，像 iCloud：手機相片自動備份，電腦資料夾自動同步，網頁裡還能記筆記，日曆、線上文件等可以從它的應用商店再加。適合想把檔案、相片、筆記放在一處的人，也最占資源。
+    ja: 最も高機能な家庭クラウドで、iCloud のようなものです。スマホの写真は自動でバックアップされ、パソコンのフォルダは同期され、ブラウザでメモも書けます。カレンダーやオンライン文書はアプリストアから追加できます。ファイル・写真・メモを 1 か所にまとめたい人向けで、最もリソースも使います。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/dashboard.png, screenshots/files.png, screenshots/photos.png]
@@ -228,36 +230,55 @@ x-wonton:
   tags:
     zh: [网盘, 文件, 同步, 相册]
     en: [Cloud, Files, Sync, Photos]
+  setup:
+    zh: 打开就用云吞账号登录，第一次进来就是管理员，不用注册。应用商店装官方应用要能上网。另有一个同名的本机管理员账号作后路，密码在安装目录的密钥文件里，云吞登录坏了时用它直接登。
+    en: Opening it signs you in with your Wonton account as the admin — no sign-up. Installing official apps from the app store needs internet. A local admin account with the same name is kept as a fallback; its password sits in a secret file in the install directory and signs in directly if Wonton sign-in breaks.
+    zh-Hant: 開啟就用雲吞帳號登入，第一次進來就是管理員，不用註冊。應用商店裝官方應用要能上網。另有一個同名的本機管理員帳號作後路，密碼在安裝目錄的密鑰檔案裡，雲吞登入壞了時用它直接登。
+    ja: 開けば Wonton アカウントで管理者としてサインインでき、登録は不要です。アプリストアから公式アプリを入れるにはインターネットが必要です。同じ名前のローカル管理者アカウントを保険として残し、パスワードはインストール先の秘密ファイルにあり、Wonton のサインインが壊れたときはそれで直接入れます。
   about:
     zh: |
       文件、照片、笔记一整套：手机自动备份照片，电脑装上 Nextcloud 的同步软件后文件夹自动保持一致，浏览器里随时翻。日历、联系人、待办和在线办公不在安装包里，到 Nextcloud 的应用商店里点一下就有。
 
-      应用发的信（找回密码、分享邀请、活动通知）会出现在你的 Wonton 私聊里；分享给外部邮箱发不出去，
-      Nextcloud 会报发送失败。
+      应用发的信（找回密码、分享邀请、活动通知）会出现在你的 Wonton 私聊里；分享给外部邮箱发不出去，Nextcloud 会报发送失败。
 
-      打开就用：云吞的身份进来就是管理员，不用再注册或登录一次。首次启动会从应用商店装官方的 user_oidc
-      应用，之后接云吞登录，所以要出网。
+      数据存在自己家里。除了云吞登录，还有一个同名的本机管理员账号作后路：密码是云吞生成、存在安装目录的密钥文件里，App 里看不到；云吞登录坏了时用它直接登。
 
-      数据存在自己家里。本地管理员账号就是云吞用户名，密码由核心生成、在核心的插件密钥文件里，App 里看不到；
-      身份提供方坏掉时用它直接登 Nextcloud。
-
-      核心升级后，插件容器会按新的签发方自动重建，打开照常，不用重装。
+      云吞更新后插件会自动重建，打开照常，不用重装。
     en: |
       Files, photos and notes in one package: your phone backs up photos automatically, your computer keeps folders in sync with the Nextcloud desktop app, and the browser is always at hand. Calendars, contacts, tasks and office tools aren't included; add them with one click in the Nextcloud app store.
 
-      Mail the app sends (password resets, share invitations, activity notifications) lands in your Wonton chat;
-      sharing to outside email addresses fails with an error.
+      Mail the app sends (password resets, share invitations, activity notifications) lands in your Wonton chat; sharing to outside email addresses fails with an error.
 
-      Opening the page is enough: your Wonton identity signs in as the admin, no second account or login. The
-      first start installs the official user_oidc app from the app store to hook up Wonton sign-in, so it needs
-      internet access.
+      Everything stays at home. Besides Wonton sign-in there is a local admin of the same name as a fallback: Wonton generates its password and keeps it in the install folder's secret file, unseen in the app; use it to sign in directly if Wonton sign-in breaks.
 
-      Everything stays at home. The local admin account is your Wonton username; the core generates its password
-      and keeps it in the core's plugin secret file, the app never shows it — a fallback if the identity provider
-      is down.
+      After a Wonton update the plugin is rebuilt automatically; pages open as before, with nothing to reinstall.
+    zh-Hant: |
+      檔案、相片、筆記一整套：手機自動備份相片，電腦裝上 Nextcloud 的同步軟體後資料夾自動保持一致，瀏覽器裡隨時翻。日曆、聯絡人、待辦和線上辦公不在安裝包裡，到 Nextcloud 的應用商店裡點一下就有。
 
-      After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
-  release_notes: { zh: 插件包迁入官方插件合仓，并更新 Nextcloud 35.0.2 镜像摘要。, en: "Moved into the official Wonton plugin monorepo and updated the Nextcloud 35.0.2 image digest." }
+      應用寄的信（找回密碼、分享邀請、活動通知）會出現在你的 Wonton 私聊裡；分享給外部信箱寄不出去，Nextcloud 會報發送失敗。
+
+      資料存在自己家裡。除了雲吞登入，還有一個同名的本機管理員帳號當後路：密碼由雲吞產生、存在安裝目錄的密鑰檔裡，App 裡看不到；雲吞登入壞了時用它直接登。
+
+      雲吞更新後外掛會自動重建，開啟照常，不用重裝。
+    ja: |
+      ファイル・写真・メモを一式で：スマホの写真は自動でバックアップされ、パソコンは Nextcloud の同期アプリでフォルダが保たれ、ブラウザは常に手元にあります。カレンダー・連絡先・ToDo・オフィス機能は含まれず、Nextcloud のアプリストアで 1 クリック追加できます。
+
+      アプリが送るメール（パスワード再設定、共有の招待、アクティビティ通知）は Wonton チャットに届きます。外部アドレスへの共有はエラーで送信に失敗します。
+
+      データは家に残ります。Wonton サインインのほかに、同じ名前のローカル管理者が保険としてあります。パスワードは Wonton が生成してインストール先の秘密ファイルに保存し、アプリには表示されません。Wonton サインインが壊れたらこれで直接サインインします。
+
+      Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，并更新 Nextcloud 35.0.2 镜像摘要。
+
+      商店介绍重写：登录和首次启动说明移到「安装后要做的事」，身份提供方、容器、签发方等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo and updated the Nextcloud 35.0.2 image digest.
+
+      Store copy rewritten: sign-in and first-start notes moved to the pre-install notice, with identity-provider/container/issuer wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，並更新 Nextcloud 35.0.2 映象摘要。\n\n商店介紹重寫：登入和首次啟動說明移到「安裝後要做的事」，身分提供者、容器、簽發方等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動し、Nextcloud 35.0.2 のイメージダイジェストを更新しました。\n\nストア紹介を書き直し、サインインと初回起動の説明を「インストール後の手順」に移し、ID プロバイダやコンテナ、発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: nextcloud
     port: 8080

@@ -54,12 +54,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: com.sillytavern.sillytavern
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: AI 角色扮演（SillyTavern）, en: AI Roleplay (SillyTavern) }
+  title: { zh: "AI 角色聊天（SillyTavern）", en: "AI Character Chat (SillyTavern)", zh-Hant: "AI 角色聊天（SillyTavern）", ja: "AI キャラチャット（SillyTavern）" }
   description:
-    zh: 和 AI 扮演的角色聊天、玩文字冒险：自带角色可以直接聊，也能自己捏角色、写世界观。想认真玩角色卡、跑长篇故事的用它。
+    zh: 和 AI 扮演的角色聊天、玩文字冒险：自带角色可以直接聊，也能自己写角色、编世界观。想认真玩角色卡、跑长篇故事的用它。
     en: "Chat with characters played by AI or run text adventures: pick a ready-made character or write your own. For character cards and long-running stories."
+    zh-Hant: 和 AI 扮演的角色聊天、玩文字冒險：自帶角色可以直接聊，也能自己寫角色、編世界觀。想認真玩角色卡、跑長篇故事的用它。
+    ja: AI が演じるキャラクターとチャットしたり、テキストアドベンチャーを遊んだりできます。既製のキャラですぐ話せ、自分でキャラや世界観も作れます。キャラクターカードや長編を本格的に遊ぶ人向けです。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/characters.png]
@@ -70,24 +72,47 @@ x-wonton:
   tags:
     zh: [AI, 角色扮演]
     en: [AI, Roleplay]
+  setup:
+    zh: 第一次打开时第一个账号已经建好并自动登录，先在用户设置里给它设一个密码，再在同一个地方给家人建各自的账号，各人的聊天和角色分开。模型默认走云吞的模型服务，装好就能用，不用填密钥。
+    en: "On first open the first account is already created and signed in: set a password for it in the user settings, then create accounts for your family in the same place so everyone keeps their own chats and characters. The model goes through Wonton's model service by default, ready to use with no key."
+    zh-Hant: 第一次開啟時第一個帳號已經建好並自動登入，先在使用者設定裡給它設一個密碼，再在同一個地方給家人建各自的帳號，各人的聊天和角色分開。模型預設走雲吞的模型服務，裝好就能用，不用填密鑰。
+    ja: 初回は最初のアカウントが作成済みで自動サインインされます。まずユーザー設定でパスワードを決め、同じ場所で家族のアカウントを作ると、チャットとキャラは各自に分かれます。モデルは既定で Wonton のモデルサービスを通り、キーなしですぐ使えます。
   about:
     zh: |
-      和 AI 扮演的角色聊天、玩文字冒险：自带角色可以直接聊，也能自己捏角色、写世界观。想认真玩角色卡、跑长篇故事的用它。
+      和 AI 扮演的角色聊天、玩文字冒险：自带角色可以直接聊，也能自己写角色、编世界观。想认真玩角色卡、跑长篇故事的用它。
 
-      第一次打开：第一个账号已经建好并自动登录，建议先在用户设置里给它设一个密码，再在同一个地方给家人建各自的账号。家里每个人有自己的聊天记录和角色。
-
-      模型默认走云吞的模型网关，装好就能用，不用填 key；换了别的接口或服务商，在应用的“API 连接”里自己配。
+      换别的模型接口或服务商时，在应用的“API 连接”里自己配。
 
       注意：角色卡是别人写的内容，可能包含成人情节，装哪个、给谁玩由你自己决定；聊天内容都留在这台服务器上。
     en: |
       Chat with characters played by AI or run text adventures: pick a ready-made character or write your own. For character cards and long-running stories.
 
-      First open: the first account is created and signed in automatically. Set a password for it in the user settings, then create accounts for your family in the same place. Everyone keeps their own chats and characters.
-
-      The model goes through Wonton's model gateway by default, so there is no key to fill in; to use another provider, set it up under "API Connections" in the app.
+      To use another model endpoint or provider, set it up under "API Connections" in the app.
 
       Note: character cards are content written by others and may include adult themes; what you install and who plays it is up to you. Chats stay on this server.
-  release_notes: { zh: 介绍重写：账号与密码的建议单独成段放在最前。, en: "Rewritten store copy: the account-and-password advice stands alone up front." }
+    zh-Hant: |
+      和 AI 扮演的角色聊天、玩文字冒險：自帶角色可以直接聊，也能自己寫角色、編世界觀。想認真玩角色卡、跑長篇故事的用它。
+
+      換別的模型介面或服務商時，在應用的「API 連接」裡自己設定。
+
+      注意：角色卡是別人寫的內容，可能包含成人情節，裝哪個、給誰玩由你自己決定；聊天內容都留在這台伺服器上。
+    ja: |
+      AI が演じるキャラクターとチャットしたり、テキストアドベンチャーを遊んだりできます。既製のキャラですぐ話せ、自分でキャラや世界観も作れます。キャラクターカードや長編を本格的に遊ぶ人向けです。
+
+      他のモデルの接続先やサービスを使うときは、アプリの「API 接続」で設定します。
+
+      注意：キャラクターカードは他人が書いた内容で、大人向けの描写を含むことがあります。何を入れ、誰に遊ばせるかは自分で決めてください。チャット内容はこのサーバーに残ります。
+  release_notes:
+    zh: |
+      介绍重写：账号与密码的建议单独成段放在最前。
+
+      商店介绍重写：首次设密码、建家人账号和默认模型移到「安装后要做的事」，模型网关、密钥等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the account-and-password advice stands alone up front.
+
+      Store copy rewritten: first password, family accounts and the default model moved to the pre-install notice, with model-gateway/key wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：賬號與密碼的建議單獨成段放在最前。\n\n商店介紹重寫：首次設密碼、建家人帳號和預設模型移到「安裝後要做的事」，模型閘道、密鑰等說法換成日常用語；補繁體中文和日文。"
+    ja: "紹介を書き直し、アカウントとパスワードのすすめを最初の段落に分けました。\n\nストア紹介を書き直し、初回のパスワード設定・家族アカウント・既定モデルを「インストール後の手順」に移し、モデルゲートウェイやキーなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: sillytavern
     port: 8000

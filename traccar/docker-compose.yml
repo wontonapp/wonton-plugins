@@ -43,12 +43,14 @@ services:
 x-wonton:
   spec: "0.13"
   id: org.traccar.traccar
-  version: 0.1.3
+  version: 0.1.4
   kind: app
-  title: { en: Traccar }
+  title: { zh: "定位地图（Traccar）", en: "Location Map (Traccar)", zh-Hant: "定位地圖（Traccar）", ja: "位置マップ（Traccar）" }
   description:
-    zh: 像一张全家共用的定位地图：手机、车载定位器、老人手表和宠物项圈的位置和轨迹都汇到这里看
-    en: "One shared map for the family: see the location and history of phones, car trackers, watches and pet collars"
+    zh: 像一张全家共用的定位地图：手机、车载定位器、老人手表和宠物项圈的位置和轨迹都汇到这里看。
+    en: "One shared map for the family: see the location and history of phones, car trackers, watches and pet collars."
+    zh-Hant: 像一張全家共用的定位地圖：手機、車用定位器、老人手錶和寵物項圈的位置和軌跡都匯到這裡看。
+    ja: 家族で共有する地図のようなものです。スマホ、車載トラッカー、見守り腕時計、ペットの首輪の位置と履歴を 1 か所で見られます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/map.jpg]
@@ -58,22 +60,47 @@ x-wonton:
   tags:
     zh: [定位, 地图]
     en: [Location, Map]
+  setup:
+    zh: 打开网页加一台设备，拿到它的编号，填进定位器或手机客户端，位置就会出现在地图上。定位器或手机要连家里的网络，地址和端口在网页里有。
+    en: Open the page, add a device, and enter its identifier into the tracker or phone app; its position then appears on the map. The tracker or phone must be on your home network — the address and port are in the page.
+    zh-Hant: 開啟網頁加一台裝置，拿到它的編號，填進定位器或手機用戶端，位置就會出現在地圖上。定位器或手機要連家裡的網路，位址和埠在網頁裡有。
+    ja: ページを開いて端末を追加し、その ID をトラッカーやスマホアプリに入れると、位置が地図に出ます。トラッカーやスマホは家のネットワークにつないでください。アドレスとポートはページにあります。
   about:
     zh: |
-      给家里的车、老人、孩子和宠物装上定位器后，在一张地图上看他们在哪、走过哪里。
+      给家里的车、老人、孩子和宠物装上定位器后，在一张地图上看他们在哪、走过哪里。可以画一个范围，进出这个范围时给你发通知（支持私聊、Telegram 等，要在网页里配）。
 
-      第一次用：打开网页加一台设备，拿到设备的唯一编号，填进定位器或手机客户端里，位置就会出现在地图上。可以画电子围栏，进出围栏时给你发通知（支持邮件、Telegram 等渠道，要在网页里配置）。
+      手机装 Traccar Client（或 OsmAnd 的跟踪插件）后填这台服务器的局域网地址就能上报；车载定位器、手表这类设备也填同一个地址和端口。
 
-      手机装 Traccar Client（或 OsmAnd 的跟踪插件）后填这台服务器的局域网地址就能上报。车载定位器、手表这类设备也是连同一个地址和端口。定位上报只开在家里局域网，设备离开家里网络后位置不再更新；网页地图在哪都能打开。
+      定位只在家的网络里上报，设备离开家里的网络后位置不再更新；网页地图在哪都能打开。
     en: |
-      Put trackers on the family car, seniors, kids or pets, and see on one map where they are and where they have been.
+      Put trackers on the family car, seniors, kids or pets, and see on one map where they are and where they have been. Draw a zone and get notified when it is crossed (private chat, Telegram and more, configured in the page).
 
-      First use: open the web page, add a device, and enter its unique identifier into the tracker or phone app. Positions then appear on the map. You can draw geofences and get notified when they are crossed (email, Telegram and other channels, configured in the web page).
+      Install Traccar Client (or the OsmAnd tracking plugin) on a phone, enter the server's LAN address, and it reports; dedicated trackers use the same address and port.
 
-      Install Traccar Client (or the OsmAnd tracking plugin) on a phone, enter the server's LAN address, and it reports. Dedicated trackers connect to the same address and port. Position reporting works on the home LAN only: once a device leaves the home network its location stops updating, while the map page itself opens from anywhere.
+      Positions are only reported on the home network: once a device leaves it, its location stops updating, while the map page itself opens from anywhere.
+    zh-Hant: |
+      給家裡的車、老人、孩子和寵物裝上定位器後，在一張地圖上看他們在哪、走過哪裡。可以畫一個範圍，進出這個範圍時給你發通知（支援私聊、Telegram 等，要在網頁裡設定）。
+
+      手機裝 Traccar Client（或 OsmAnd 的跟蹤外掛）後填這台伺服器的區域網部位址就能上報；車用定位器、手錶這類裝置也填同一個位址和埠。
+
+      定位只在家的網路裡上報，裝置離開家裡的網路後位置不再更新；網頁地圖在哪都能開啟。
+    ja: |
+      家の車、高齢者、子ども、ペットにトラッカーを付け、1 枚の地図で現在地と履歴を見ます。範囲を描き、出入りしたら通知を受け取れます（チャット、Telegram など。ページで設定）。
+
+      スマホに Traccar Client（または OsmAnd の追跡プラグイン）を入れ、サーバーの LAN アドレスを入力すると報告します。専用トラッカーも同じアドレスとポートを使います。
+
+      位置の報告は家のネットワーク内だけです。機器が家のネットワークを離れると更新は止まりますが、地図ページ自体はどこからでも開けます。
   release_notes:
-    zh: 插件包迁入官方插件合仓，内容与上一版相同。
-    en: "Package moved into the official Wonton plugin monorepo; same content as the previous release."
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：加设备和填编号移到「安装后要做的事」，唯一编号、电子围栏等说法换成日常用语，并加了中文标题；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: adding a device and entering its ID moved to the pre-install notice, with identifier/geofence wording in everyday words and a Chinese title added; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：加裝置和填編號移到「安裝後要做的事」，唯一編號、電子圍欄等說法換成日常用語，並加了中文標題；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、端末の追加と ID の入力を「インストール後の手順」に移し、識別子やジオフェンスなどの言い方を日常的な言葉にして中国語タイトルも付けました。繁体字中国語と日本語を追加。"
   webui:
     service: traccar
     port: 8082

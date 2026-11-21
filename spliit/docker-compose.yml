@@ -51,14 +51,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: app.spliit.spliit
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title:
-    zh: AA 记账（Spliit）
-    en: Expense Sharing (Spliit)
+  title: { zh: "AA 记账（Spliit）", en: "Expense Sharing (Spliit)", zh-Hant: "AA 記帳（Spliit）", ja: "割り勘家計簿（Spliit）" }
   description:
-    zh: 和家人朋友聚餐、合租、旅行后 AA 分账：建一个群，谁付了钱记一笔，谁欠谁多少自动算清。
+    zh: 和家人朋友聚餐、合租、旅行后分账：建一个群，谁付了钱记一笔，谁欠谁多少自动算清。
     en: "Split expenses with family and friends for dinners, shared flats and trips: create a group, log who paid, and see who owes what."
+    zh-Hant: 和家人朋友聚餐、合租、旅行後分帳：建一個群，誰付了錢記一筆，誰欠誰多少自動算清。
+    ja: 家族や友人との食事、ルームシェア、旅行の割り勘に。グループを作り、払った人を記録すれば、誰がいくら払うべきか自動で計算します。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/group.png]
@@ -68,28 +68,55 @@ x-wonton:
   tags:
     zh: [记账, 旅行]
     en: [Finance, Travel]
+  setup:
+    zh: 建群组（选币种、加成员），把群组链接发给同行的人，大家都能记账。不用注册，也不用密码。
+    en: Create a group (pick a currency, add members) and send the group link to your companions so everyone can log expenses. No account or password needed.
+    zh-Hant: 建群組（選幣種、加成員），把群組連結發給同行的人，大家都能記帳。不用註冊，也不用密碼。
+    ja: グループを作り（通貨を選び、メンバーを追加）、リンクを同行者に送れば、誰でも記録できます。アカウントもパスワードも不要です。
   about:
     zh: |
-      聚餐、合租、旅行要 AA 的时候，建一个群组，把"谁付了钱、花在谁身上"记下来，每个人该收该付、最后怎么转账最省事，都自动算好。
+      聚餐、合租、旅行要平分费用的时候，建一个群组，把“谁付了钱、花在谁身上”记下来，每个人该收该付、最后怎么转账最省事，都自动算好。账目和余额全群可见。
 
-      用法：新建群组（选币种、加成员），把群组链接发给同行的人，大家都能记账；账目和余额全群可见。
+      不在家里的同行朋友，用云吞的好友分享把插件分享给他，他凭群组链接进群记账。
 
-      不用注册账号：打开就是自己的群组列表（存在浏览器里），换设备时用群组链接再进一次。
+      群组列表存在你自己的浏览器里，换设备时用群组链接再进一次。
 
-      和云吞的关系：家里人打开就能用；不在家里的同行朋友，用云吞的好友分享把插件分享给他，他凭群组链接进群记账。
-
-      已知限制：群组删除和收据识别（要接 OpenAI）按上游默认是关闭的；汇率换算由设备浏览器自己向公开汇率接口查询。
+      已知限制：群组删除和收据识别（要接 OpenAI）按上游的默认是关闭的；汇率换算是你的浏览器自己向公开的汇率服务查询。
     en: |
-      When a dinner, a shared flat or a trip needs splitting up, create a group, log who paid for whom, and the app works out everyone's balance and the simplest way to settle up.
+      When a dinner, a shared flat or a trip needs splitting up, create a group, log who paid for whom, and the app works out everyone's balance and the simplest way to settle up. Balances are visible to the whole group.
 
-      How to use: create a group (pick a currency, add members), send the group link to your travel companions, and everyone can add expenses; balances are visible to the whole group.
+      For companions outside the household, share the plugin with them via Wonton's friend sharing; they join a group through its link.
 
-      No accounts: opening the page shows your groups (kept in your browser); on a new device, re-enter through the group link.
+      Your group list is kept in your own browser; on a new device, re-enter through the group link.
 
-      In Wonton: family members just open it. For friends outside the household, share the plugin with them via Wonton's friend sharing; they join a group through its link.
+      Known limits: group deletion and receipt scanning (needs OpenAI) follow the upstream default and are off; currency conversion is fetched by your browser from a public rates service.
+    zh-Hant: |
+      聚餐、合租、旅行要平分費用的時候，建一個群組，把「誰付了錢、花在誰身上」記下來，每個人該收該付、最後怎麼轉帳最省事，都自動算好。帳目和餘額全群可見。
 
-      Known limits: group deletion and receipt scanning (needs OpenAI) follow the upstream default and are off; currency conversion is fetched by your device's browser from a public rates service.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      不在家裡的同行朋友，用雲吞的好友分享把外掛分享給他，他憑群組連結進群記帳。
+
+      群組清單存在你自己的瀏覽器裡，換裝置時用群組連結再進一次。
+
+      已知限制：群組刪除和收據辨識（要接 OpenAI）按上游的預設是關閉的；匯率換算是你的瀏覽器自己向公開的匯率服務查詢。
+    ja: |
+      食事、ルームシェア、旅行で割り勘が必要なときは、グループを作り、誰が誰のために払ったかを記録すれば、各自の残高と一番簡単な精算方法を自動で計算します。残高はグループ全員に見えます。
+
+      家の外の同行者には、Wonton の友だち共有でプラグインを共有し、グループのリンクから入ってもらいます。
+
+      グループ一覧は自分のブラウザに保存されます。別の端末ではグループのリンクから入り直します。
+
+      既知の制限：グループの削除とレシート読み取り（OpenAI が必要）は上流の既定でオフです。為替換算はブラウザが公開のレートサービスへ直接問い合わせます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：建群和分享移到「安装后要做的事」，汇率接口、上游默认等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: group creation and sharing moved to the pre-install notice, with rates-API/upstream-default wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：建群和分享移到「安裝後要做的事」，匯率介面、上游預設等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、グループ作成と共有を「インストール後の手順」に移し、為替 API や上流の既定値などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: web
     port: 3000

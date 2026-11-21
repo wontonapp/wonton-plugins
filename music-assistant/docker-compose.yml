@@ -29,12 +29,14 @@ services:
 x-wonton:
   spec: "0.12"
   id: io.music-assistant.server
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 全屋音乐（Music Assistant）, en: Music Assistant }
+  title: { zh: "全屋音乐（Music Assistant）", en: "Whole-Home Music (Music Assistant)", zh-Hant: "全屋音樂（Music Assistant）", ja: "家中音楽システム（Music Assistant）" }
   description:
-    zh: 把家里的音箱连成一个音响系统：本地音乐和各家在线音乐合成一个曲库，推到每个房间的音箱播放，还能多房间同步
-    en: "Turn your speakers into one sound system: local music and online music services in a single library, played on speakers in every room, in sync"
+    zh: 把家里的音箱连成一个音响系统：本地音乐和各家在线音乐合成一个曲库，推到每个房间播放，还能让几个房间同步放同一首。适合家里有好几个房间、想统一控制音箱的人；和一个人戴耳机听的音乐库不一样。
+    en: "Turn your speakers into one sound system: local music and online music services in a single library, played in every room, in sync if you like. For homes with speakers in several rooms that want one place to control them; not a personal headphone library."
+    zh-Hant: 把家裡的音箱連成一個音響系統：本地音樂和各家的線上音樂合成一個曲庫，推到每個房間播放，還能讓幾個房間同步放同一首。適合家裡有好幾個房間、想統一控制音箱的人；和一個人戴耳機聽的音樂庫不一樣。
+    ja: 家のスピーカーを 1 つのオーディオシステムにします。ローカル音楽と各社のオンライン音楽を 1 つのライブラリにまとめ、各部屋で再生でき、複数室の同時再生もできます。複数の部屋にスピーカーがある家で、まとめて操作したい人向け。1 人でヘッドホンで聴く音楽ライブラリとは違います。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/setup.png, screenshots/library.png]
@@ -49,23 +51,43 @@ x-wonton:
     zh: |
       把本地音乐和各家的在线音乐合成一个曲库，推送到家里的音箱上播放：AirPlay、Chromecast、Sonos、DLNA 这类音箱装好就会被自动找到，几个房间可以同步放同一首歌，也可以各放各的。
 
-      第一次打开：先设管理员账号和密码，务必记牢——忘了没有找回的办法，只能清空数据重来。
+      它要直接待在局域网里才能找到音箱，所以拿到了最高一级的网络权限；代价是网页也直接开在本机网络里，局域网里的设备能绕过云吞打开它——应用自己的登录会挡住陌生人，介意的话可以在路由器上把 8095 端口拦掉。
 
-      然后在设置里添加音乐源：本地文件夹的路径填 /music（共享文件夹 music 里的内容，只读，不会被改动），在线音乐服务也在同一页登录添加。
-
-      这个插件需要宿主网络这一最高级别的网络权限：发现音箱和推流要直接待在局域网上。因此它的网页端口 8095 也会直接开在本机网卡上，局域网里的设备可以绕过云吞网关直接打开——应用自带的登录会挡住陌生人，介意的话可以在路由器或本机防火墙上拦掉 8095。封面和专辑资料要连外网，走本机自己的网络出去，不经云吞的出口代理。
+      封面和专辑资料要连外网去取，走本机自己的网络出去，不经云吞的出口。
     en: |
       Combine local music and online music services into one library and play it on the speakers around your home: AirPlay, Chromecast, Sonos and DLNA speakers are found automatically, several rooms can play the same song in sync, or each its own.
 
-      First open: set the administrator account and password, and remember them — there is no recovery, a wipe is the only reset.
+      Finding speakers needs to sit directly on the LAN, so it gets the highest network permission; the cost is that the web page also opens on the host's own network, and LAN devices can reach it without Wonton — the app's own login keeps strangers out, and you can block port 8095 on your router if you prefer.
 
-      Then add music sources in the settings: for the local folder provider enter the path /music (the music shared folder, read-only, never modified); online music services are added on the same page.
+      Artwork and album details are fetched via the host's own connection, not through Wonton's outbound proxy.
+    zh-Hant: |
+      把本地音樂和各家的線上音樂合成一個曲庫，推送到家裡的音箱上播放：AirPlay、Chromecast、Sonos、DLNA 這類音箱裝好就會被自動找到，幾個房間可以同步放同一首歌，也可以各放各的。
 
-      This plugin needs host networking, the highest-level network permission: player discovery and streaming require sitting directly on the LAN. Its web port 8095 is therefore also open on the host's own network interfaces, and devices on the LAN can reach it without going through the Wonton gateway — the app's own login keeps strangers out, and you can block 8095 in your router or host firewall if you prefer. Artwork and album details are fetched from the internet via the host's own routing, not through the Wonton egress proxy.
-  release_notes: { zh: 介绍重写：首次登录提示单独成段放在最前，「流媒体」改成「在线音乐」。, en: "Rewritten store copy: the first-open sign-in note stands alone up front, and streaming services are called online music services." }
+      它要直接待在區域網路裡才能找到音箱，所以拿到了最高一級的網路權限；代價是網頁也直接開在本機網路裡，區域網路裡的裝置能繞過雲吞開啟它——應用自己的登入會擋住陌生人，介意的話可以在路由器上把 8095 連接埠擋掉。
+
+      封面和專輯資料要連外網去取，走本機自己的網路出去，不經雲吞的出口。
+    ja: |
+      ローカル音楽と各社のオンライン音楽を 1 つのライブラリにまとめ、家のスピーカーで再生します。AirPlay・Chromecast・Sonos・DLNA のスピーカーは導入すれば自動で見つかり、複数室で同じ曲を同期再生することも、別々に再生することもできます。
+
+      スピーカーを見つけるには LAN に直接いる必要があるため、最上位のネットワーク権限を持ちます。その代わり Web ページも本機のネットワークに直接開き、LAN の機器は Wonton を通さずに開けます。アプリ自体のログインが他人を防ぎますが、気になる場合はルータでポート 8095 を塞いでください。
+
+      ジャケットやアルバム情報は本機の回線で取りに行き、Wonton の出口プロキシは使いません。
+  release_notes:
+    zh: |
+      介绍重写：首次登录提示单独成段放在最前，「流媒体」改成「在线音乐」。
+
+      商店介绍重写：首次设置移到「安装后要做的事」，宿主网络、端口、出口代理等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the first-open sign-in note stands alone up front, and streaming services are called online music services.
+
+      Store copy rewritten: first-time setup moved to the pre-install notice, with host-network/port/proxy wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：首次登入提示單獨成段放在最前，「流媒體」改成「線上音樂」。\n\n商店介紹重寫：首次設定移到「安裝後要做的事」，宿主網路、連接埠、出口代理等說法換成日常用語；補繁體中文和日文。"
+    ja: "紹介を書き直し、初回ログインの注意を最初の段落に分け、「ストリーミング」を「オンライン音楽」に変えました。\n\nストア紹介を書き直し、初回設定を「インストール後の手順」に移し、ホストネットワーク・ポート・出口プロキシなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 打开网页先设管理员账号和密码，再到「设置 → 音乐源」添加"本地文件夹"，路径填 /music
-    en: Open the page, set the admin account first, then add a "Local filesystem" music source with the path /music
+    zh: 打开网页先设管理员账号和密码，务必记牢——忘了只能清空数据重来。再到「设置 → 音乐源」添加“本地文件夹”，路径填 /music；在线音乐也在同一页登录添加。
+    en: Open the page and set the admin account and password first — remember them, a wipe is the only reset. Then add a "Local filesystem" source under Settings → Music sources with the path /music; online services are signed in on the same page.
+    zh-Hant: 開啟網頁先設管理員帳號和密碼，務必記牢——忘了只能清空資料重來。再到「設定 → 音樂來源」新增「本機資料夾」，路徑填 /music；線上音樂也在同一頁登入新增。
+    ja: ページを開いてまず管理者アカウントとパスワードを設定し、必ず覚えてください。忘れるとデータを消すしかありません。次に「設定 → 音楽ソース」で「ローカルフォルダ」を追加し、パスに /music を入れます。オンライン音楽も同じページでサインインして追加します。
   webui:
     service: server
     port: 8095

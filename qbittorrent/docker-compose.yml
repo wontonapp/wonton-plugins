@@ -70,12 +70,14 @@ x-wonton:
   # qBittorrent Web API v2（/api/v2/）请求免凭据（认证白名单只放核心地址）。
   provides:
     torrent_client: { service: qbittorrent, port: 8080 }
-  version: 0.3.1
+  version: 0.3.2
   kind: app
-  title: { zh: BT 下载器（qBittorrent）, en: Torrent Downloader (qBittorrent) }
+  title: { zh: "BT 下载（qBittorrent）", en: "Torrent Downloader (qBittorrent)", zh-Hant: "BT 下載（qBittorrent）", ja: "トレントダウンローダー（qBittorrent）" }
   description:
     zh: 像迅雷：贴上磁力链接或种子文件就开始下载，下完自动存进共享文件夹 downloads，并在云吞私聊里通知你。手机上的界面也好用。
-    en: "Like uTorrent on your home server: paste a magnet link or add a .torrent file, and it downloads into the downloads shared folder and lets you know in Wonton when it's done. The interface works well on phones too."
+    en: "Like a download manager on your home server: paste a magnet link or add a .torrent file, and it downloads into the downloads shared folder and lets you know in Wonton when it's done. The interface works well on phones too."
+    zh-Hant: 像迅雷：貼上磁力連結或種子檔就開始下載，下完自動存進共享資料夾 downloads，並在雲吞私聊裡通知你。手機上的介面也好用。
+    ja: 迅雷のようなものです。マグネットリンクや .torrent ファイルを入れるとダウンロードが始まり、完了すると共有フォルダ downloads に保存され、Wonton のチャットで知らせます。スマホでも操作しやすい画面です。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -85,16 +87,47 @@ x-wonton:
   tags:
     zh: [下载, BT]
     en: [Downloads, BitTorrent]
+  setup:
+    zh: 打开就用，不用登录；贴磁力链接或加种子文件就开始下载。下载完成的通知发到你的 Wonton 私聊，收件人只能填家里人的地址。界面可以加到手机主屏当应用用。
+    en: Open and use it — no login. Paste a magnet link or add a torrent file to start. Completion notices arrive in your Wonton chat, and recipients can only be household addresses. The interface can be added to your phone's home screen as an app.
+    zh-Hant: 開啟就用，不用登入；貼磁力連結或加種子檔就開始下載。下載完成的通知發到你的 Wonton 私聊，收件人只能填家裡人的位址。介面可以加到手機主畫面當應用用。
+    ja: 開けば使え、ログインは不要です。マグネットリンクまたはトレントファイルを入れると始まります。完了通知は Wonton チャットに届き、宛先は家族のアドレスだけです。画面はスマホのホーム画面にアプリとして追加できます。
   about:
     zh: |
-      qBittorrent 是一个完整的 BT 下载器：添加磁力链接或种子文件，查看速度和进度，管理队列。
+      完整的 BT 下载器：添加磁力链接或种子文件，查看速度和进度，管理等待队列。
 
-      界面是 VueTorrent，手机上好用，可以安装成 PWA；设置里可以切回 qBittorrent 原版界面。下载内容默认写入共享文件夹 downloads。网页经云吞网关打开，网关所在网络免 qBittorrent 登录；局域网只开放 BT 连接端口，WebUI 不直接暴露。下载完成会发一封通知邮件，经云吞的内部邮箱转进你的 Wonton 私聊；收件人只能填家里人的内部邮箱，外部地址发不出去。
+      界面是轻快的手机版，设置里可以切回原版界面。下载内容默认写入共享文件夹 downloads。
+
+      网页只从云吞进来，不用再登一次；局域网里只开放下载本身要用的连接，网页不直接露在外面。下载完成会发一封通知，经云吞的内部信箱转进你的 Wonton 私聊。
     en: |
-      qBittorrent is a full BitTorrent client: add magnet links or torrent files, watch progress and speed, and manage the queue.
+      A full BitTorrent client: add magnet links or torrent files, watch progress and speed, and manage the queue.
 
-      The interface is VueTorrent — mobile friendly and installable as a PWA; you can switch back to the stock qBittorrent UI in its settings. Downloads go to the downloads shared folder by default. The WebUI is opened through the Wonton gateway, which is trusted without a second qBittorrent login; only the BitTorrent port is exposed on the LAN. When a download finishes, a notification email is delivered to your Wonton chat via the internal mailbox; recipients must be household internal addresses — external ones are rejected.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      The interface is a light mobile-friendly one; you can switch back to the stock UI in the settings. Downloads go to the downloads shared folder by default.
+
+      The web page comes in through Wonton only, with no second login; on the LAN only the port BitTorrent itself needs is open, and the web page stays private. Completion notices go through Wonton's internal mailbox into your Wonton chat.
+    zh-Hant: |
+      完整的 BT 下載器：新增磁力連結或種子檔，查看速度和進度，管理等待佇列。
+
+      介面是輕快的手機版，設定裡可以切回原版介面。下載內容預設寫入共享資料夾 downloads。
+
+      網頁只從雲吞進來，不用再登一次；區域網路裡只開放下載本身要用的連線，網頁不直接露在外面。下載完成會寄一封通知，經雲吞的內部信箱轉進你的 Wonton 私聊。
+    ja: |
+      本格的な BitTorrent クライアントです。マグネットリンクやトレントファイルを追加し、速度と進捗を見て、待ち行列を管理します。
+
+      画面は軽快なスマホ向けで、設定から元の画面に戻せます。ダウンロードは既定で共有フォルダ downloads に保存されます。
+
+      Web ページは Wonton 経由でしか来ず、追加のログインはありません。LAN ではトレント自身に必要なポートだけを開き、Web ページは外に出しません。完了通知は Wonton の内部メールボックスを通ってチャットに届きます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：下载和通知用法移到「安装后要做的事」，PWA、WebUI、端口等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: downloading and notification usage moved to the pre-install notice, with PWA/WebUI/port wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：下載和通知用法移到「安裝後要做的事」，PWA、WebUI、連接埠等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、ダウンロードと通知の使い方を「インストール後の手順」に移し、PWA・WebUI・ポートなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: qbittorrent
     port: 8080

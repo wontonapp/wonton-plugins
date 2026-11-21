@@ -90,12 +90,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: com.sftpgo.sftpgo
-  version: 0.2.0
+  version: 0.2.1
   kind: app
-  title: { zh: 文件传输站（SFTPGo）, en: File Transfer Hub (SFTPGo) }
+  title: { zh: "文件传输站（SFTPGo）", en: "File Transfer Hub (SFTPGo)", zh-Hant: "檔案傳輸站（SFTPGo）", ja: "ファイル転送ハブ（SFTPGo）" }
   description:
     zh: 给传文件用的中转站：在家里用电脑、手机上的传输软件（比如 FileZilla）直接连上来批量传文件，网页里也能上传下载和分享。适合常大批量倒文件、习惯用传输软件的人。
     en: "A transfer station for your files: at home, connect a transfer app such as FileZilla from your computer or phone to move files in bulk, or upload, download and share in the browser. For big batches and people who already use a transfer app."
+    zh-Hant: 給傳檔案用的中轉站：在家裡用電腦、手機上的傳輸軟體（比如 FileZilla）直接連上來批次傳檔案，網頁裡也能上傳下載和分享。適合常大批量倒檔案、習慣用傳輸軟體的人。
+    ja: ファイルをやり取りする中継所です。家の中でパソコンやスマホの転送ソフト（FileZilla など）から直接つなぎ、まとめて転送できます。ブラウザでもアップロード・ダウンロード・共有ができます。大量のファイルをやり取りする人向けです。
   icon: icon.png
   notices: [NOTICE]
   author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
@@ -105,26 +107,47 @@ x-wonton:
   tags:
     zh: [文件, 传输, 同步, SFTP]
     en: [Files, Transfer, Sync, SFTP]
+  setup:
+    zh: 打开网页就用云吞账号直接进文件页，文档、下载、传输、照片这些共享文件夹都在里面。想用传输软件连，在插件详情里打开「在局域网开放」，地址和账号就在旁边。管理服务器（建账号、加存储）打开 /web/admin，第一次建管理员时用户名填你的云吞用户名。
+    en: Open the page to go straight into the file client with your Wonton account; the documents, downloads, transfers and photos shared folders are all there. To use a transfer app, turn on "Open on LAN" in the plugin details — the address and account are next to it. To administer the server (more accounts, more storage), open /web/admin; on the first visit, use your Wonton username as the admin name.
+    zh-Hant: 開啟網頁就用雲吞帳號直接進檔案頁，文件、下載、傳輸、照片這些共享資料夾都在裡面。想用傳輸軟體連，在外掛詳情裡開啟「在區域網路開放」，位址和帳號就在旁邊。管理伺服器（建帳號、加儲存）開啟 /web/admin，第一次建管理員時使用者名稱填你的雲吞使用者名稱。
+    ja: ページを開けば Wonton アカウントでそのままファイル画面に入ります。ドキュメント・ダウンロード・転送・写真などの共有フォルダがそろっています。転送ソフトを使うには、プラグイン詳細で「LAN で公開」をオンにすると、アドレスとアカウントが横に表示されます。サーバー管理（アカウント追加、ストレージ追加）は /web/admin を開き、初回の管理者作成で Wonton のユーザー名を入れます。
   about:
     zh: |
-      一台自己的文件传输站：手机、电脑用顺手的传输软件（FileZilla 这类）直连家里的文件，浏览器里也能上传下载和分享。
+      一台自己的文件传输站：手机、电脑用顺手的传输软件（FileZilla 这类）直连家里的文件，浏览器里也能上传下载和分享。传进来的文件和别的插件共用。
 
-      打开网页直接进文件客户端，用的是云吞的账号，不用再设密码。文档、下载、传输、照片这些共享文件夹都在里面，传进来的文件和别的插件共用。
+      改密码、两步验证在网页右上角的个人资料里。应用发的信（找回密码、事件通知）会出现在你的 Wonton 私聊里，发给外部地址的信发不出去。
 
-      想用 SFTP 客户端连：在插件详情里打开局域网开关，连接地址和账号就在旁边。改密码、双因子验证在网页右上角的个人资料里。应用发的信（找回密码、事件通知）会出现在你的 Wonton 私聊里，发给外部地址的信发不出去。
-
-      想管理服务器（建别的账号、加存储），打开 /web/admin：第一次会让你建管理员，用户名填你的云吞用户名，之后同样用云吞账号登进管理界面。
+      局域网入口只管传输软件，网页仍然只在云吞里打开。
     en: |
-      Your own file transfer station: connect from any phone or computer with a transfer app such as FileZilla, or work in the browser to upload, download and share.
+      Your own file transfer station: connect from any phone or computer with a transfer app such as FileZilla, or work in the browser to upload, download and share. Files you transfer are available to other plugins.
 
-      Open the web UI and you are straight into the file client with your Wonton account — no second password. Your shared folders (documents, downloads, transfers, photos) are all there, so files you transfer are available to other plugins.
+      Change your password or set up two-factor authentication from your profile in the top-right of the page. Mails the app sends (password resets, event notices) appear in your Wonton private chat; mail to external addresses cannot be sent.
 
-      For SFTP clients, turn on the LAN switch in the plugin details; the address and account are right next to it. Change your SFTP password or set up two-factor authentication from your profile in the web client. Mails the app sends (password resets, event notices) appear in your Wonton private chat; mail to external addresses cannot be sent.
+      The LAN entry only serves transfer apps; the web page still opens through Wonton only.
+    zh-Hant: |
+      一台自己的檔案傳輸站：手機、電腦用順手的傳輸軟體（FileZilla 這類）直連家裡的檔案，瀏覽器裡也能上傳下載和分享。傳進來的檔案和別的外掛共用。
 
-      To administer the server (more accounts, more storage), open /web/admin: the first visit asks you to create an admin — use your Wonton username and future admin logins go through Wonton too.
+      改密碼、兩步驗證在網頁右上角的個人資料裡。應用寄的信（找回密碼、事件通知）會出現在你的 Wonton 私聊裡，發給外部位址的信發不出去。
+
+      區域網路入口只管傳輸軟體，網頁仍然只在雲吞裡開啟。
+    ja: |
+      自分専用のファイル転送所です。スマホやパソコンの転送ソフト（FileZilla など）で家のファイルに直接つなぎ、ブラウザでもアップロード・ダウンロード・共有ができます。転送したファイルは他のプラグインと共有されます。
+
+      パスワード変更や 2 段階認証は、ページ右上のプロフィールで行います。アプリが送るメール（パスワード再設定、イベント通知）は自分の Wonton チャットに届き、外部アドレスへのメールは送れません。
+
+      LAN の入口は転送ソフト専用で、Web ページは引き続き Wonton からだけ開けます。
   release_notes:
-    zh: 应用发的信（找回密码、事件通知）改走云吞的内部邮箱，会出现在你的 Wonton 私聊里；发给外部地址的信发不出去。账号登录时自动带上内部邮箱（按 OIDC 声明，主人和家人一样），找回密码可用。
-    en: Mails the app sends (password resets, event notices) now go through Wonton's internal mailbox and appear in your Wonton private chat; mail to external addresses cannot be sent. Accounts pick up their internal mailbox address at login (from the OIDC claim), so password reset works.
+    zh: |
+      应用发的信（找回密码、事件通知）改走云吞的内部邮箱，会出现在你的 Wonton 私聊里；发给外部地址的信发不出去。账号登录时自动带上内部邮箱（按 OIDC 声明，主人和家人一样），找回密码可用。
+
+      商店介绍重写：网页、传输软件和管理界面三种入口移到「安装后要做的事」，SFTP、双因子等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Mails the app sends (password resets, event notices) now go through Wonton's internal mailbox and appear in your Wonton private chat; mail to external addresses cannot be sent. Accounts pick up their internal mailbox address at login (from the OIDC claim), so password reset works.
+
+      Store copy rewritten: the web, transfer-app and admin entry points moved to the pre-install notice, with SFTP/two-factor wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "應用發的信（找回密碼、事件通知）改走雲吞的內部郵箱，會出現在你的 Wonton 私聊裡；發給外部地址的信發不出去。賬號登入時自動帶上內部郵箱（按 OIDC 宣告，主人和家人一樣），找回密碼可用。\n\n商店介紹重寫：網頁、傳輸軟體和管理介面三種入口移到「安裝後要做的事」，SFTP、兩步驗證等說法換成日常用語；補繁體中文和日文。"
+    ja: "アプリが送るメール（パスワード再設定、イベント通知）は Wonton の内部メールを通り、あなたの Wonton ダイレクトメッセージに現れます。外部アドレスへのメールは送れません。アカウントはログイン時に内部メールアドレスを自動で持ちます（OIDC クレーム経由、主人も家族も同じ）。パスワード再設定が使えます。\n\nストア紹介を書き直し、Web・転送ソフト・管理画面の 3 つの入口を「インストール後の手順」に移し、SFTP や 2 段階認証などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: sftpgo
     port: 8080

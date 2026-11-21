@@ -44,12 +44,14 @@ x-wonton:
   spec: "0.11"
   # 反向域名：上游官网 esphome.io。
   id: io.esphome.esphome
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 自制设备固件（ESPHome）, en: ESPHome }
+  title: { zh: "自制智能设备（ESPHome）", en: "DIY Smart Devices (ESPHome)", zh-Hant: "自製智慧裝置（ESPHome）", ja: "自作スマート家電（ESPHome）" }
   description:
-    zh: 给自制的智能设备写固件、无线刷机，接入智能家居
-    en: Write firmware for your DIY smart devices and flash it over the air
+    zh: 给自制的智能设备写程序、无线更新，接入智能家居
+    en: Write the software for your DIY smart devices, update them over the air and hook them into your smart home
+    zh-Hant: 給自製的智慧裝置寫程式、無線更新，接入智慧家庭
+    ja: 自作のスマート家電のプログラムを書き、無線で更新してスマートホームにつなぎます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/editor.png]
@@ -64,29 +66,45 @@ x-wonton:
     en: [Home, Developer]
   about:
     zh: |
-      给动手做的智能设备装大脑：一块 ESP32 开发板接上传感器或开关，在网页里描述它是什么、接了什么，
-      ESPHome 帮你生成固件刷进去，设备就能接入 Home Assistant 这类智能家居平台。
+      给动手做的智能设备装上大脑：一块 ESP32 开发板接上传感器或开关，在网页里说明它是什么、接了什么，ESPHome 就生成程序写进设备，让它能接入 Home Assistant 这类智能家居。
 
-      新建设备像填表一样简单：选板子、加组件，网页向导会生成设备配置；刷过一次固件以后，改配置
-      就能无线更新，不用再接线。第一次刷机在电脑浏览器的网页安装器里完成，之后都在家里无线进行。
+      新建设备像填表：选板子、加组件，向导帮你写好设置。第一次写程序要在电脑的浏览器里接线刷入，之后改设置就能无线更新，不用再碰线。
 
-      设备配置可以让家里的助手代写：助手能读改设备配置、查组件文档、验证并编译固件。
+      设备设置也可以让家里的助手代写：它能读改设置、查组件说明、检查并生成程序。
     en: |
-      Give your DIY devices a brain: wire a sensor or switch to an ESP32 board, describe what it is
-      in the web interface, and ESPHome builds and flashes the firmware so the device works with
-      Home Assistant and similar smart home platforms.
+      Give your DIY devices a brain: wire a sensor or switch to an ESP32 board, describe what it is and what is wired to it in the web page, and ESPHome builds the software to flash so the device works with Home Assistant and similar smart homes.
 
-      Creating a device is like filling in a form: pick a board, add components, and the wizard
-      generates the configuration. After the first flash, configuration changes update over Wi-Fi —
-      no cables needed. The first flash runs from a computer's browser via the web installer;
-      everything after that happens wirelessly at home.
+      Creating a device is like filling in a form: pick a board, add components, and a wizard writes the settings for you. The first flash needs a cable from a computer's browser; after that, settings changes update over Wi-Fi with no cable.
 
-      Your assistant can write device configurations for you: it can read and edit them, look up
-      component documentation, and validate and compile firmware.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Your assistant can write device settings too: it can read and change them, look up component documentation, check them and build the software.
+    zh-Hant: |
+      給動手做的智慧裝置裝上大腦：一塊 ESP32 開發板接上感測器或開關，在網頁裡說明它是什麼、接了什麼，ESPHome 就產生程式寫進裝置，讓它能接入 Home Assistant 這類智慧家庭。
+
+      新增裝置像填表：選板子、加元件，精靈幫你寫好設定。第一次寫程式要在電腦的瀏覽器裡接線刷入，之後改設定就能無線更新，不用再碰線。
+
+      裝置設定也可以讓家裡的助手代寫：它能讀改設定、查元件說明、檢查並產生程式。
+    ja: |
+      自作のスマート家電に頭脳を与えます。ESP32 ボードにセンサーやスイッチを配線し、何で何をつないだかを Web ページで書くと、ESPHome が書き込むプログラムを作り、Home Assistant などのスマートホームで動くようになります。
+
+      デバイスの作成はフォーム記入のようなものです。ボードを選び、部品を足すと、ウィザードが設定を書いてくれます。最初の書き込みだけはパソコンのブラウザからケーブルで行い、以後は設定を変えれば Wi-Fi 越しに更新でき、ケーブルは不要です。
+
+      家のアシスタントに設定を書かせることもできます。設定の読み書き、部品の説明の検索、検査とプログラム作成ができます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：去掉重复的首次刷机描述，固件、编译等说法改成程序、生成；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: the duplicated first-flash text is gone, and firmware/compile wording became software and build; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：去掉重複的首次刷機描述，韌體、編譯等說法改成程式、產生；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、重複していた初回書き込みの説明を削り、ファームウェアやコンパイルをプログラム・作成という言い方にしました。繁体字中国語と日本語を追加。"
   setup:
     zh: 打开插件网页，用户名 wonton，密码在插件详情页里查看复制。
     en: Open the plugin's web page; sign in as user "wonton" with the password shown in the plugin details.
+    zh-Hant: 開啟外掛網頁，使用者名稱 wonton，密碼在外掛詳情頁裡查看複製。
+    ja: プラグインの Web ページを開き、ユーザー名 wonton と、プラグイン詳細に表示されるパスワードでサインインします。
   webui:
     service: esphome
     port: 6052

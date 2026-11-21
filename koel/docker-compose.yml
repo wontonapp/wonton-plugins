@@ -124,12 +124,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: dev.koel.koel
-  version: 0.2.0
+  version: 0.2.1
   kind: app
-  title: { zh: 网页音乐库（Koel）, en: Web Music Player (Koel) }
+  title: { zh: "网页音乐库（Koel）", en: "Web Music Player (Koel)", zh-Hant: "網頁音樂庫（Koel）", ja: "Web 音楽プレーヤー（Koel）" }
   description:
     zh: 网页做得最精致的自家音乐库：按歌手、专辑听歌、建歌单，还能看收听统计，家里人可以各开账号。适合主要在网页上听歌的人。
     en: "A home music library with the most polished web player: listen by artist and album, build playlists, see your listening stats, and invite family to their own accounts. Best if you mostly listen in the browser."
+    zh-Hant: 網頁做得最精緻的自家音樂庫：按歌手、專輯聽歌、建歌單，還能看收聽統計，家裡人可以各開帳號。適合主要在網頁上聽歌的人。
+    ja: Web プレーヤーが最も洗練された自宅音楽ライブラリです。アーティストやアルバム単位で聴き、プレイリストを作り、再生統計も見られます。家族は各自のアカウントを持てます。主にブラウザで聴く人向けです。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/album.png, screenshots/player.png]
@@ -140,28 +142,55 @@ x-wonton:
   tags:
     zh: [音乐]
     en: [Music]
+  setup:
+    zh: 第一次登录用你的内部地址（<用户名>@wonton.internal），默认密码是 KoelIsCool，进去后立即在设置里改掉。把歌曲放进 music 共享文件夹，再在 Koel 设置里点扫描。邀请家人、找回密码的信会进你的 Wonton 私聊，只能发给家里人。
+    en: The first sign-in uses your internal address (<username>@wonton.internal) with the default password KoelIsCool — change it in Settings right away. Put songs in the music shared folder, then press Scan in Koel's settings. Invites and password resets arrive in your Wonton chat, household members only.
+    zh-Hant: 第一次登入用你的內部位址（<使用者名稱>@wonton.internal），預設密碼是 KoelIsCool，進去後立即在設定裡改掉。把歌曲放進 music 共享資料夾，再在 Koel 設定裡點掃描。邀請家人、找回密碼的信會進你的 Wonton 私聊，只能發給家裡人。
+    ja: 初回サインインは内部アドレス（<ユーザー名>@wonton.internal）と既定のパスワード KoelIsCool を使い、すぐ設定で変更します。曲は共有フォルダ music に入れ、Koel の設定でスキャンを押します。家族の招待やパスワード再設定は Wonton チャットに届き、宛先は家族だけです。
   about:
     zh: |
       把共享文件夹里的音乐变成自己的在线音乐库：按歌手、专辑浏览，建歌单，看收听统计。网页在手机上也好用。
 
-      第一次打开用你的内部邮箱登录（<用户名>@wonton.internal），默认密码 KoelIsCool。登录后请立即在设置里改密码；网关挡在前面，改密码之前只有你打得开登录页。
+      音乐文件夹是只读的，要从网页上传需要另配可写的媒体目录，这里用不了。
 
-      音乐目录只读：把歌曲放进 music 共享文件夹，然后在 Koel 的设置里点扫描。网页上传需要可写的媒体目录，这里用不了。
+      修歌名、专辑封面这类信息可以自己改。
 
-      Koel 发的信（邀请家人、找回密码）会作为消息出现在你的 Wonton 私聊里。只能发给家里的人：邀请外面的邮箱会被拒收，Koel 会报发送失败。
-
-      播客、网络电台、Last.fm、MusicBrainz 元数据这些要连外网的功能默认关闭；插件不申请出网权限。单点登录（Google / OIDC）和反向代理认证是 Koel Plus 的付费功能，免费版用不了。
+      播客、网络电台、Last.fm、MusicBrainz 资料这些要连外网的功能默认关闭，本插件不申请上网。用 Google 账号登录和放在别的网页代理后面是 Koel Plus 的付费功能，免费版用不了。
     en: |
-      Turn the music in your shared folder into your own online library: browse by artist and album, build playlists and see your listening stats. The web player works well on phones too.
+      Turn the music in your shared folder into your own online library: browse by artist and album, build playlists and see your listening stats. The player works well on phones too.
 
-      The first sign-in uses your internal Wonton address (<username>@wonton.internal); the default password is KoelIsCool. Change the password right away in Settings; the gateway sits in front, so before the change only you can reach the login page.
+      The music folder is read-only; uploading from the web needs a writable media folder and does not work here.
 
-      The music folder is read-only: drop songs into the music shared folder, then press Scan in Koel's settings. Uploading from the web needs a writable media folder and does not work here.
+      Titles, album covers and similar details can be edited yourself.
 
-      Emails Koel sends (inviting family, password resets) arrive as messages in your Wonton chat. Only people in your home can receive mail: inviting an outside address gets rejected and Koel reports the failure.
+      Podcasts, internet radio, Last.fm and MusicBrainz data need the internet and are off; this plugin asks for no internet access. Google sign-in and sitting behind another web proxy are paid Koel Plus features and are not available in the free edition.
+    zh-Hant: |
+      把共享資料夾裡的音樂變成自己的線上音樂庫：按歌手、專輯瀏覽，建歌單，看收聽統計。網頁在手機上也好用。
 
-      Podcasts, internet radio, Last.fm and MusicBrainz metadata need the internet and are turned off; the plugin does not ask for outbound access. Single sign-on (Google / OIDC) and reverse-proxy authentication are paid Koel Plus features and are not available in the free edition.
-  release_notes: { zh: 插件包迁入官方插件合仓，保留当前分支的内部邮箱通知、默认管理员改名和 Koel 9.15.0 支持。, en: "Moved the plugin package into the official Wonton plugin monorepo; retains internal-mail notifications, default-admin renaming and Koel 9.15.0 support from the current branch." }
+      音樂資料夾是唯讀的，要從網頁上傳需要另配可寫的媒體目錄，這裡用不了。
+
+      修歌名、專輯封面這類資訊可以自己改。
+
+      播客、網路電台、Last.fm、MusicBrainz 資料這些要連外網的功能預設關閉，本外掛不申請上網。用 Google 帳號登入和放在別的網頁代理後面是 Koel Plus 的付費功能，免費版用不了。
+    ja: |
+      共有フォルダの音楽を自分のオンラインライブラリに変えます。アーティストやアルバムで探し、プレイリストを作り、再生統計を見られます。スマホでも使いやすいプレーヤーです。
+
+      音楽フォルダは読み取り専用で、ページからのアップロードには書き込み可能なメディアフォルダが必要なため、ここでは使えません。
+
+      曲名やジャケットなどの情報は自分で直せます。
+
+      ポッドキャスト、ネットラジオ、Last.fm、MusicBrainz の情報はネットが必要で、既定ではオフです。本プラグインはインターネットを申請しません。Google サインインと別の Web プロキシの背後での利用は有料の Koel Plus 機能で、無料版では使えません。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，保留当前分支的内部邮箱通知、默认管理员改名和 Koel 9.15.0 支持。
+
+      商店介绍重写：首次登录、改密码和放歌移到「安装后要做的事」，网关、反向代理、元数据等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved the plugin package into the official Wonton plugin monorepo; retains internal-mail notifications, default-admin renaming and Koel 9.15.0 support from the current branch.
+
+      Store copy rewritten: first sign-in, password change and adding music moved to the pre-install notice, with gateway/reverse-proxy/metadata wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，保留當前分支的內部郵箱通知、預設管理員改名和 Koel 9.15.0 支援。\n\n商店介紹重寫：首次登入、改密碼和放歌移到「安裝後要做的事」，閘道、反向代理、中繼資料等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。現行ブランチの内部メール通知、既定の管理者名の変更、Koel 9.15.0 対応は維持しています。\n\nストア紹介を書き直し、初回サインインとパスワード変更、曲の配置を「インストール後の手順」に移し、ゲートウェイやリバースプロキシ、メタデータなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: koel
     port: 80

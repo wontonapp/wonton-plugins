@@ -160,14 +160,16 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.7"
+  spec: "0.11"
   id: org.actualbudget.actual
-  version: 0.1.5
+  version: 0.1.6
   kind: app
-  title: { zh: 家庭账本（Actual）, en: Household Budget (Actual) }
+  title: { zh: "家庭账本（Actual）", en: "Household Budget (Actual)", zh-Hant: "家庭記帳（Actual）", ja: "家計簿（Actual）" }
   description:
     zh: 像一本家庭记账本：每笔花销记下来，给吃饭、交通等各类开销定好每月预算，花超没超一眼看清；手机和电脑看的是同一本账。
     en: "A household ledger: record every expense, give each category a monthly budget and see at a glance what's left; your phone and computer open the same book."
+    zh-Hant: 像一本家庭記帳本：每筆花費記下來，給吃飯、交通等各類開銷訂好每月預算，有沒有花超一眼看清；手機和電腦看的是同一本帳。
+    ja: 家庭の家計簿のようなもの。支出を記録し、食費や交通費などに毎月の予算を決めて、使いすぎかどうかが一目でわかります。スマホとパソコンで同じ家計簿を開きます。
   icon: icon.png
   notices: [NOTICE]
   screenshots:
@@ -181,16 +183,39 @@ x-wonton:
   tags:
     zh: [记账]
     en: [Finance]
+  setup:
+    zh: 先在网页里新建或导入一本账本，助手（Bot）的记账功能才有账可查。
+    en: Create or import a budget in the web app first, so the bot's ledger tools have a budget to work with.
+    zh-Hant: 先在網頁裡新增或匯入一本帳，助手（Bot）的記帳功能才有帳可查。
+    ja: まず Web ページで家計簿を作成するか読み込みます。そうしないと Bot の記帳機能が使う家計簿がありません。
   about:
     zh: |
       记家庭收支、做预算、看报表。手机和电脑打开的是同一个账本，数据留在这台机器上。
 
-      先在网页里新建或导入一本账本，Bot 的记账工具才有账可查。银行自动同步用 GoCardless 或 SimpleFIN，所以要能出网。备份在账本的“设置 > 导出数据”里导出到当前设备。
+      银行自动同步要经 GoCardless 或 SimpleFIN 这类国外的服务，家里要能上外网。备份在账本的“设置 > 导出数据”里导出到当前设备。
     en: |
       Track household income and spending, set budgets and read reports. Phone and desktop open the same budget, and the data stays on this machine.
 
-      Create or import a budget in the web app first; the bot's ledger tools read from it. Automatic bank sync uses GoCardless or SimpleFIN, so the plugin needs internet access. Export backups from the budget's Settings > Export data to the current device.
-  release_notes: { zh: 插件包迁入官方插件合仓，保留健康检查免重复登录的修复。, en: "Moved into the official Wonton plugin monorepo; keeps the fix that prevents repeated logins during health checks." }
+      Automatic bank sync goes through outside services such as GoCardless or SimpleFIN, so the plugin needs internet access. Export backups from the budget's Settings > Export data to the current device.
+    zh-Hant: |
+      記家庭收支、做預算、看報表。手機和電腦開啟的是同一個帳，資料留在這台機器上。
+
+      銀行自動同步要經 GoCardless 或 SimpleFIN 這類國外服務，家裡要能連上外網。備份在帳的「設定 > 匯出資料」裡匯出到目前裝置。
+    ja: |
+      家計の収支を記録し、予算を立て、レポートを見ます。スマホとパソコンで同じ家計簿を開き、データはこのマシンに残ります。
+
+      銀行の自動同期は GoCardless や SimpleFIN などの外部サービス経由なので、家からインターネットに出られる必要があります。バックアップは家計簿の「設定 > データのエクスポート」から現在の端末に書き出せます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，保留健康检查免重复登录的修复。
+
+      商店介绍重写：去掉工具名和外来服务名，首次建账步骤移到「安装后要做的事」；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo; keeps the fix that prevents repeated logins during health checks.
+
+      Store copy rewritten without tool and service names; the first-run step moved to the pre-install notice, with Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，保留健康檢查免重複登入的修復。\n\n商店介紹重寫：去掉工具名和外來服務名，首次建帳步驟移到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。ヘルスチェックにより再ログインが不要になる修正は維持しています。\n\nストア紹介を書き直し、ツール名や外部サービス名を減らして初回の手順を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
   webui:
     service: actual
     port: 5006

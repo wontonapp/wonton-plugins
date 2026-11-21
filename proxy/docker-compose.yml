@@ -97,14 +97,16 @@ configs:
   subscription-page: { file: web/subscription.html }
 
 x-wonton:
-  spec: "0.7"
+  spec: "0.11"
   id: app.wonton.proxy
-  version: 0.1.3
+  version: 0.1.4
   kind: app
-  title: { zh: 上网代理（Mihomo）, en: Internet Proxy (Mihomo) }
+  title: { zh: "上网代理（Mihomo）", en: "Internet Proxy (Mihomo)", zh-Hant: "上網代理（Mihomo）", ja: "インターネットプロキシ（Mihomo）" }
   description:
     zh: 填一次你的代理订阅，家里服务器上的其他应用上网就走你挑的线路：网页里切线路、看流量，也能打开给家里其他设备用。
     en: "Add your proxy subscription once and the other apps on your home server go online through the route you pick: switch routes and watch traffic in the browser, and optionally share it with other devices at home."
+    zh-Hant: 填一次你的代理訂閱，家裡伺服器上的其他應用上網就走你挑的線路：網頁裡切線路、看流量，也能開啟給家裡其他裝置用。
+    ja: プロキシのサブスクリプションを一度登録すれば、家のサーバの他のアプリは選んだ経路で外に出ます。ブラウザで経路を切り替え、通信量を見られ、家の他の機器にも開放できます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/subscription.png]
@@ -114,22 +116,47 @@ x-wonton:
   tags:
     zh: [网络]
     en: [Network]
+  setup:
+    zh: 打开网页，把订阅地址贴进 zashboard 保存，再挑一个节点。要让别的应用走它，在云吞里把它选成出网代理；要给家里其他设备用，在插件详情里打开「在局域网开放」，复制地址和账号。
+    en: Open the page, paste your subscription into zashboard and save it, then pick a node. To route other apps through it, select it in Wonton as the egress proxy; to share it with devices at home, turn on "Open on LAN" in the plugin details and copy the address and account.
+    zh-Hant: 開啟網頁，把訂閱位址貼進 zashboard 儲存，再挑一個節點。要讓別的應用走它，在雲吞裡把它選成出網代理；要給家裡其他裝置用，在外掛詳情裡開啟「在區域網路開放」，複製位址和帳號。
+    ja: ページを開き、サブスクリプションを zashboard に貼り付けて保存し、ノードを選びます。他のアプリを通すには Wonton で出口プロキシとして選び、家の機器にも使わせるにはプラグイン詳細で「LAN で公開」をオンにしてアドレスとアカウントをコピーします。
   about:
     zh: |
-      保存一个 Clash / Mihomo 格式的订阅，在 zashboard 里管理节点、流量和连接。订阅每小时更新，节点选择随插件数据保存。
+      保存一个 Clash / Mihomo 格式的订阅，在 zashboard 里管理节点、流量和连接。订阅每小时更新，选的节点跟着插件数据保存。
 
-      订阅链接保存后不会回显。未配置或没有节点时会如实提示，流量不会自动改走直连。
+      订阅地址保存后不再显示。没配置或没有可用节点时会如实提示，不会偷偷改走直连。
 
-      可以在云吞里选择它作为插件的出网代理。给家里其他设备用的 HTTP / SOCKS 端口默认关闭；打开后从插件详情复制地址和账号。
+      给家里其他设备用的入口默认关闭。
     en: |
-      Save a Clash / Mihomo subscription and manage nodes, traffic and connections in zashboard. Subscriptions refresh hourly; node selection persists with plugin data.
+      Save a Clash / Mihomo subscription and manage nodes, traffic and connections in zashboard. Subscriptions refresh hourly; the node you pick persists with plugin data.
 
       Saved subscription URLs are never displayed. Missing subscriptions and empty node lists are shown honestly; traffic never silently falls back to a direct connection.
 
-      Select it in Wonton as the egress proxy for plugins. LAN HTTP / SOCKS access is off by default; enable it and copy the address and credentials from plugin details.
+      The entry for other devices at home is off by default.
+    zh-Hant: |
+      儲存一個 Clash / Mihomo 格式的訂閱，在 zashboard 裡管理節點、流量和連線。訂閱每小時更新，選的節點跟著外掛資料儲存。
+
+      訂閱位址儲存後不再顯示。沒設定或沒有可用節點時會如實提示，不會偷偷改走直連。
+
+      給家裡其他裝置用的入口預設關閉。
+    ja: |
+      Clash / Mihomo 形式のサブスクリプションを保存し、zashboard でノード・通信量・接続を管理します。サブスクは毎時更新され、選んだノードはプラグインのデータに残ります。
+
+      保存したサブスクの URL は再表示されません。未設定やノードなしは正直に示し、勝手に直接接続へ切り替わることはありません。
+
+      家の他の機器向けの入口は既定でオフです。
   release_notes:
-    zh: 清单声明 spec 0.7（用到 provides.egress_proxy 和 egress.proxy 权限项）；订阅脚本的基础镜像升到 Python 3.16.0a1（alpha）。
-    en: Declares spec 0.7 for provides.egress_proxy and the egress.proxy permission; the subscription helper's base image moves to Python 3.16.0a1 (alpha).
+    zh: |
+      清单声明 spec 0.7（用到 provides.egress_proxy 和 egress.proxy 权限项）；订阅脚本的基础镜像升到 Python 3.16.0a1（alpha）。
+
+      商店介绍重写：订阅、选节点、开端口这些步骤收进「安装后要做的事」，端口、出网代理等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Declares spec 0.7 for provides.egress_proxy and the egress.proxy permission; the subscription helper's base image moves to Python 3.16.0a1 (alpha).
+
+      Store copy rewritten: subscribe/pick-node/open-entry steps collected in the pre-install notice, with port/egress-proxy wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "清單宣告 spec 0.7（用到 provides.egress_proxy 和 egress.proxy 許可權項）；訂閱指令碼的基礎映象升到 Python 3.16.0a1（alpha）。\n\n商店介紹重寫：訂閱、選節點、開入口這些步驟收進「安裝後要做的事」，連接埠、出網代理等說法換成日常用語；補繁體中文和日文。"
+    ja: "マニフェストで spec 0.7 を宣言（provides.egress_proxy と egress.proxy 権限を使用）。購読スクリプトのベースイメージを Python 3.16.0a1（alpha）に上げました。\n\nストア紹介を書き直し、購読・ノード選択・入口開放の手順を「インストール後の手順」にまとめ、ポートや出口プロキシなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: web
     port: 8080

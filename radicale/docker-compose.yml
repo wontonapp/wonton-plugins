@@ -88,14 +88,16 @@ configs:
     file: create-users.sh
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: org.radicale.radicale
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 日历通讯录（Radicale）, en: Calendar & Contacts (Radicale) }
+  title: { zh: "日历通讯录（Radicale）", en: "Calendar & Contacts (Radicale)", zh-Hant: "日曆通訊錄（Radicale）", ja: "カレンダーと連絡先（Radicale）" }
   description:
     zh: 把家里人的手机日历和通讯录同步到自己家：手机自带的日历、联系人应用直接连上就能用，不用 iCloud、Google 这类外面的账号。
     en: "Sync your family's phone calendars and contacts to your own home: the built-in Calendar and Contacts apps connect directly, no iCloud or Google account needed."
+    zh-Hant: 把家裡人的手機日曆和通訊錄同步到自己家：手機自帶的日曆、聯絡人應用直接連上就能用，不用 iCloud、Google 這類外面的帳號。
+    ja: 家族のスマホのカレンダーと連絡先を自宅に同期します。標準のカレンダーと連絡先アプリから直接つなげ、iCloud や Google のアカウントは要りません。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/web.png]
@@ -106,20 +108,39 @@ x-wonton:
   tags:
     zh: [日历, 通讯录, 同步]
     en: [Calendar, Contacts, Sync]
+  setup:
+    zh: 手机连接：在插件详情里打开「在局域网开放」，把显示的地址、账号和密码填进手机自带的账号设置（iPhone）或 DAVx⁵（安卓）。
+    en: "Connecting a phone: turn on \"Open on LAN\" in the plugin details, then enter the address, account and password shown there into the phone's account settings (iPhone) or DAVx⁵ (Android)."
+    zh-Hant: 手機連線：在外掛詳情裡開啟「在區域網路開放」，把顯示的位址、帳號和密碼填進手機自帶的帳號設定（iPhone）或 DAVx⁵（Android）。
+    ja: スマホからの接続：プラグイン詳細で「LAN で公開」をオンにし、表示されるアドレス・アカウント・パスワードをスマホのアカウント設定（iPhone）または DAVx⁵（Android）に入力します。
   about:
     zh: |
-      像 iCloud 日历一样，但数据在自己家里：在网页上建日历和通讯录、导入导出，手机自带的日历、联系人应用自动同步。
+      像 iCloud 日历，但数据在自己家里：在网页上建日历和通讯录、导入导出，手机自带的日历、联系人应用自动同步。
 
-      家里每个人有自己的账号，各看各的日历，互不干扰。日历和通讯录是普通文件，备份整个数据目录就够。
-
-      手机连接方法：在插件详情里打开“在局域网开放”，把显示的地址、账号和密码填进手机自带的账号设置（iOS）或 DAVx⁵（Android），见 README。
+      家里每个人有自己的账号，各看各的日历，互不干扰。日历和通讯录就是普通文件，备份整个插件文件夹就够。
     en: |
       Like iCloud Calendar, but the data stays at home: create calendars and address books on the web page, import and export, and the built-in Calendar and Contacts apps on your phone stay in sync.
 
-      Everyone in the family has their own account and their own calendars.
+      Everyone in the family has their own account and calendars. Calendars and contacts are plain files — backing up the plugin folder is enough.
+    zh-Hant: |
+      像 iCloud 日曆，但資料在自己家裡：在網頁上建日曆和通訊錄、匯入匯出，手機自帶的日曆、聯絡人應用自動同步。
 
-      To connect a phone, turn on the LAN switch in the plugin details and enter the address, account and password shown there into the phone's account settings (iOS) or DAVx⁵ (Android); see the README.
-  release_notes: { zh: 日历/通讯录应用镜像随上游升到 3.9.1。, en: "The calendar & contacts app image moves to 3.9.1 upstream." }
+      家裡每個人有自己的帳號，各看各的日曆，互不干擾。日曆和通訊錄就是普通檔案，備份整個外掛資料夾就夠。
+    ja: |
+      iCloud カレンダーのようなものですが、データは家に残ります。Web ページでカレンダーとアドレス帳を作り、取り込みや書き出しができ、スマホ標準のカレンダーと連絡先は同期されます。
+
+      家族はそれぞれ自分のアカウントとカレンダーを持ち、互いに干渉しません。カレンダーも連絡先も普通のファイルなので、プラグインフォルダを丸ごとバックアップすれば十分です。
+  release_notes:
+    zh: |
+      日历/通讯录应用镜像随上游升到 3.9.1。
+
+      商店介绍重写：手机连接步骤移到「安装后要做的事」，数据目录、README 等说法换成日常用语；补繁体中文和日文。
+    en: |
+      The calendar & contacts app image moves to 3.9.1 upstream.
+
+      Store copy rewritten: the phone-connection steps moved to the pre-install notice, with data-directory/README wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "日曆/通訊錄應用映象隨上游升到 3.9.1。\n\n商店介紹重寫：手機連線步驟移到「安裝後要做的事」，資料目錄、README 等說法換成日常用語；補繁體中文和日文。"
+    ja: "カレンダー／連絡先アプリのイメージを上流に合わせて 3.9.1 に上げました。\n\nストア紹介を書き直し、スマホ接続の手順を「インストール後の手順」に移し、データディレクトリや README などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: web
     port: 5232

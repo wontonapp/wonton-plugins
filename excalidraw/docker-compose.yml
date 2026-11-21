@@ -20,14 +20,16 @@ services:
       start_interval: 1s
 
 x-wonton:
-  spec: "0.6"
+  spec: "0.11"
   id: com.excalidraw.excalidraw
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 手绘白板（Excalidraw）, en: Sketch Whiteboard (Excalidraw) }
+  title: { zh: "手绘画板（Excalidraw）", en: "Sketch Board (Excalidraw)", zh-Hant: "手繪畫板（Excalidraw）", ja: "手描きホワイトボード（Excalidraw）" }
   description:
     zh: 像在白纸上随手画：流程图、示意图、草图都是手绘风格，画完能导出成图片。
     en: "Like sketching on paper: flowcharts, diagrams and doodles in a hand-drawn style, ready to export as images."
+    zh-Hant: 像在白紙上隨手畫：流程圖、示意圖、草圖都是手繪風格，畫完能匯出成圖片。
+    ja: 紙に落書きするような感覚で、手描き風のフローチャートや図、スケッチを描けます。描いたあとは画像に書き出せます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/canvas.jpg, screenshots/welcome.jpg]
@@ -38,20 +40,47 @@ x-wonton:
   tags:
     zh: [白板, 效率]
     en: [Whiteboard, Productivity]
+  setup:
+    zh: 打开就画，不用注册；画好的图请随手导出成文件，换设备或清浏览器数据都要靠它找回。
+    en: Open it and draw — no account. Export your drawing to a file as you go; that file is how you get it back on another device or after clearing browser data.
+    zh-Hant: 開啟就畫，不用註冊；畫好的圖請隨手匯出成檔案，換裝置或清瀏覽器資料都要靠它找回。
+    ja: 開けばすぐ描け、アカウントは要りません。描いた図はこまめにファイルへ書き出してください。別の端末やブラウザデータを消した後は、そのファイルでしか戻せません。
   about:
     zh: |
-      打开就是一块手绘风画布：方框、箭头、文字、便签随手画，拼流程图、架构图和草图；能导入导出 PNG、SVG 和 .excalidraw 文件。
+      打开就是一块手绘风画布：方框、箭头、文字、便签随手画，拼流程图、示意图和草图；能导入导出 PNG、SVG 和 .excalidraw 文件。
 
-      画布内容保存在你浏览器自己的本地存储里，不经过、也不留在服务器上；换浏览器或清了浏览器数据就要用导出的文件恢复。
+      画的内容只存在你打开网页的那台设备的浏览器里，不经过也不留在服务器上；换浏览器或清了浏览器数据，就要用导出的文件恢复。
 
-      多人协作房间要上游单独的 room 服务，官方镜像不带，这个插件不提供。
+      多人一起画要额外装 Excalidraw 官方的协作服务，官方镜像不带，这个插件不提供。
     en: |
-      Open it and you get a hand-drawn style canvas: boxes, arrows, text and sticky notes for flowcharts, architecture sketches and brainstorms; import and export PNG, SVG and .excalidraw files.
+      Open it and you get a hand-drawn style canvas: boxes, arrows, text and sticky notes for flowcharts, diagrams and brainstorms; import and export PNG, SVG and .excalidraw files.
 
-      Your drawing is stored in your browser's own local storage — it never reaches the server. Switching browsers or clearing browser data means restoring from an exported file.
+      Your drawing stays only in the browser of the device you opened the page on — it never reaches the server. Switching browsers or clearing browser data means restoring from an exported file.
 
-      Live collaboration rooms need the upstream room service, which the official image does not ship; this plugin does not provide it.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Drawing together needs Excalidraw's separate collaboration service, which the official image does not ship and this plugin does not provide.
+    zh-Hant: |
+      開啟就是一塊手繪風畫布：方框、箭頭、文字、便籤隨手畫，拼流程圖、示意圖和草圖；能匯入匯出 PNG、SVG 和 .excalidraw 檔案。
+
+      畫的內容只存在你開啟網頁的那台裝置的瀏覽器裡，不經過也不留在伺服器上；換瀏覽器或清了瀏覽器資料，就要用匯出的檔案恢復。
+
+      多人一起畫要額外裝 Excalidraw 官方的協作服務，官方鏡像不帶，這個外掛不提供。
+    ja: |
+      開くと手描き風のキャンバスが現れます。四角・矢印・文字・付箋でフローチャートや図、スケッチを描け、PNG・SVG・.excalidraw ファイルを読み書きできます。
+
+      描いた内容は、ページを開いた端末のブラウザにだけ残り、サーバーを経由も保存もしません。ブラウザを変えたりデータを消したりした場合は、書き出したファイルから復元してください。
+
+      複数人での同時編集には Excalidraw 公式の別サービスが必要で、公式イメージには含まれておらず、このプラグインでも提供しません。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：浏览器存储、上游协作服务这类说法换成日常用语，导出提醒移到「安装后要做的事」；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: browser-storage and upstream-service wording in everyday words, and the export reminder moved to the pre-install notice; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：瀏覽器儲存、上游協作服務這類說法換成日常用語，匯出提醒移到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、ブラウザ保存や上流サービスなどの言い方を日常的な言葉にし、書き出しの注意を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
   webui:
     service: excalidraw
     port: 80

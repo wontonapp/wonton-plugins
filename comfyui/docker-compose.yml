@@ -50,15 +50,17 @@ services:
       start_interval: 5s
 
 x-wonton:
-  spec: "0.6"
+  spec: "0.11"
   # 反向域名：上游是 comfy.org。
   id: org.comfy.comfyui
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: AI 画图（ComfyUI）, en: AI Image Studio (ComfyUI) }
+  title: { zh: "AI 画图（ComfyUI）", en: "AI Image Studio (ComfyUI)", zh-Hant: "AI 畫圖（ComfyUI）", ja: "AI 画像生成（ComfyUI）" }
   description:
     zh: 用家里的显卡让 AI 画图、做视频：把步骤像积木一样连起来，放进模型就能出图。上手有门槛，适合愿意折腾的 AI 绘画爱好者。
     en: "Make AI images and videos on your own graphics card: connect the steps like building blocks, add a model and generate. There's a learning curve — best for AI art hobbyists."
+    zh-Hant: 用家裡的顯示卡讓 AI 畫圖、做影片：把步驟像積木一樣連起來，放進模型就能出圖。上手有門檻，適合願意折騰的 AI 繪畫愛好者。
+    ja: 家のグラフィックスカードで AI に画像や動画を作らせます。手順を積み木のようにつなぎ、モデルを入れて生成します。慣れるまでは難しく、AI アートを楽しむ人向けです。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/generated.png, screenshots/workflow.png, screenshots/workflows.png]
@@ -69,30 +71,47 @@ x-wonton:
   tags:
     zh: [AI, 视频]
     en: [AI, Video]
+  setup:
+    zh: 先放模型：把模型文件放进插件文件夹的 models 下（大图模型放 checkpoints），也能在网页里用自带的 Manager 下载。有 NVIDIA 显卡就自动用显卡；1024×1024 出图最低约要 8 GB 显存。
+    en: "Put models in place first: drop model files under models in the plugin folder (checkpoints for image models), or download them in the web UI with the bundled Manager. An NVIDIA card is used automatically; 1024×1024 needs about 8 GB of video memory at minimum."
+    zh-Hant: 先放模型：把模型檔案放進外掛資料夾的 models 下（大圖模型放 checkpoints），也能在網頁裡用自帶的 Manager 下載。有 NVIDIA 顯示卡就自動用顯示卡；1024×1024 出圖最低約要 8 GB 顯示記憶體。
+    ja: まずモデルを置きます。モデルファイルはプラグインフォルダの models に入れ（画像モデルは checkpoints）、ページ内の同梱 Manager でダウンロードもできます。NVIDIA のカードがあれば自動で使います。1024×1024 の生成には最低約 8 GB のビデオメモリが要ります。
   about:
     zh: |
-      把 ComfyUI 装在自己家里，在自己的显卡上生成图片和视频，数据不出门。
+      在自己家里生成图片和视频，用自己的显卡，数据不出门。
 
-      有 NVIDIA 显卡就自动用显卡。模型不进镜像：把模型文件放进插件数据目录的 models/ 下
-      （比如 checkpoints/ 放大模型），装好的 ComfyUI-Manager 也能在网页里直接下载。
-      想跑主流大图模型：SDXL base 1.0 约 6.9 GB，1024×1024 生成最低约 8 GB 显存，
-      32 GB 显卡很宽裕；更大模型按文件大小自估。
+      网页里能装自定义节点来加功能：节点是别人的代码，装之前自己看一眼。
 
-      网页里能装自定义节点（Manager），出网权限就是给它们下载用的：节点是别人的代码，
-      装之前自己看一眼。
+      模型不进安装包，要自己放；下载模型和装节点都要能上网。
     en: |
-      Run ComfyUI at home: generate images and videos on your own graphics card, with data
-      staying on your machine.
+      Generate images and videos at home on your own card, with data staying on your machine.
 
-      Your NVIDIA GPU is used automatically. Models are not part of the image: put model files
-      into the plugin data directory under models/ (checkpoints/ for checkpoints), or download
-      them in the web UI with the bundled ComfyUI-Manager. A popular starting point: SDXL base
-      1.0 is about 6.9 GB and needs roughly 8 GB of VRAM for 1024×1024; a 32 GB card has plenty
-      of headroom.
+      Custom nodes can be installed in the web UI to add features; nodes are third-party code — review before installing.
 
-      Custom nodes can be installed from the web UI (Manager); the internet permission exists
-      for their downloads. Custom nodes are third-party code — review before installing.
-  release_notes: { zh: 插件包迁入官方插件合仓，保留 ComfyUI v0.44.0 构建镜像和 web_get 数据探针。, en: "Moved into the official Wonton plugin monorepo; keeps the ComfyUI v0.44.0 image build and web_get data probes." }
+      Models are not bundled and must be added yourself; downloading models and installing nodes need internet access.
+    zh-Hant: |
+      在自己家裡生成圖片和影片，用自己的顯示卡，資料不出門。
+
+      網頁裡能裝自訂節點來加功能：節點是別人的程式碼，裝之前自己看一眼。
+
+      模型不進安裝包，要自己放；下載模型和裝節點都要能上網。
+    ja: |
+      自宅で自分のカードを使って画像や動画を生成し、データは外に出しません。
+
+      ページ内でカスタムノードを入れて機能を足せます。ノードは第三者のコードなので、入れる前に目を通してください。
+
+      モデルは同梱されず、自分で置きます。モデルの取得とノードの導入にはインターネットが必要です。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，保留 ComfyUI v0.44.0 构建镜像和 web_get 数据探针。
+
+      商店介绍重写：放模型和显存要求移到「安装后要做的事」，数据目录、自定义节点、出网权限等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo; keeps the ComfyUI v0.44.0 image build and web_get data probes.
+
+      Store copy rewritten: model placement and VRAM needs moved to the pre-install notice, with data-directory/custom-node/outbound wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，保留 ComfyUI v0.44.0 構建映象和 web_get 資料探針。\n\n商店介紹重寫：放模型和顯示記憶體要求移到「安裝後要做的事」，資料目錄、自訂節點、外網權限等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。ComfyUI v0.44.0 のビルドイメージと web_get データプローブは維持しています。\n\nストア紹介を書き直し、モデルの配置とビデオメモリ要件を「インストール後の手順」に移し、データディレクトリやカスタムノード、外部通信などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   # ComfyUI 没有登录页（网关挡着，只有登录用户打得开），也不支持 OIDC 或代理用户名，所以 none。
   webui:
     service: comfyui

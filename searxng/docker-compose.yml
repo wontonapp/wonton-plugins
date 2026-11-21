@@ -76,12 +76,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: org.searxng.searxng
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: AI 搜索引擎（SearXNG）, en: AI Search Engine (SearXNG) }
+  title: { zh: "网页搜索（SearXNG）", en: "Web Search (SearXNG)", zh-Hant: "網頁搜尋（SearXNG）", ja: "Web 検索（SearXNG）" }
   description:
     zh: 像百度，但一次帮你搜好几家，不记录你搜了什么；家里的 AI 助手也用它上网查资料。
     en: Like a search engine, but queries several at once and keeps no record of what you searched; your home AI assistant uses it to look things up too.
+    zh-Hant: 像百度，但一次幫你搜好幾家，不記錄你搜了什麼；家裡的 AI 助手也用它上網查資料。
+    ja: 検索エンジンのようなものですが、一度に複数のサイトへ問い合わせ、検索履歴を残しません。家の AI アシスタントも調べ物に使います。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/01-home.png, screenshots/02-results.png]
@@ -91,18 +93,47 @@ x-wonton:
   tags:
     zh: [AI, 搜索, 工具]
     en: [AI, Search, Tools]
+  setup:
+    zh: 打开就能搜。要让家里的 AI 助手用它查资料，在助手的设置里把它选成搜索来源。
+    en: Open it and search. To have your home AI assistant look things up with it, pick it as the search source in the assistant's settings.
+    zh-Hant: 開啟就能搜。要讓家裡的 AI 助手用它查資料，在助手的設定裡把它選成搜尋來源。
+    ja: 開けば検索できます。家の AI アシスタントに調べさせるには、アシスタントの設定で検索元として選びます。
   about:
     zh: |
-      一次搜索同时问百度、必应、搜狗、360、B 站这些搜索引擎，把结果排在一起，不记录你搜过什么。
+      一次搜索同时问百度、必应、搜狗、360、B 站这些网站，把结果排在一起。
 
       平时当搜索引擎用；家里的 AI 助手要查资料时，也用它来搜网页、读网页，再把结果讲给你。
-      和 vane 那种“先搜再写答案”的 AI 搜索不同，这里给的是各家的原始结果，适合自己看，也适合给 AI 当资料来源。
+
+      和“先搜再写答案”的 AI 搜索不同，这里给的是各家的原始结果，适合自己看，也适合给 AI 当资料来源。搜索本身要能上网。
     en: |
-      One search queries Baidu, Bing, Sogou, 360 and Bilibili together and ranks the results, keeping no record of your searches.
+      One search asks Baidu, Bing, Sogou, 360 and Bilibili together and ranks the results.
 
       Use it as your everyday search engine; when your home AI assistant needs to look things up, it searches and reads the web through this.
-      Unlike AI search apps that write an answer for you, this shows each source's original results — good for reading yourself and for AI to cite.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+
+      Unlike AI search that writes an answer for you, this shows each site's original results — good for reading yourself and for AI to cite. Searching needs internet access.
+    zh-Hant: |
+      一次搜尋同時問百度、Bing、搜狗、360、B 站這些網站，把結果排在一起。
+
+      平時當搜尋引擎用；家裡的 AI 助手要查資料時，也用它來搜網頁、讀網頁，再把結果講給你。
+
+      和「先搜再寫答案」的 AI 搜尋不同，這裡給的是各家的原始結果，適合自己看，也適合給 AI 當資料來源。搜尋本身要能上網。
+    ja: |
+      1 回の検索で Baidu、Bing、Sogou、360、Bilibili に同時に問い合わせ、結果を並べます。
+
+      普段は検索エンジンとして使い、家の AI アシスタントが調べ物をするときも、これで Web を検索して読ませ、結果を伝えます。
+
+      答えを書いてくれる AI 検索と違い、各サイトの元の結果を出すので、自分で読むにも AI に引用させるにも向きます。検索にはインターネットが必要です。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：AI 助手的接法移到「安装后要做的事」，并把与描述重复的一句去掉；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: hooking up the AI assistant moved to the pre-install notice and the duplicated sentence dropped; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：AI 助手的接法移到「安裝後要做的事」，並把與描述重複的一句去掉；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、AI アシスタントとの接続を「インストール後の手順」に移し、説明と重複した一文を削りました。繁体字中国語と日本語を追加。"
   webui:
     service: searxng
     port: 8080

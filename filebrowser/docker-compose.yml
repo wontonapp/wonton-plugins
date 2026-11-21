@@ -134,14 +134,16 @@ configs:
             userIdentifier: preferred_username
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: org.filebrowser.quantum
-  version: 0.1.4
+  version: 0.1.5
   kind: app
-  title: { zh: 网页文件管理器（File Browser）, en: Web File Manager (File Browser) }
+  title: { zh: "文件浏览（File Browser）", en: "File Browser", zh-Hant: "檔案瀏覽（File Browser）", ja: "ファイル閲覧（File Browser）" }
   description:
     zh: 像电脑上的文件夹窗口搬进了网页：翻看家里的共享文件夹，照片视频直接预览，上传、下载、改名、移动都能做。最轻巧，打开就是你的文件。
     en: "Your computer's folder window, in a browser: go through the shared folders on your home server, preview photos and videos, and upload, download, rename or move files. The lightest option — it opens straight to your files."
+    zh-Hant: 像電腦上的資料夾視窗搬進了網頁：翻看家裡的共享資料夾，照片影片直接預覽，上傳、下載、改名、移動都能做。最輕巧，開啟就是你的檔案。
+    ja: パソコンのフォルダ画面をブラウザに移したようなもの。家の共有フォルダを見て回り、写真や動画をその場で表示し、アップロード・ダウンロード・名前の変更・移動ができます。最も軽く、開けば自分のファイルが並びます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/files.png, screenshots/photos.png, screenshots/preview.png, screenshots/upload.png, screenshots/transfers.png]
@@ -152,16 +154,27 @@ x-wonton:
   tags:
     zh: [文件]
     en: [Files]
+  setup:
+    zh: 打开就是你的文件，不用注册也不用再记一个密码。
+    en: It opens straight to your files — no sign-up and no extra password to remember.
+    zh-Hant: 開啟就是你的檔案，不用註冊也不用再記一個密碼。
+    ja: 開けば自分のファイルが並び、登録も別のパスワードも不要です。
   about:
+    zh: 在网页上浏览共享文件夹：图片、视频、音乐直接预览播放，文档在线看，上传、下载、重命名、移动、打包下载都能做。
+    en: "Browse the shared folders in a web page: preview images, play videos and music, read documents, upload, download, rename, move and download folders as archives."
+    zh-Hant: 在網頁上瀏覽共享資料夾：圖片、影片、音樂直接預覽播放，文件線上閱讀，上傳、下載、重新命名、移動、打包下載都能做。
+    ja: 共有フォルダを Web ページで見て回れます。画像を表示し、動画や音楽を再生し、文書を読み、アップロード・ダウンロード・名前の変更・移動・フォルダの一括ダウンロードができます。
+  release_notes:
     zh: |
-      在网页上浏览共享文件夹：图片、视频、音乐直接预览播放，文档在线看，上传、下载、重命名、移动、打包下载都能做。
+      插件包迁入官方插件合仓，内容与上一版相同。
 
-      打开就是你自己的文件，不用再记一个密码。
+      商店介绍重写：「不用再记一个密码」移到「安装后要做的事」；补繁体中文和日文。
     en: |
-      Browse the shared folders in a web page: preview images, play videos and music, read documents, upload, download, rename, move and download folders as archives.
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
 
-      It opens straight into your own files, with no extra password.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Store copy rewritten: the no-extra-password note moved to the pre-install notice; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：「不用再記一個密碼」移到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、「別のパスワードが不要」という説明を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
   webui:
     service: filebrowser
     port: 80

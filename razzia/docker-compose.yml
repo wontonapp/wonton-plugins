@@ -56,12 +56,14 @@ x-wonton:
   # setup 是 0.11 的字段、show_owner 是 0.8 的；未用 0.12 的 settings，声明 0.11。
   spec: "0.11"
   id: game.razzia.app
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 抢答游戏（Razzia）, en: Quiz Game (Razzia) }
+  title: { zh: "抢答游戏（Razzia）", en: "Quiz Game (Razzia)", zh-Hant: "搶答遊戲（Razzia）", ja: "クイズゲーム（Razzia）" }
   description:
     zh: 像 Kahoot 的家庭抢答：一人出题当主持，大家用手机加入房间抢答，看谁答得又快又对。
     en: A Kahoot-style quiz for the household — one person hosts, everyone joins on their phone, the fastest right answer wins.
+    zh-Hant: 像 Kahoot 的家庭搶答：一人出題當主持，大家用手機加入房間搶答，看誰答得又快又對。
+    ja: 家族向けの Kahoot のようなクイズです。1 人が司会として出題し、みんなはスマホで部屋に入って早押しします。正解が早いほど高得点です。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/join.png, screenshots/manager.png]
@@ -76,21 +78,43 @@ x-wonton:
     zh: |
       家庭聚会、复习功课的抢答游戏：主持人放题，大家用手机加入房间，每题限时抢答，答对越快分越高，最后上排行榜和领奖台。
 
-      主持人打开插件网页，输入主持口令（口令在 App 的插件详情页里查看）就能选题开局，屏幕上会给出 6 位房间码和二维码；玩家打开这个插件，输入房间码和昵称就加入。自带两套中文题（家庭常识赛、成语大会），主持界面里也能自己出题、给题目配图片。
+      主持人选一套题或自己出题开局，屏幕上给出 6 位房间码和二维码；玩家打开这个插件，输房间码和昵称就加入。自带两套中文题（家庭常识赛、成语大会），主持界面里也能自己出题、给题目配图片。
 
       游戏界面跟着手机系统的语言走，上游还没有中文界面（有英、日、德、法、意、西、波兰、土耳其、越南语），显示的是英文；自己出的题、预置的中文题都不受影响。
     en: |
       A quiz party game for families and study groups: the host puts questions on screen, everyone joins from their phone, each question is timed, faster correct answers score more, and the game ends with a leaderboard and podium.
 
-      The host opens the plugin page and unlocks the manager screen with the manager password (view it on the plugin's detail page in the app), picks a quiz or writes one, and starts — the screen shows a 6-digit room code and a QR code. Players open this plugin, type the code and a nickname, and play. Two Chinese quizzes ship preloaded (general knowledge and idioms), and you can write your own with pictures in the manager screen.
+      The host picks a quiz or writes one, and the screen shows a 6-digit room code and a QR code. Players open this plugin, type the code and a nickname, and play. Two Chinese quizzes ship preloaded (general knowledge and idioms), and you can write your own with pictures in the manager screen.
 
       The interface follows the phone's system language; upstream has no Chinese yet (English, Japanese, German, French, Italian, Spanish, Polish, Turkish and Vietnamese), so it falls back to English. Quiz content is unaffected.
+    zh-Hant: |
+      家庭聚會、複習功課的搶答遊戲：主持人放題，大家用手機加入房間，每題限時搶答，答對越快分越高，最後上排行榜和領獎台。
+
+      主持人選一套題或自己出題開局，螢幕上給出 6 位房間碼和二維碼；玩家開啟這個外掛，輸房間碼和暱稱就加入。內建兩套中文題（家庭常識賽、成語大會），主持介面裡也能自己出題、給題目配圖片。
+
+      遊戲介面跟著手機系統的語言走，上游還沒有中文介面（有英、日、德、法、義、西、波蘭、土耳其、越南語），顯示的是英文；自己出的題、預置的中文題都不受影響。
+    ja: |
+      家族の集まりや勉強会向けの早押しクイズです。司会が問題を出し、みんなはスマホで部屋に入り、各問は時間制限付きで、正解が早いほど高得点です。最後にランキングと表彰台が出ます。
+
+      司会はクイズを選ぶか自分で作り、画面に 6 桁の部屋コードと QR コードが出ます。参加者はこのプラグインを開き、コードとニックネームを入力して入ります。中国語のクイズが 2 つ（一般常識・四字熟語）付属し、司会画面で画像付きの問題も作れます。
+
+      画面はスマホのシステム言語に従います。上流に中国語はまだなく（英語・日本語・ドイツ語・フランス語・イタリア語・スペイン語・ポーランド語・トルコ語・ベトナム語）、英語で表示されます。クイズの中身は影響を受けません。
   release_notes:
-    zh: 插件包迁入官方插件合仓，内容与上一版相同。
-    en: "Package moved into the official Wonton plugin monorepo; same content as the previous release."
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：主持口令的查看和输入移到「安装后要做的事」，去掉重复说明；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: viewing and entering the manager password moved to the pre-install notice, with the duplicate dropped; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：主持口令的查看和輸入移到「安裝後要做的事」，去掉重複說明；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、司会パスワードの確認と入力を「インストール後の手順」に移し、重複した説明を削りました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 主持前在 App 的插件详情页点开“主持口令”查看口令，主持时输入它。
-    en: Before hosting, open “Manager password” on the plugin's detail page in the app and enter it on the manager screen.
+    zh: 主持前在插件详情页点开「主持口令」记下，主持时输入它；玩家不用口令，输房间码和昵称即可。
+    en: Before hosting, open "Manager password" on the plugin details page and note it down, then enter it to host. Players need no password — just the room code and a nickname.
+    zh-Hant: 主持前在外掛詳情頁點開「主持口令」記下，主持時輸入它；玩家不用口令，輸房間碼和暱稱即可。
+    ja: 司会の前にプラグイン詳細の「司会パスワード」を開いて控え、司会時にそれを入力します。参加者はパスワード不要で、部屋コードとニックネームだけを入れます。
   webui:
     service: razzia
     port: 3000

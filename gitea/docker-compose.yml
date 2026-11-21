@@ -93,12 +93,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: io.gitea.gitea
-  version: 0.2.1
+  version: 0.2.2
   kind: app
-  title: { en: Gitea }
+  title: { zh: "自家代码仓库（Gitea）", en: "Home Code Hosting (Gitea)", zh-Hant: "自家程式碼倉庫（Gitea）", ja: "自宅コード保管庫（Gitea）" }
   description:
-    zh: 自己家的代码仓库（Git）：写代码的家人把项目存在家里，网页上一起看代码、提修改，电脑上的开发工具也能连进来用
-    en: "Your own Git server at home: keep code projects at home, work with them on the web, and connect your coding tools directly"
+    zh: 自己家的代码仓库：写代码的家人把项目存在家里，网页上一起看代码、提修改，电脑上的开发工具也能连进来用
+    en: "Your own code host at home: keep projects at home, read and review code together on the web, and connect your desktop tools"
+    zh-Hant: 自己家的程式碼倉庫：寫程式的家人把專案存在家裡，網頁上一起看程式碼、提修改，電腦上的開發工具也能連進來用
+    ja: 自宅のコード保管庫です。コードを書く家族がプロジェクトを家に置き、Web で一緒にコードを見て修正を出せます。パソコンの開発ツールからもつなげます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/dashboard.png, screenshots/repo.png, screenshots/file.png]
@@ -109,27 +111,47 @@ x-wonton:
   tags:
     zh: [开发, Git]
     en: [Developer, Git]
+  setup:
+    zh: 打开网页就用云吞账号登录，第一次登录会自动建号；家人换各自的云吞账号登录一次就行。要用电脑上的开发工具连进来，先在网页设置里加上自己的公钥，再用网页上显示的地址。局域网地址有多条时，用设置里显示的那一条。
+    en: Open the page and sign in with your Wonton account; the account is created on first sign-in, and family members just sign in once with their own. To connect desktop tools, add your public key in the web settings first and use the address the web page shows; with several LAN addresses, take the one in the settings.
+    zh-Hant: 開啟網頁就用雲吞帳號登入，第一次登入會自動建號；家人換各自的雲吞帳號登入一次就行。要用電腦上的開發工具連進來，先在網頁設定裡加上自己的公鑰，再用網頁上顯示的位址。區域網路位址有多條時，用設定裡顯示的那一條。
+    ja: Web ページを開き、Wonton アカウントでサインインします。初回サインインでアカウントが作られ、家族は各自のアカウントで一度サインインするだけです。パソコンの開発ツールからつなぐには、先に Web の設定で公開鍵を登録し、Web ページに表示されるアドレスを使います。LAN アドレスが複数ある場合は設定に表示されるものを使ってください。
   about:
     zh: |
-      自己家里的 Git 服务：代码仓库放在家里，网页上看代码、提修改、审改动，手机和电脑都能用。
+      自己家里的代码仓库：代码放在家里，网页上看代码、提修改、审改动，手机和电脑都能用。
 
-      网页用云吞账号打开，第一次登录自动建号；你（云吞的主人）在这个实例里是管理员。
-      本地注册是关掉的，家人要用就在云吞里换账号登录一次。
+      你（云吞的主人）在这里是管理员；本地注册是关掉的，账号只能从云吞这边进。
 
-      应用发的信（找回密码、issue 和 PR 通知这些）走云吞的内部邮箱，会出现在收件人的 Wonton 私聊里。
-
-      git 推拉不走网页，走局域网 SSH：在 Gitea 网页设置里加上你的 SSH 公钥，然后
-      git clone ssh://git@<这台主机的局域网地址>:2222/<用户>/<仓库>.git。
-      多个局域网地址时克隆地址按设置里显示的改一台。
+      应用发的信（找回密码、修改和合并的通知）走云吞的内部信箱，会出现在收件人的 Wonton 私聊里。
     en: |
-      Your own Git service at home: keep your repositories at home, and read code, propose changes and review them on the web from any phone or computer.
+      A code host in your own home: code lives at home, and you read, propose and review changes on the web from any phone or computer.
 
-      The web opens with your Wonton account and the account is created on first sign-in; you (the Wonton owner) are the admin of this instance. Local sign-up is disabled — family members sign in once with their Wonton account.
+      You (the Wonton owner) are the admin here; local sign-up is off, so accounts only come in through Wonton.
 
-      Emails the app sends (password resets, issue and PR notifications) go through the Wonton internal mailbox and land in the recipient's Wonton chat.
+      Emails the app sends (password resets, change and merge notifications) go through Wonton's internal mailbox and land in the recipient's Wonton chat.
+    zh-Hant: |
+      自己家裡的程式碼倉庫：程式碼放在家裡，網頁上看程式碼、提修改、審改動，手機和電腦都能用。
 
-      Git push and pull go over LAN SSH, not the web: add your SSH public key in the Gitea web settings, then git clone ssh://git@<server LAN address>:2222/<user>/<repo>.git. With several LAN addresses, use the one shown in the settings.
-  release_notes: { zh: "介绍重写：一句话介绍改成日常说法，登录方式不再写进介绍。", en: "Rewritten store copy: the one-line description uses everyday words and no longer duplicates the sign-in details." }
+      你（雲吞的主人）在這裡是管理員；本機註冊是關掉的，帳號只能從雲吞這邊進。
+
+      應用寄的信（找回密碼、修改和合併的通知）走雲吞的內部信箱，會出現在收件人的 Wonton 私聊裡。
+    ja: |
+      自宅のコード保管庫です。コードは家に置かれ、スマホからもパソコンからも Web で読み、修正を出し、レビューできます。
+
+      あなた（Wonton のオーナー）がここの管理者です。ローカル登録は切ってあるので、アカウントは Wonton からしか作られません。
+
+      アプリが送るメール（パスワード再設定、変更やマージの通知）は Wonton の内部メールボックスを通り、受け取った人の Wonton チャットに届きます。
+  release_notes:
+    zh: |
+      介绍重写：一句话介绍改成日常说法，登录方式不再写进介绍。
+
+      商店介绍重写：补通俗中文标题，首次登录和公钥步骤移到「安装后要做的事」，实例、issue、clone 等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the one-line description uses everyday words and no longer duplicates the sign-in details.
+
+      Store copy rewritten: added a plain Chinese title, moved sign-in and public-key steps to the pre-install notice, and replaced instance/issue/clone wording; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：一句話介紹改成日常說法，登入方式不再寫進介紹。\n\n商店介紹重寫：補通俗中文標題，首次登入和公鑰步驟移到「安裝後要做的事」，實例、issue、clone 等說法換成日常用語；補繁體中文和日文。"
+    ja: "紹介を書き直し、一言紹介を日常的な言い方に変え、ログイン方法は紹介から外しました。\n\nストア紹介を書き直し、わかりやすい中国語タイトルを付け、初回サインインと公開鍵の手順を「インストール後の手順」に移し、インスタンス・issue・clone などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: gitea
     port: 3000

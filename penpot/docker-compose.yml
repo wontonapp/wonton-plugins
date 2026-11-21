@@ -128,14 +128,16 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: app.penpot.penpot
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 界面设计（Penpot）, en: Design Studio (Penpot) }
+  title: { zh: "界面设计（Penpot）", en: "Design Studio (Penpot)", zh-Hant: "介面設計（Penpot）", ja: "UI デザイン（Penpot）" }
   description:
     zh: 像网页版的 Figma：画 App 和网站的界面、做能点着看的演示稿，导出成图片或 PDF。适合做设计的人。
     en: "Like Figma in your browser: design app and website screens, build clickable mock-ups, and export images or PDFs. For people who do design work."
+    zh-Hant: 像網頁版的 Figma：畫 App 和網站介面、做能點著看的示範稿，匯出成圖片或 PDF。適合做設計的人。
+    ja: ブラウザ版 Figma のようなものです。アプリやサイトの画面を描き、クリックできるモックを作り、画像や PDF に書き出せます。デザインをする人向けです。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -145,16 +147,39 @@ x-wonton:
   tags:
     zh: [设计, 效率]
     en: [Design, Productivity]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；第一次登录确认一下姓名表单就行，界面可以选简体中文。
+    en: Opening the page signs you in with your Wonton account — no sign-up. Confirm the name form on first sign-in, and pick Simplified Chinese for the interface if you like.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；第一次登入確認一下姓名表單就行，介面可以選簡體中文。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。初回サインインでは氏名フォームを確認するだけで、画面は簡体字中国語も選べます。
   about:
     zh: |
       在自己家里做设计：画界面、画图形、做能点击演示的界面稿；用项目整理设计文件，导出 PNG、SVG 或 PDF。
 
-      使用 Wonton 身份登录，界面跟随浏览器语言，支持简体中文。首次登录需要确认 Penpot 的姓名表单。
+      界面跟着浏览器语言走，支持简体中文。
     en: |
       Design at home: draw interfaces and graphics, build clickable mock-ups, organize files in projects and export PNG, SVG, or PDF.
 
-      Sign in with your Wonton identity. The interface follows your browser language, including Simplified Chinese. First sign-in requires confirming Penpot's name form.
-  release_notes: { zh: 插件包迁入官方插件合仓，并将 Penpot 三个服务同步升级至 2.19.0，保留不部署管理台的配置。, en: "Moved into the official Wonton plugin monorepo and upgraded all three Penpot services to 2.19.0 while keeping the Admin Console disabled." }
+      The interface follows your browser language and includes Simplified Chinese.
+    zh-Hant: |
+      在自己家裡做設計：畫介面、畫圖形、做能點擊示範的介面稿；用專案整理設計檔案，匯出 PNG、SVG 或 PDF。
+
+      介面跟著瀏覽器語言走，支援簡體中文。
+    ja: |
+      家でデザインします。画面や図形を描き、クリックできるモックを作り、ファイルはプロジェクトで整理し、PNG・SVG・PDF に書き出せます。
+
+      画面はブラウザの言語に従い、簡体字中国語にも対応します。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，并将 Penpot 三个服务同步升级至 2.19.0，保留不部署管理台的配置。
+
+      商店介绍重写：登录和首次确认移到「安装后要做的事」，身份等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo and upgraded all three Penpot services to 2.19.0 while keeping the Admin Console disabled.
+
+      Store copy rewritten: sign-in and the first-confirm step moved to the pre-install notice, with identity wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，並將 Penpot 三個服務同步升級至 2.19.0，保留不部署管理臺的配置。\n\n商店介紹重寫：登入和首次確認移到「安裝後要做的事」，身分等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移し、Penpot の三サービスをそろえて 2.19.0 に上げました。管理コンソールを置かない設定は維持しています。\n\nストア紹介を書き直し、サインインと初回確認を「インストール後の手順」に移し、ID などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: frontend
     port: 8080
