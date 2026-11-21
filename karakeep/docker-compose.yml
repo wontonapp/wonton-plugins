@@ -142,10 +142,14 @@ volumes:
 x-wonton:
   spec: "0.11"
   id: app.karakeep.karakeep
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 智能收藏夹（Karakeep）, en: Smart Bookmarks (Karakeep) }
-  description: { zh: 像微信收藏：网址、文章、笔记、图片都能存进来，自动打好标签，日后搜里面的内容就能找回。适合看到什么都想先存下来的人。, en: "A save-it-for-later box for everything: keep links, articles, notes and images, get tags added automatically, and find anything later by searching what's inside." }
+  title: { zh: "智能收藏夹（Karakeep）", en: "Smart Bookmarks (Karakeep)", zh-Hant: "智慧收藏夾（Karakeep）", ja: "スマートブックマーク（Karakeep）" }
+  description:
+    zh: 像微信收藏：网址、文章、笔记、图片都能存进来，自动打好标签，日后搜里面的内容就能找回。适合看到什么都想先存下来的人。
+    en: "A save-it-for-later box for everything: keep links, articles, notes and images, get tags added automatically, and find anything later by searching what's inside."
+    zh-Hant: 像微信收藏：網址、文章、筆記、圖片都能存進來，自動打好標籤，日後搜裡面的內容就能找回。適合看到什麼都想先存下來的人。
+    ja: 後で見るための箱のようなものです。リンク、記事、メモ、画像を保存すると自動でタグが付き、中身を検索していつでも見つかります。何でもとりあえず残したい人向けです。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/search.png, screenshots/tags.png]
@@ -155,33 +159,55 @@ x-wonton:
   tags:
     zh: [书签, 阅读, AI]
     en: [Bookmarks, Reading, AI]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；AI 打标签也直接用，不用填任何外部服务的密钥。手机浏览器可以加到主屏当应用用。邀请家人和共享列表时，收件人只能填家里人的地址。
+    en: Opening it signs you in with your Wonton account — no sign-up — and AI tagging works with no external key to fill in. The page can be added to your phone's home screen as an app. When inviting family or sharing a list, recipients must be household addresses.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；AI 打標籤也直接用，不用填任何外部服務的密鑰。手機瀏覽器可以加到主畫面當應用用。邀請家人和共享清單時，收件人只能填家裡人的位址。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。AI のタグ付けも外部キーなしでそのまま動きます。ページはスマホのホーム画面にアプリとして追加できます。家族の招待やリスト共有では、宛先は家族のアドレスだけです。
   about:
     zh: |
-      把链接、文章、笔记和图片存进自己的书签库：网页自动抓标题、描述、全文和整页截图，手机和电脑浏览器都能快速收藏。
+      把链接、文章、笔记和图片存进自己的收藏库：网页自动抓标题、摘要、全文和整页截图，手机和电脑浏览器都能快速收藏。
 
-      收藏会自动打标签，AI 打标经云吞的模型网关完成，不用填任何外部服务的密钥。标题、标签和全文都能搜，
-      也可以按列表、标签和收藏时间翻。网页在手机浏览器里好用，也可以加到主屏幕当应用（PWA）。
+      收藏会自动打标签，标题、标签和全文都能搜，也可以按列表、标签和收藏时间翻。
 
-      抓网页用的是插件内置的无头浏览器（会抓取你收藏的页面，需要出网权限），全文搜索用的是插件内置的
-      Meilisearch。
+      抓网页用的是插件自带的浏览器，要能上网；全文搜索由插件自带的搜索服务完成。
 
-      核心升级后容器会自动按新的签发方重建，打开照常，不用重装。升级后页面若显示「插件记录已损坏」而打不开，是核心读不了旧记录，重装也修不好。
-
-      应用发出的邀请和列表协作邀请会经云吞的内部邮箱转进收件人的 Wonton 私聊；只发给家里的人，
-      邀请站外的人（外部邮箱）会发送失败。
+      应用发出的邀请和列表协作邀请会经云吞的内部信箱转进收件人的 Wonton 私聊；只发给家里的人，邀请站外的人（外部邮箱）会发送失败。
     en: |
-      Save links, articles, notes and images into your own bookmark library. Pages are fetched automatically with title, description, full text and a full-page screenshot, and can be saved quickly from phone and desktop browsers.
+      Save links, articles, notes and images into your own bookmark library. Pages are fetched automatically with title, summary, full text and a full-page screenshot, and can be saved quickly from phone and desktop browsers.
 
-      Bookmarks are tagged automatically. AI tagging runs through Wonton's model gateway, so there is no external API key to set up. Search across titles, tags and full text, or browse by lists, tags and date. The web app works well in a phone browser and can be added to the home screen as a PWA.
+      Bookmarks are tagged automatically, and titles, tags and full text are all searchable; browse by lists, tags and date too.
 
-      Crawling is done by a built-in headless browser (it fetches the pages you save, so the plugin needs internet access) and full-text search runs on a built-in Meilisearch service.
+      Fetching uses the plugin's own browser and needs internet access; full-text search runs on the plugin's own search service.
 
-      After a core upgrade the containers are rebuilt with the new issuer automatically; nothing to reinstall. If the page then reports a corrupted plugin record, the core can't read the record written before the upgrade and reinstalling won't help.
+      Invites and list collaboration invitations go through Wonton's internal mailbox into the recipient's Wonton chat. Only household members can receive them; inviting someone outside the household (an external email address) fails to send.
+    zh-Hant: |
+      把連結、文章、筆記和圖片存進自己的收藏庫：網頁自動抓標題、摘要、全文和整頁截圖，手機和電腦瀏覽器都能快速收藏。
 
-      Emails the app sends (invites and list collaboration invitations) go through Wonton's internal mailbox and arrive in the recipient's Wonton chat. Only household members can receive them; inviting someone outside the household (an external email address) fails to send.
+      收藏會自動打標籤，標題、標籤和全文都能搜，也可以按清單、標籤和收藏時間翻。
+
+      抓網頁用的是外掛自帶的瀏覽器，要能上網；全文搜尋由外掛自帶的搜尋服務完成。
+
+      應用發出的邀請和清單協作邀請會經雲吞的內部信箱轉進收件人的 Wonton 私聊；只發給家裡的人，邀請站外的人（外部信箱）會發送失敗。
+    ja: |
+      リンク、記事、メモ、画像を自分のブックマークライブラリに保存します。ページはタイトル・概要・全文・全画面スクリーンショット付きで自動取得され、スマホやパソコンのブラウザからすぐ保存できます。
+
+      ブックマークには自動でタグが付き、タイトル・タグ・全文を検索でき、リスト・タグ・日付でも探せます。
+
+      取得にはプラグイン内蔵のブラウザを使い、インターネットが必要です。全文検索は内蔵の検索サービスで動きます。
+
+      招待やリスト共同編集の招待は Wonton の内部メールボックスを通って相手のチャットに届きます。届くのは家族だけで、外部の人（外部アドレス）を招くと送信に失敗します。
   release_notes:
-    zh: 接上云吞的内部邮箱：邀请和列表协作邀请转进收件人的 Wonton 私聊（外部邮箱发不出）；已装过的实例把主人账号的邮箱对成内部邮箱。
-    en: "Wires the app to Wonton's internal mailbox: invites and list collaboration invitations arrive in the recipient's Wonton chat (external addresses cannot be sent to); existing installs get the owner account's email aligned to the internal one."
+    zh: |
+      接上云吞的内部邮箱：邀请和列表协作邀请转进收件人的 Wonton 私聊（外部邮箱发不出）；已装过的实例把主人账号的邮箱对成内部邮箱。
+
+      商店介绍重写：登录和邀请的说明移到「安装后要做的事」，模型网关、无头浏览器、Meilisearch、签发方等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Wires the app to Wonton's internal mailbox: invites and list collaboration invitations arrive in the recipient's Wonton chat (external addresses cannot be sent to); existing installs get the owner account's email aligned to the internal one.
+
+      Store copy rewritten: sign-in and invitation notes moved to the pre-install notice, with model-gateway/headless-browser/Meilisearch/issuer wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "接上雲吞的內部郵箱：邀請和列表協作邀請轉進收件人的 Wonton 私聊（外部郵箱發不出）；已裝過的例項把主人賬號的郵箱對成內部郵箱。\n\n商店介紹重寫：登入和邀請的說明移到「安裝後要做的事」，模型閘道、無頭瀏覽器、Meilisearch、簽發者等說法換成日常用語；補繁體中文和日文。"
+    ja: "Wonton の内部メールにつなぎました。招待やリストへの共同招待は受信者の Wonton ダイレクトメッセージに届きます（外部メールには送れません）。インストール済みのインスタンスは、主人アカウントのメールを内部アドレスに合わせます。\n\nストア紹介を書き直し、サインインと招待の説明を「インストール後の手順」に移し、モデルゲートウェイやヘッドレスブラウザ、Meilisearch、発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   secrets:
     # NEXTAUTH 的会话签名密钥和 Meilisearch 主密钥，都由核心生成。
     nextauth_secret: { generate: { bytes: 32 } }

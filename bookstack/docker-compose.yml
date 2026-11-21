@@ -98,14 +98,16 @@ volumes:
   db-data:
 
 x-wonton:
-  spec: "0.6"
+  spec: "0.11"
   id: app.bookstack.bookstack
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { en: BookStack }
+  title: { zh: "家庭文档库（BookStack）", en: "Home Wiki (BookStack)", zh-Hant: "家庭文件庫（BookStack）", ja: "家庭向け Wiki（BookStack）" }
   description:
-    zh: "家里的 Wiki 和文档库：书、章节、页面，图文编辑，全文搜索。用 BookStack 自己的账号登录，不走云吞登录。"
-    en: "Your home wiki and docs: books, chapters and pages with a rich editor and full-text search. Signs in with BookStack's own account, not the Wonton login."
+    zh: 像家里的一本本百科书：分书、章节、页面记资料，贴图带附件，全文搜索随找。用自己的账号登录，不占云吞身份。
+    en: "Like a shelf of home encyclopedias: books, chapters and pages hold your notes with images and attachments, all full-text searchable. Signs in with its own account, apart from Wonton."
+    zh-Hant: 像家裡的一本本百科書：分書、章節、頁面記資料，貼圖帶附件，全文搜尋隨找。用自己的帳號登入，不佔用雲吞身分。
+    ja: 家に並ぶ百科事典のようなもの。本・章・ページに画像や添付を交えて記録をまとめ、全文検索で探せます。Wonton とは別の専用アカウントでサインインします。
   icon: icon.png
   notices: [NOTICE]
   author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
@@ -115,16 +117,27 @@ x-wonton:
   tags:
     zh: [文档]
     en: [Documents]
+  setup:
+    zh: 打开后用你的云吞邮箱登录，密码在插件详情页的「管理员密码」里查看，第一次登录后改成自己的；家人可以在登录页自己注册。
+    en: Open the page and sign in with your Wonton email; the password is under “Admin password” in the plugin details — change it after the first sign-in. Family members can register on the sign-in page.
+    zh-Hant: 開啟後用你的雲吞信箱登入，密碼在外掛詳情頁的「管理員密碼」裡查看，第一次登入後改成自己的；家人可以在登入頁自行註冊。
+    ja: 開いたら Wonton のメールアドレスでサインインします。パスワードはプラグイン詳細の「管理者パスワード」で確認でき、初回サインイン後に自分のものへ変更してください。家族はサインインページから自分で登録できます。
   about:
+    zh: 把家里的知识整理成书：一本书分章节，章节里一页页写，图文所见即所得，图片和附件直接贴进页面，之后全文搜索。
+    en: "Organise your knowledge into books: chapters hold pages, editing shows the result as you type, images and attachments go straight into the page, and everything stays searchable."
+    zh-Hant: 把家裡的知識整理成書：一本書分章節，章節裡一頁頁寫，圖文所見即所得，圖片和附件直接貼進頁面，之後全文搜尋。
+    ja: 家の知識を本にまとめます。本を章に分け、章にページを書き足していきます。編集中に仕上がりがそのまま見え、画像や添付もページに直接置けて、あとから全文検索できます。
+  release_notes:
     zh: |
-      把家里的知识整理成书：一本书分章节，章节里一页页写，所见即所得编辑，图片和附件直接贴进页面，之后全文搜索。
+      插件包迁入官方插件合仓，内容与上一版相同。
 
-      用 BookStack 自己的账号登录，不走云吞登录。
+      商店介绍重写：补通俗中文标题，登录和账号内容移到「安装后要做的事」；补繁体中文和日文。
     en: |
-      Organise your knowledge into books: chapters hold pages, editing is rich-text with images and attachments, and everything stays searchable.
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
 
-      Signs in with BookStack's own account, not the Wonton login.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Store copy rewritten: added a plain Chinese title and moved sign-in and account notes to the pre-install notice; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：補通俗中文標題，登入和帳號內容移到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、わかりやすい中国語タイトルを付け、サインインとアカウントの説明を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
   webui:
     service: bookstack
     port: 80

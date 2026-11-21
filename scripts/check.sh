@@ -47,6 +47,38 @@ PY
   echo "提醒：清单是 spec $plugin_spec，核心镜像 $(core_image) 支持到 $core_max；新插件建议写现行版本（字段见 https://github.com/wontonapp/wonton-docs/blob/main/plugin-spec.md）。" >&2
 }
 
+# 繁中段里混进简体字（“被發現”写成“被发现”）——按一批只用于简体的常用字查，提醒不挡。
+zh_hant_reminder() {
+  python3 - "$plugin/docker-compose.yml" <<'PY' >&2
+import re, sys
+simplified = set("发现开关门为对与这设权数据网页应夹点击选择确类视频图乐连转间时长进还将没会个机该处实软盘备账号码启运览标记删贝档读写别")
+bad = []
+depth = None
+for number, line in enumerate(open(sys.argv[1], encoding="utf-8"), 1):
+    indent = len(line) - len(line.lstrip())
+    match = re.match(r"\s*zh-Hant:\s*(.*)", line)
+    if match:
+        rest = match.group(1)
+        if rest.startswith("|") or rest.startswith(">"):
+            depth = indent
+            rest = ""
+        else:
+            rest = re.split(r",\s*[A-Za-z][A-Za-z-]*:", rest)[0]
+    elif not line.strip():
+        rest = ""
+    elif depth is not None and indent > depth:
+        rest = line
+    else:
+        depth = None
+        rest = ""
+    hits = "".join(sorted(set(rest) & simplified))
+    if hits:
+        bad.append(f"{number}: {' '.join(hits)}")
+if bad:
+    print("提醒：zh-Hant 里有简体字（行号：字）：" + "；".join(bad), file=sys.stderr)
+PY
+}
+
 output="$(mktemp)"
 trap 'rm -f "$output"' EXIT
 set +e
@@ -63,4 +95,5 @@ if [[ "$(cat "$output")" =~ 插件按规范[[:space:]]+([0-9]+\.[0-9]+).*只支�
   exit "$status"
 fi
 spec_reminder
+zh_hant_reminder
 exit "$status"

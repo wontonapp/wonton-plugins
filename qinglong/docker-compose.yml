@@ -58,12 +58,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: com.github.whyour.qinglong
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 定时任务（青龙）, en: Scheduled Tasks (Qinglong) }
+  title: { zh: "定时任务（青龙）", en: "Scheduled Tasks (Qinglong)", zh-Hant: "定時任務（青龍）", ja: "定時タスク（Qinglong）" }
   description:
-    zh: 像手机上的定时提醒，在家里电脑上定时跑脚本：每天定时备份文件、抓取信息、发条提醒都行。会写 Python、JavaScript 或 Shell 脚本，把它交给青龙到点执行；现成的脚本仓库也能一键导入。
+    zh: 像手机上的定时提醒，在家里电脑上定时跑脚本：每天备份文件、抓取信息、发条提醒都行。会写 Python、JavaScript 或 Shell 脚本，把它交给青龙到点执行；现成的脚本仓库也能一键导入。
     en: "Like a recurring reminder on your phone, it runs scripts on schedule at home: daily backups, fetching information, sending a notice. Hand it any Python, JavaScript or Shell script and Qinglong runs it on time; ready-made script repos can be imported with one click."
+    zh-Hant: 像手機上的定時提醒，在家裡電腦上定時跑腳本：每天備份檔案、抓取資訊、發條提醒都行。會寫 Python、JavaScript 或 Shell 腳本，把它交給青龍到點執行；現成的腳本倉庫也能一鍵匯入。
+    ja: スマホの繰り返しリマインダーのようなものです。家のパソコンでスクリプトを定時に実行し、毎日のバックアップや情報取得、通知を行えます。Python・JavaScript・Shell のスクリプトを渡せば、Qinglong が時間通りに実行します。既製のスクリプトリポジトリも 1 クリックで取り込めます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/01-crontab.png, screenshots/02-script.png, screenshots/03-log.png, screenshots/04-env.png]
@@ -78,23 +80,51 @@ x-wonton:
     zh: |
       在家里电脑上定时跑脚本的面板：到点执行 Python、JavaScript、Shell 脚本，不用再开着电脑手动跑。
 
-      能做什么：写好脚本定时备份、定时抓取、定时提醒；在线管理脚本、定时规则、环境变量；任务日志随时回看；依赖装在面板里，脚本要用什么包就在面板里装。
+      备份、抓取、提醒都能定时，脚本、定时规则和要用的软件包都在面板里管，任务日志随时回看。
 
-      通知已经接好：脚本里调用青龙的通知（Python 的 notify、JavaScript 的 sendNotify），消息会发进"云吞"私聊，不用再配推送渠道。
+      通知已经接好：脚本里调用青龙的通知（Python 的 notify、JavaScript 的 sendNotify），消息会发进你的 Wonton 私聊，不用再配推送渠道。
 
-      注意：脚本能做脚本能做的一切事，相当于给这台电脑上跑你写（或你找到）的程序；只装自己信得过的脚本和脚本仓库。
+      注意：脚本相当于在这台电脑上跑程序，只装自己信得过的脚本和仓库。
     en: |
       A panel that runs scripts on a schedule on your home computer: Python, JavaScript and Shell scripts execute on time, no computer left open by hand.
 
-      What it does: scheduled backups, fetching, reminders; manage scripts, cron rules, environment variables online; view task logs anytime; install the packages your scripts need right in the panel.
+      Backups, fetching and reminders can all be scheduled, and scripts, cron rules and needed packages are managed in the panel with task logs at hand.
 
       Notifications are wired up: call Qinglong's notify (Python) or sendNotify (JavaScript) in a script and the message lands in your Wonton chat, no push channel to configure.
 
-      Note: scripts can do anything a program can do — it runs code you write (or find) on this machine; only install scripts and script repos you trust.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Note: scripts are programs running on this machine, so only install scripts and repos you trust.
+    zh-Hant: |
+      在家裡電腦上定時跑腳本的面板：到點執行 Python、JavaScript、Shell 腳本，不用再開著電腦手動跑。
+
+      備份、抓取、提醒都能定時，腳本、定時規則和要用的軟體套件都在面板裡管，任務紀錄隨時回看。
+
+      通知已經接好：腳本裡呼叫青龍的通知（Python 的 notify、JavaScript 的 sendNotify），訊息會發進你的 Wonton 私聊，不用再配推送頻道。
+
+      注意：腳本相當於在這台電腦上跑程式，只裝自己信得過的腳本和倉庫。
+    ja: |
+      家のパソコンでスクリプトを定時に走らせるパネルです。Python・JavaScript・Shell のスクリプトを時間通りに実行し、パソコンを開きっぱなしにする必要はありません。
+
+      バックアップ・取得・リマインダーを定時にでき、スクリプト・スケジュール・必要なパッケージはパネルで管理し、実行ログもいつでも見られます。
+
+      通知は設定済みです。スクリプトで Qinglong の通知（Python の notify、JavaScript の sendNotify）を呼べば Wonton チャットに届き、プッシュ経路の設定は不要です。
+
+      注意：スクリプトはこのパソコンで動くプログラムです。信頼できるスクリプトとリポジトリだけを入れてください。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：首次设账号移到「安装后要做的事」，环境变量、依赖等说法换成日常用语，并修掉重复的一句；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: first-time account setup moved to the pre-install notice, with env-var/dependency wording in everyday words and a duplicated phrase fixed; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：首次設帳號移到「安裝後要做的事」，環境變數、依賴等說法換成日常用語，並修掉重複的一句；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、初回のアカウント設定を「インストール後の手順」に移し、環境変数や依存関係などの言い方を日常的な言葉にして重複表現も直しました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 装好后第一次打开，在页面里设置管理员用户名和密码。
-    en: On first open, create the admin username and password on the page.
+    zh: 第一次打开时自己定管理员用户名和密码，务必记牢；再去脚本页写脚本或用仓库导入，然后加定时规则。
+    en: On first open, set an admin username and password and remember them; then write a script or import a repo, and add a schedule.
+    zh-Hant: 第一次開啟時自己定管理員使用者名稱和密碼，務必記牢；再去腳本頁寫腳本或用倉庫匯入，然後加定時規則。
+    ja: 初回に管理者のユーザー名とパスワードを自分で決め、必ず覚えてください。次にスクリプトを書くかリポジトリを取り込み、スケジュールを追加します。
   webui:
     service: qinglong
     port: 5700

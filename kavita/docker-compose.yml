@@ -83,12 +83,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: com.kavitareader.kavita
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 漫画电子书架（Kavita）, en: Comics & E-Book Reader (Kavita) }
+  title: { zh: "漫画书架（Kavita）", en: "Comics & E-Book Shelf (Kavita)", zh-Hant: "漫畫書架（Kavita）", ja: "マンガ本棚（Kavita）" }
   description:
     zh: 像漫画 App 的书架：漫画和电子书放进去，网页里翻页看，读到哪一页自动记住，换手机接着读。漫画、小说都爱看的人选它。
     en: "Like a manga app's bookshelf: add comics and e-books, read them in the browser, and it remembers your page so you can pick up on your phone. For people who read both manga and novels."
+    zh-Hant: 像漫畫 App 的書架：漫畫和電子書放進去，網頁裡翻頁看，讀到哪一頁自動記住，換手機接著讀。漫畫、小說都愛看的人選它。
+    ja: マンガアプリの本棚のようなものです。マンガや電子書籍を入れ、ブラウザでページをめくり、読んだページは自動で覚えてスマホでも続きから読めます。マンガも小説も読む人向けです。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/library.png, screenshots/series.png, screenshots/reader.png]
@@ -98,31 +100,55 @@ x-wonton:
   tags:
     zh: [阅读, 漫画]
     en: [Reading, Comics]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；把书放进共享文件夹就会自己入库。
+    en: Opening the page signs you in with your Wonton account — no sign-up. Books dropped into the shared folder are added on their own.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；把書放進共享資料夾就會自己入庫。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。共有フォルダに本を置けば自動で登録されます。
   about:
     zh: |
       把漫画和电子书整理成书库，网页阅读器翻页、缩放、记住进度，手机接着读。
 
-      登录走云吞的账号，打开就是你的书架；局域网里的书放进共享文件夹就能入库。
+      应用发的信（找回密码、邀请、推到阅读器）会出现在收件人的 Wonton 私聊里；发给外部地址（比如 Kindle 的邮箱）会发送失败。
 
-      应用发的信（找回密码、邀请、Send To 设备）会出现在收件人的「Wonton」私聊里；发给外部地址
-      （比如 Kindle）会发送失败。
+      检查更新、补全书籍资料、云端同步进度要连外网，书库本身不联网也能看。
 
-      需要访问外网：检查更新、外部元数据和 Kavita+ 都要连出去，书库本身不受影响。
-
-      云吞升级后会自动重新接好账号。
+      云吞更新后会自动重新接好账号，不用重装。
     en: |
       Organize comics and e-books into libraries; the web reader remembers your page so you can pick up on the phone.
 
-      You sign in with your Wonton account and land straight on your shelves. Books in the shared folder get picked up by the scanner.
+      Emails the app sends (password resets, invites, sending to e-readers) land in the recipient's Wonton chat; external addresses (like a Kindle address) fail to send.
 
-      Emails the app sends (password resets, invites, Send To) land in the recipient's Wonton chat; external addresses (like Kindle) fail to send.
+      Update checks, book details and cloud progress sync need the internet; your library reads fine without it.
 
-      Needs internet access: update checks, external metadata and Kavita+ reach the network; your library works offline.
+      After a Wonton upgrade your account is reconnected automatically — nothing to reinstall.
+    zh-Hant: |
+      把漫畫和電子書整理成書庫，網頁閱讀器翻頁、縮放、記住進度，手機接著讀。
 
-      After a Wonton upgrade, your account is reconnected automatically.
+      應用寄的信（找回密碼、邀請、推送到閱讀器）會出現在收件人的 Wonton 私聊裡；發給外部位址（例如 Kindle 的信箱）會發送失敗。
+
+      檢查更新、補全書籍資料、雲端同步進度要連外網，書庫本身不連網也能看。
+
+      雲吞更新後會自動重新接好帳號，不用重裝。
+    ja: |
+      マンガと電子書籍を書庫に整理し、Web リーダーでページをめくり、拡大縮小し、進み具合を覚えます。スマホでも続きから読めます。
+
+      アプリが送るメール（パスワード再設定、招待、リーダーへの送信）は受け取った人の Wonton チャットに届きます。外部アドレス（Kindle のアドレスなど）への送信は失敗します。
+
+      更新確認・書誌情報・クラウド同期にはインターネットが必要ですが、書庫はオフラインでも読めます。
+
+      Wonton の更新後はアカウントが自動でつなぎ直され、入れ直す必要はありません。
   release_notes:
-    zh: 接入云吞内部邮箱：找回密码、邀请、Send To 等邮件自动转到收件人的「Wonton」私聊，不用再填 SMTP；发给外部地址（如 Kindle）会失败。
-    en: "Connects to the Wonton internal mailbox: password resets, invites and Send To emails are relayed into the recipient's Wonton chat with no SMTP setup; external addresses (like Kindle) fail to send."
+    zh: |
+      接入云吞内部邮箱：找回密码、邀请、Send To 等邮件自动转到收件人的「Wonton」私聊，不用再填 SMTP；发给外部地址（如 Kindle）会失败。
+
+      商店介绍重写：登录说明移到「安装后要做的事」，Send To、Kavita+ 等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Connects to the Wonton internal mailbox: password resets, invites and Send To emails are relayed into the recipient's Wonton chat with no SMTP setup; external addresses (like Kindle) fail to send.
+
+      Store copy rewritten: the sign-in note moved to the pre-install notice, with Send To/Kavita+ wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "接入雲吞內部郵箱：找回密碼、邀請、Send To 等郵件自動轉到收件人的「Wonton」私聊，不用再填 SMTP；發給外部地址（如 Kindle）會失敗。\n\n商店介紹重寫：登入說明移到「安裝後要做的事」，Send To、Kavita+ 等說法換成日常用語；補繁體中文和日文。"
+    ja: "Wonton の内部メールにつなぎました。パスワード再設定、招待、Send To などのメールは受信者の Wonton ダイレクトメッセージに届き、SMTP の設定は不要です。外部アドレス（Kindle など）への送信は失敗します。\n\nストア紹介を書き直し、サインインの説明を「インストール後の手順」に移し、Send To や Kavita+ などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: kavita
     port: 5000

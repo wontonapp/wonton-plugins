@@ -58,14 +58,16 @@ configs:
           rwmda: @acct
 
 x-wonton:
-  spec: "0.6"
+  spec: "0.11"
   id: me.ocv.copyparty
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 家庭网盘（Copyparty）, en: Home Cloud Drive (Copyparty) }
+  title: { zh: "家庭网盘（Copyparty）", en: "Home Drive (Copyparty)", zh-Hant: "家庭網盤（Copyparty）", ja: "家庭クラウドドライブ（Copyparty）" }
   description:
     zh: 像百度网盘，但文件存在家里的服务器上：手机、电脑打开网页就能上传下载，照片、视频、音乐直接在线看。最简单好上手，还能开链接让别人下载或往里传文件。
-    en: "Like Google Drive, but the files live on your home server: upload and download from any phone or computer browser, with photos, videos and music playing right there. The easiest drive to start with, and you can share links for others to download from or upload to."
+    en: "Like Google Drive, but the files live on your home server: upload and download from any phone or computer browser, with photos, videos and music playing right there. The easiest drive to start with, and you can hand out links for others to download from or upload to."
+    zh-Hant: 像百度網盤，但檔案存在家裡的伺服器上：手機、電腦開啟網頁就能上傳下載，照片、影片、音樂直接線上收看。最簡單好上手，還能開連結讓別人下載或往裡傳檔案。
+    ja: Google ドライブのようなものですが、ファイルは家のサーバーに置きます。スマホやパソコンのブラウザからアップロード・ダウンロードでき、写真・動画・音楽はその場で再生できます。一番手軽で、リンクを渡して他人にダウンロードやアップロードを許可することもできます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/files.png, screenshots/photos.png]
@@ -76,20 +78,47 @@ x-wonton:
   tags:
     zh: [文件, 网盘]
     en: [Files, Cloud drive]
+  setup:
+    zh: 打开就能用，不用注册：打开就是你的文件，家里每台设备都能进。
+    en: "Open it and go — no sign-up: it opens straight to your files and works from every device at home."
+    zh-Hant: 開啟就能用，不用註冊：開啟就是你的檔案，家裡每台裝置都能進。
+    ja: 開けばすぐ使え、登録は要りません。開いた時点で自分のファイルが並び、家のどの端末からでも使えます。
   about:
     zh: |
-      把家里的服务器变成一个网盘：在手机或电脑的网页上上传、下载、整理文件，图片、视频、音乐、PDF 直接预览，整个文件夹打包下载。
+      把家里的服务器变成一个网盘：在手机或电脑的网页上上传、下载、整理文件，图片、视频、音乐、PDF 直接打开，整个文件夹打包下载。
 
       别人给你的分享链接可以直接上传，你也能给任意文件或文件夹生成下载链接和限时口令。
 
-      文件存在插件自己的数据目录里，卸载插件选保留数据时文件不动。
+      文件存在插件自己的空间里，卸载插件选保留数据时文件不动。
     en: |
-      Turn your home server into a cloud drive: upload, download and organize files from your phone or computer, with built-in previews for images, videos, music and PDFs, and folder downloads as archives.
+      Turn your home server into a cloud drive: upload, download and organize files from your phone or computer, with images, videos, music and PDFs opening right in the page, and folders downloaded as archives.
 
       Share links can accept uploads from others, and you can generate download links with passwords and expiry for any file or folder.
 
-      Files live in the plugin's own data directory and survive uninstalling with data kept.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Files live in the plugin's own space and stay put when you uninstall with the data kept.
+    zh-Hant: |
+      把家裡的伺服器變成一個網盤：在手機或電腦的網頁上上傳、下載、整理檔案，圖片、影片、音樂、PDF 直接開啟，整個資料夾打包下載。
+
+      別人給你的分享連結可以直接上傳，你也能給任意檔案或資料夾產生下載連結和限時密碼。
+
+      檔案存在外掛自己的空間裡，移除外掛時選保留資料，檔案就不動。
+    ja: |
+      家のサーバーをクラウドドライブにします。スマホやパソコンのブラウザからアップロード・ダウンロード・整理ができ、画像・動画・音楽・PDF はその場で開け、フォルダはまとめてダウンロードできます。
+
+      他人からもらった共有リンクからは直接アップロードでき、どのファイルやフォルダにもパスワード付き・期限付きのダウンロードリンクを作れます。
+
+      ファイルはプラグイン専用の領域に置かれ、データを残してアンインストールすればそのまま残ります。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：数据目录这类说法换成日常用语，补「不用注册」的说明；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: data-directory wording replaced with everyday words and the no-sign-up point spelled out; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：資料目錄這類說法換成日常用語，補「不用註冊」的說明；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、データディレクトリなどの言い方を日常的な言葉にし、登録不要であることを明記しました。繁体字中国語と日本語を追加。"
   webui:
     service: copyparty
     port: 3923

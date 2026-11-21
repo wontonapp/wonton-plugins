@@ -54,12 +54,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: org.nodered.node-red
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 流程自动化（Node-RED）, en: Flow Automation (Node-RED) }
+  title: { zh: "流程自动化（Node-RED）", en: "Flow Automation (Node-RED)", zh-Hant: "流程自動化（Node-RED）", ja: "フロー自動化（Node-RED）" }
   description:
-    zh: 像拼积木一样拖方块、连上线，把家里的设备和消息串成自动流程。比如：门铃一响就给手机发消息，定时把温度记下来。
+    zh: 像拼积木一样拖方块、连上线，把家里的设备和消息串成自动流程：门铃一响就给手机发消息，定时把温度记下来。
     en: "Snap blocks together and wire them up to automate your home: ring the doorbell, get a message; log the temperature on a schedule."
+    zh-Hant: 像拼積木一樣拖方塊、連上線，把家裡的裝置和訊息串成自動流程：門鈴一響就給手機發訊息，定時把溫度記下來。
+    ja: ブロックをつなげて家の機器やメッセージを自動化します。ドアベルが鳴ればメッセージが届き、温度は定時に記録されます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/01-editor.png, screenshots/02-flow.png, screenshots/03-deploy.png]
@@ -72,25 +74,37 @@ x-wonton:
     en: [Automation, Home, Productivity]
   about:
     zh: |
-      像拼积木一样，拖几个方块、连上线，就能搭出自动流程。
+      像拼积木一样，拖几个方块、连上线，就能搭出自动流程：门铃一响就给手机发消息、太阳落山自动开灯、定时把温度记录下来。流程存在这台机器上，浏览器里随时打开改。
 
-      比如：门铃一响就给手机发条消息、太阳落山自动开灯、定时把温度记录下来。流程存在这台机器上，浏览器里随时打开改。
-
-      常用来做智能家居联动、消息提醒和定时任务。
-
-      注意：流程里的「函数」方块能运行自定义代码，请只安装自己信得过的流程。
+      注意：流程里有一种方块能运行自己写的代码，请只装自己信得过的流程。
     en: |
-      Snap blocks together, wire them up, and your home runs itself.
+      Snap blocks together and wire them up to build automations: a phone message when the doorbell rings, lights on at sunset, the temperature logged on schedule. Flows stay on this machine and open in the browser whenever you want to change them.
 
-      For example: send a phone message when the doorbell rings, turn the lights on at sunset, log the temperature on a schedule. Flows are stored on this machine and open in the browser whenever you want to change them.
+      Note: one kind of block runs custom code, so only install flows you trust.
+    zh-Hant: |
+      像拼積木一樣，拖幾個方塊、連上線，就能搭出自動流程：門鈴一響就給手機發訊息、太陽下山自動開燈、定時把溫度記錄下來。流程存在這台機器上，瀏覽器裡隨時開啟改。
 
-      Commonly used for smart-home scenes, notifications and scheduled jobs.
+      注意：流程裡有一種方塊能執行自己寫的程式，請只裝自己信得過的流程。
+    ja: |
+      ブロックをつなげて自動化を組みます。ドアベルが鳴ればスマホにメッセージ、日の入りで照明をつけ、温度を定時に記録できます。フローはこのマシンに残り、ブラウザでいつでも開いて直せます。
 
-      Note: the "function" block runs custom code, so only install flows you trust.
-  release_notes: { zh: 插件包迁入官方插件合仓，功能与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; functionality is unchanged." }
+      注意：独自のコードを実行するブロックがあるため、信頼できるフローだけを入れてください。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，功能与上一版相同。
+
+      商店介绍重写：登录说明移到「安装后要做的事」，去掉与例子重复的一段；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; functionality is unchanged.
+
+      Store copy rewritten: the sign-in note moved to the pre-install notice and a repeated paragraph dropped; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，功能與上一版相同。\n\n商店介紹重寫：登入說明移到「安裝後要做的事」，去掉與例子重複的一段；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。機能は前版と同じです。\n\nストア紹介を書き直し、サインインの説明を「インストール後の手順」に移し、例と重複した段落を削りました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 打开网页，用户名 admin，密码在插件的详情页里查看。
-    en: Open the web page and sign in as admin; the password is on the plugin's detail page.
+    zh: 打开网页，用户名 admin，密码在插件详情页的「管理员密码」里查看。
+    en: Open the web page and sign in as admin; the password is under "Admin password" on the plugin details page.
+    zh-Hant: 開啟網頁，使用者名稱 admin，密碼在外掛詳情頁的「管理員密碼」裡查看。
+    ja: Web ページを開き、ユーザー名 admin でサインインします。パスワードはプラグイン詳細の「管理者パスワード」にあります。
   webui:
     service: nodered
     port: 1880

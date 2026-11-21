@@ -24,15 +24,17 @@ services:
       start_interval: 5s
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   # 反向域名：上游是 ollama.com。
   id: com.ollama.ollama
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 本地 AI 模型（Ollama）, en: Local AI Models (Ollama) }
+  title: { zh: "本地 AI 模型（Ollama）", en: "Local AI Models (Ollama)", zh-Hant: "本機 AI 模型（Ollama）", ja: "ローカル AI モデル（Ollama）" }
   description:
-    zh: 在家里的服务器上运行开源 AI 模型，给 Bot 和其他应用当“大脑”，聊的内容不出家门。有没有显卡都能跑、换模型方便，家用首选。
-    en: Run open-source AI models on your home server as the brain for your bots and apps, with nothing leaving home. Works with or without a graphics card and makes switching models easy — the go-to choice for most homes.
+    zh: 在家里的服务器上运行开源 AI 模型，给助手和其他应用当“大脑”，聊的内容不出家门。有没有显卡都能跑、换模型方便。
+    en: Run open-source AI models on your home server as the brain for your assistants and apps, with nothing leaving home. Works with or without a graphics card and makes switching models easy.
+    zh-Hant: 在家裡的伺服器上執行開源 AI 模型，給助手和其他應用當「大腦」，聊的內容不出家門。有沒有顯示卡都能跑、換模型方便。
+    ja: 家のサーバーでオープンソースの AI モデルを動かし、アシスタントやアプリの頭脳にします。会話は家から出ません。グラフィックカードがなくても動き、モデルの切り替えも簡単です。
   icon: icon.svg
   notices: [NOTICE]
   author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
@@ -42,27 +44,47 @@ x-wonton:
   tags:
     zh: [AI]
     en: [AI]
+  setup:
+    zh: 装好后到「模型设置」里添加 Ollama，地址填本机的局域网地址加 :11434，网关里的应用和助手就能用本地模型了。下载和删除模型用 Ollama 自己的命令。
+    en: After install, add Ollama under "Models" with this host's LAN address plus :11434; apps and assistants behind the gateway can then use local models. Pull and remove models with Ollama's own command.
+    zh-Hant: 裝好後到「模型設定」裡新增 Ollama，位址填本機的區域網路位址加 :11434，閘道裡的應用和助手就能用本機模型了。下載和刪除模型用 Ollama 自己的指令。
+    ja: 導入後「モデル設定」で Ollama を追加し、本機の LAN アドレスに :11434 を付けて入力します。ゲートウェイ配下のアプリとアシスタントがローカルモデルを使えるようになります。モデルの取得と削除は Ollama 自身のコマンドで行います。
   about:
     zh: |
       把 Ollama 装在自己家里，用本机的算力跑开源大模型，数据不出门。
 
-      有显卡就自动用显卡（NVIDIA、AMD、Intel），没有就退回 CPU。装好后打开
-      “模型设置”（模型网关），把 http://<主机的局域网地址>:11434 填成 Ollama 的
-      provider，网关里的应用和 Bot 就能用本地模型了；局域网里的电脑和手机也能直接连这个地址。
+      有显卡就自动用显卡（NVIDIA、AMD、Intel），没有就用 CPU。局域网里的电脑和手机也能直接连上来用。
 
-      模型的下载和删除用 Ollama 自己的命令行（docker exec 进容器跑 ollama pull / ollama rm）。
+      模型的下载和删除用 Ollama 自己的命令，在插件的终端里跑（ollama pull / ollama rm）。
     en: |
-      Run Ollama on your own hardware at home and use open models locally, keeping data on your
-      machine.
+      Run Ollama on your own hardware at home and use open models locally, keeping data on your machine.
 
-      It uses your GPU (NVIDIA, AMD, Intel) when there is one and falls back to CPU otherwise.
-      After installing, open “Models” (the model gateway) and add
-      http://<your-host-LAN-address>:11434 as an Ollama provider; apps and bots behind the
-      gateway can then use local models, and so can computers and phones on your LAN.
+      It uses your graphics card when there is one (NVIDIA, AMD, Intel) and falls back to the CPU otherwise. Computers and phones on your LAN can connect to it directly too.
 
-      Pull and remove models with Ollama's own command line (docker exec into the container:
-      ollama pull / ollama rm).
-  release_notes: { zh: 插件包迁入官方插件合仓，并更新名称和说明。, en: "Moved into the official Wonton plugin monorepo with updated name and description." }
+      Pull and remove models with Ollama's own command in the plugin's terminal (ollama pull / ollama rm).
+    zh-Hant: |
+      把 Ollama 裝在自己家裡，用本機的算力跑開源大模型，資料不出門。
+
+      有顯示卡就自動用顯示卡（NVIDIA、AMD、Intel），沒有就用 CPU。區域網路裡的電腦和手機也能直接連上來用。
+
+      模型的下載和刪除用 Ollama 自己的指令，在外掛的終端裡跑（ollama pull / ollama rm）。
+    ja: |
+      Ollama を自宅で動かし、本機の計算力でオープンモデルを動かします。データは外に出ません。
+
+      グラフィックカードがあれば自動で使い（NVIDIA、AMD、Intel）、なければ CPU を使います。LAN のパソコンやスマホからも直接つなげます。
+
+      モデルの取得と削除は Ollama 自身のコマンドをプラグインの端末で実行します（ollama pull / ollama rm）。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，并更新名称和说明。
+
+      商店介绍重写：接模型网关的步骤移到「安装后要做的事」，docker exec、provider 等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo with updated name and description.
+
+      Store copy rewritten: gateway hook-up moved to the pre-install notice, with docker-exec/provider wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，並更新名稱和說明。\n\n商店介紹重寫：接模型閘道的步驟移到「安裝後要做的事」，docker exec、provider 等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動し、名前と説明を更新しました。\n\nストア紹介を書き直し、ゲートウェイ接続の手順を「インストール後の手順」に移し、docker exec や provider などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   # 出网：拉模型要走 registry.ollama.ai。
   # 局域网：网关要够得着 Ollama 才能把它注册成 provider，局域网设备直连也靠它。
   permissions:

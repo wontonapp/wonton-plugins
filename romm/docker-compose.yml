@@ -88,12 +88,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: app.romm.romm
-  version: 0.2.0
+  version: 0.2.1
   kind: app
-  title: { zh: 复古游戏厅（RomM）, en: Retro Game Room (RomM) }
+  title: { zh: "复古游戏厅（RomM）", en: "Retro Game Room (RomM)", zh-Hant: "復古遊戲廳（RomM）", ja: "レトロゲームルーム（RomM）" }
   description:
     zh: 像网页版的怀旧游戏机：把红白机、GBA 这些老游戏的文件放进去，点开就在浏览器里玩，存档跟着账号走。
     en: "A retro console in your browser: add game files for the NES, Game Boy Advance and other classics, then play right in the browser with saves tied to your account."
+    zh-Hant: 像網頁版的懷舊遊戲機：把紅白機、GBA 這些老遊戲的檔案放進去，點開就在瀏覽器裡玩，存檔跟著帳號走。
+    ja: ブラウザの中のレトロゲーム機です。ファミコンや GBA などのゲームファイルを入れれば、ブラウザですぐ遊べ、セーブはアカウントに付きます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/library.png, screenshots/game.png, screenshots/search.png, screenshots/play.png]
@@ -103,34 +105,55 @@ x-wonton:
   tags:
     zh: [游戏, 模拟器, 复古游戏]
     en: [Games, Emulators, Retro games]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册。游戏文件放进共享文件夹 games 的 roms 里，再按机器分文件夹（如 games/roms/gba/ 放 GBA 游戏），网页里也能直接上传。
+    en: Opening the page signs you in with your Wonton account — no sign-up. Put game files under roms in the games shared folder, one folder per console (e.g. games/roms/gba/ for GBA); you can also upload from the web page.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊。遊戲檔案放進共享資料夾 games 的 roms 裡，再按主機分資料夾（如 games/roms/gba/ 放 GBA 遊戲），網頁裡也能直接上傳。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。ゲームファイルは共有フォルダ games の roms に、機種ごとのフォルダを作って置きます（GBA なら games/roms/gba/）。Web ページからもアップロードできます。
   about:
     zh: |
-      把老游戏的文件（ROM）整理成网页游戏库：扫描、搜索、看封面和介绍，点开就在浏览器里玩（游戏模拟器已内置），存档和即时存档跟着账号走。
+      把老游戏整理成网页游戏库：扫描、搜索、看封面和介绍，点开就在浏览器里玩（游戏机已内置），存档和即时存档跟着账号走。游戏机支持哪些机型见 RomM 自己的文档。
 
-      游戏文件放在共享文件夹 games 里，按上游 5.x 的库结构放 roms 子目录再按平台分（如 games/roms/gba/ 放 GBA 的 ROM，支持的平台见 RomM 文档）；也可以直接在网页里上传。
+      应用发的信（找回密码、确认码）会出现在你的 Wonton 私聊里；通知渠道填云吞以外的邮箱收不到，RomM 会报发送失败。
 
-      登录用云吞的账号，打开就进库，不用再注册或设密码。
+      封面和介绍这些资料来自外面的服务（如 IGDB），要填自己的密钥；本版本不预填，没有它也能扫描和游玩。
 
-      应用发的信（密码重置、通知确认码）会出现在你的 Wonton 私聊里；通知渠道填云吞以外的邮箱收不到，RomM 会报发送失败。
-
-      封面和介绍等元数据依赖 IGDB 一类的外部服务，需要用户自己的 API 密钥；本版本不预填密钥，扫描和游玩不依赖元数据。
-
-      核心升级后，插件容器会按新的签发方自动重建，打开照常，不用重装。
+      云吞更新后插件会自动重建，打开照常，不用重装。
     en: |
-      Turn your old game files (ROMs) into a web library: scan, search, browse covers and descriptions, and play right in the browser with emulators built in. Saves and save states follow your account.
+      Turn old game files into a web library: scan, search, browse covers and descriptions, and play right in the browser with consoles built in. Saves and save states follow your account. Supported consoles are listed in RomM's own docs.
 
-      ROM files live in the games shared folder, in a roms folder grouped by platform (e.g. games/roms/gba/ for GBA; supported platforms are listed in the RomM docs). You can also upload from the web UI.
+      Emails the app sends (password resets, confirmation codes) show up in your Wonton private chat; notification channels pointed at addresses outside Wonton won't be delivered — RomM reports the failure.
 
-      Sign-in uses your Wonton account; the library opens straight away, with no second sign-up or password.
+      Covers and descriptions come from outside services (such as IGDB) and need your own key, which this release does not prefill; scanning and playing work without it.
 
-      Emails the app sends (password resets, notification codes) show up in your Wonton private chat; notification channels pointed at addresses outside Wonton won't be delivered — RomM reports the failure.
+      After a Wonton update the plugin is rebuilt automatically; pages open as before, with nothing to reinstall.
+    zh-Hant: |
+      把老遊戲整理成網頁遊戲庫：掃描、搜尋、看封面和介紹，點開就在瀏覽器裡玩（遊戲機已內建），存檔和即時存檔跟著帳號走。遊戲機支援哪些機型見 RomM 自己的文件。
 
-      Metadata (covers, descriptions) comes from external services such as IGDB and requires your own API keys. This release ships without keys; scanning and playing work without metadata.
+      應用寄的信（找回密碼、確認碼）會出現在你的 Wonton 私聊裡；通知頻道填雲吞以外的信箱收不到，RomM 會報發送失敗。
 
-      After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
+      封面和介紹這些資料來自外面的服務（如 IGDB），要填自己的密鑰；本版本不預填，沒有它也能掃描和遊玩。
+
+      雲吞更新後外掛會自動重建，開啟照常，不用重裝。
+    ja: |
+      古いゲームを Web ライブラリに変えます。スキャン・検索・ジャケットや説明の閲覧ができ、機種エミュレータは内蔵されていてブラウザですぐ遊べます。セーブとセーブステートはアカウントに付きます。対応機種は RomM 自身のドキュメントにあります。
+
+      アプリが送るメール（パスワード再設定、確認コード）は自分の Wonton チャットに届きます。Wonton 以外のアドレスを通知先にしても届かず、RomM が失敗を報告します。
+
+      ジャケットや説明は外部サービス（IGDB など）から取得し、自分のキーが必要です。本バージョンでは未設定で、なくてもスキャンとプレイはできます。
+
+      Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
   release_notes:
-    zh: 应用发的信（密码重置、通知确认码）走云吞的内部邮箱，出现在你的 Wonton 私聊里。
-    en: Emails the app sends (password resets, notification codes) go through Wonton's internal mailbox and land in your Wonton private chat.
+    zh: |
+      应用发的信（密码重置、通知确认码）走云吞的内部邮箱，出现在你的 Wonton 私聊里。
+
+      商店介绍重写：放游戏文件和登录移到「安装后要做的事」，ROM、IGDB、容器等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Emails the app sends (password resets, notification codes) go through Wonton's internal mailbox and land in your Wonton private chat.
+
+      Store copy rewritten: putting game files in place and signing in moved to the pre-install notice, with ROM/IGDB/container wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "應用發的信（密碼重置、通知確認碼）走雲吞的內部郵箱，出現在你的 Wonton 私聊裡。\n\n商店介紹重寫：放遊戲檔案和登入移到「安裝後要做的事」，ROM、IGDB、容器等說法換成日常用語；補繁體中文和日文。"
+    ja: "アプリが送るメール（パスワード再設定、通知の確認コード）は Wonton の内部メールを通り、あなたの Wonton ダイレクトメッセージに現れます。\n\nストア紹介を書き直し、ゲームファイルの配置とサインインを「インストール後の手順」に移し、ROM・IGDB・コンテナなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: romm
     port: 8080

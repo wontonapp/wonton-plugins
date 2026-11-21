@@ -71,12 +71,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: net.mayswind.ezbookkeeping
-  version: 0.1.3
+  version: 0.1.4
   kind: app
-  title: { zh: 家庭记账（ezBookkeeping）, en: Home Bookkeeping (ezBookkeeping) }
+  title: { zh: "随身账本（ezBookkeeping）", en: "Pocket Ledger (ezBookkeeping)", zh-Hant: "隨身帳本（ezBookkeeping）", ja: "ポケット家計簿（ezBookkeeping）" }
   description:
     zh: 像随身的小账本，记下每天的花销和收入，还能导入支付宝、微信的账单
-    en: "A pocket ledger for daily spending and income, with Alipay and WeChat bill import"
+    en: A pocket ledger for daily spending and income, with Alipay and WeChat bill import
+    zh-Hant: 像隨身的小帳本，記下每天的花費和收入，還能匯入支付寶、微信的帳單
+    ja: 持ち歩く小さな家計簿のようなもの。日々の支出と収入を記録でき、Alipay や WeChat の明細も取り込めます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -88,30 +90,54 @@ x-wonton:
     en: [Finance, Money]
   about:
     zh: |
-      记一笔只要几秒：选类别、输金额，花销收入一目了然。像百度网盘存照片一样，账目都在自己家里，不交给任何公司。
-
-      第一次打开：用云吞的用户名登录，初始密码在插件设置里能查看，登录后马上改成自己的。
+      记一笔只要几秒：选类别、输金额，花销收入一目了然。账目都在自己家里，不交给任何公司。
 
       可以导入支付宝、微信导出的账单对账；拍下小票让助手识别金额和商家。家人各自注册各自的账本，数据互相独立。你的账本默认就是中文和人民币。
 
-      助手（Bot）装好就能帮你记账和查账，看到的是你的账本；在应用里吊销 MCP 令牌后，重建容器时会自动重新签发。
+      助手（Bot）装好就能帮你记账和查账，看到的是你的账本；在应用里吊销掉给助手的凭证后，云吞更新重建时也会自动重新给一份。
 
-      汇率换算和 AI 识别需要访问外网；模型网关没接上时，AI 识别在应用里如实显示不可用。
+      汇率换算和拍照识别要能上外网；没接上 AI 服务时，这类功能会在应用里如实显示不可用。
     en: |
-      Record an expense in seconds: pick a category, type an amount, and see where the money goes. Like keeping photos in your own cloud, the books live at home, not with any company.
-
-      First open: sign in with your Wonton username; the initial password is in this plugin's settings — change it to your own right after signing in.
+      Record an expense in seconds: pick a category, type an amount, and see where the money goes. The books live at home, not with any company.
 
       Import Alipay and WeChat statement exports to reconcile; snap a receipt and let the assistant read the amount and vendor. Each family member registers their own books, independent of others. Your books start in Chinese with CNY as the default currency.
 
-      The assistant (bot) can record and look up transactions for you right after install, seeing your books; if you revoke the MCP token in the app, a container rebuild re-issues it.
+      The assistant (bot) can record and look up transactions for you right after install, seeing your books; if you revoke its credential in the app, a later Wonton update puts a fresh one in place.
 
-      Exchange rates and AI recognition need internet access; without a model gateway the AI features report as unavailable in the app.
-  release_notes: { zh: 介绍重写：首次登录提示单独成段放在最前。, en: "Rewritten store copy: the first-open sign-in note stands alone up front." }
+      Exchange rates and photo recognition need internet access; without an AI service connected those features report as unavailable in the app.
+    zh-Hant: |
+      記一筆只要幾秒：選類別、輸金額，花費收入一目了然。帳目都在自己家裡，不交給任何公司。
+
+      可以匯入支付寶、微信匯出的帳單對帳；拍下收據讓助手辨識金額和商家。家人各自註冊各自的帳本，資料互相獨立。你的帳本預設就是中文和人民幣。
+
+      助手（Bot）裝好就能幫你記帳和查帳，看到的是你的帳本；在應用裡撤銷給助手的憑證後，雲吞更新重建時也會自動重新給一份。
+
+      匯率換算和拍照辨識要能連上外網；沒接上 AI 服務時，這類功能會在應用裡如實顯示不可用。
+    ja: |
+      一件の記録は数秒です。カテゴリを選び金額を入れれば、支出と収入が一目でわかります。家計簿は家の中にあり、どこかの会社に預けません。
+
+      Alipay や WeChat が書き出した明細を取り込んで照合でき、レシートを撮ればアシスタントが金額と店名を読み取ります。家族はそれぞれ自分の家計簿を登録し、データは独立します。あなたの家計簿は最初から日本語環境ではなく中国語・人民元が既定です。
+
+      ボットは導入後すぐに記帳と照会ができ、あなたの家計簿を見ます。アプリでボットの資格情報を取り消しても、Wonton の更新時の再構築で新しいものが自動で入ります。
+
+      為替換算と写真の読み取りにはインターネットが必要です。AI サービスが未接続のときは、アプリ上で利用できないとそのまま表示されます。
+  release_notes:
+    zh: |
+      介绍重写：首次登录提示单独成段放在最前。
+
+      商店介绍重写：首次登录只在「安装后要做的事」里说一次，MCP 令牌、容器、模型网关改成凭证、重建、AI 服务；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the first-open sign-in note stands alone up front.
+
+      Store copy rewritten: the first sign-in appears only in the pre-install notice, and MCP token/container/model-gateway wording became credential/rebuild/AI service; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：首次登入提示單獨成段放在最前。\n\n商店介紹重寫：首次登入只在「安裝後要做的事」裡說一次，MCP 令牌、容器、模型閘道改成憑證、重建、AI 服務；補繁體中文和日文。"
+    ja: "紹介を書き直し、初回ログインの注意を最初の段落に分けました。\n\nストア紹介を書き直し、初回サインインは「インストール後の手順」だけにまとめ、MCP トークン・コンテナ・モデルゲートウェイを資格情報・再構築・AI サービスという言い方にしました。繁体字中国語と日本語を追加。"
   # 主人的账号是装好时按云吞用户名预建的（登录方式见 about）；初始密码在这里查看。
   setup:
-    zh: 打开应用，用云吞的用户名登录；初始密码在插件设置里查看。
-    en: Open the app and sign in with your Wonton username; the initial password is in the plugin settings.
+    zh: 打开应用，用云吞的用户名登录；初始密码在插件设置里查看，登录后马上改成自己的。
+    en: Open the app and sign in with your Wonton username; the initial password is in the plugin settings — change it to your own right after signing in.
+    zh-Hant: 開啟應用，用雲吞的使用者名稱登入；初始密碼在外掛設定裡查看，登入後馬上改成自己的。
+    ja: アプリを開き、Wonton のユーザー名でサインインします。初期パスワードはプラグイン設定で確認でき、サインイン後すぐ自分のものに変えてください。
   webui:
     service: web
     port: 8080

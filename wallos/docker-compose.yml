@@ -89,12 +89,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: app.wallos.wallos
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 订阅管家（Wallos）, en: Wallos }
+  title: { zh: "订阅管家（Wallos）", en: "Subscription Tracker (Wallos)", zh-Hant: "訂閱管家（Wallos）", ja: "サブスク管理（Wallos）" }
   description:
-    zh: 像给订阅请的记账员：视频会员、网盘、域名这些按期扣费的服务记在一起，到期前提醒，全家花销一目了然
-    en: "A ledger for your recurring subscriptions: track what you pay for, see upcoming renewals and get a heads-up before each due date"
+    zh: 像给订阅请的记账员：视频会员、网盘、域名这些按期扣费的服务记在一起，到期前提醒，全家花销一目了然。
+    en: "A ledger for your recurring subscriptions: track what you pay for, see upcoming renewals and get a heads-up before each due date."
+    zh-Hant: 像給訂閱請的記帳員：影片會員、網盤、網域這些按期扣費的服務記在一起，到期前提醒，全家花銷一目了然。
+    ja: サブスクのための家計簿のようなものです。動画会員、クラウド、ドメインなど定期的に課金されるものを 1 か所に記録し、更新前に知らせ、家族の出費が一目で分かります。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/subscriptions.png, screenshots/home.png]
@@ -106,33 +108,45 @@ x-wonton:
     en: [Finance, Subscriptions]
   about:
     zh: |
-      把家里按期扣费的服务（视频会员、网盘、域名、软件授权……）记到一处：每笔记价格和周期，
-      日历里看最近的扣费日，统计里看每月、每年一共花多少。
+      把家里按期扣费的服务（视频会员、网盘、域名、软件授权……）记到一处：每笔记价格和周期，日历里看最近的扣费日，统计里看每月、每年一共花多少。
 
       到期前几天自动提醒，提醒会出现在你的 Wonton 私聊里，不用盯着每个服务的续费日。
 
-      支持多币种：在应用设置里把汇率源选成 Frankfurter（免费、不用 key）就能自动换算，
-      想用 Fixer 的话自己填 key。应用内还能加家庭成员，记录每笔订阅是谁付的。
-
-      登录用云吞的账号，打开就在里面，不用再注册或设密码。
+      支持多币种：在应用设置里把汇率源选成 Frankfurter（免费、不用密钥）就能自动换算，想用 Fixer 的话自己填密钥。应用内还能加家庭成员，记录每笔订阅是谁付的。
     en: |
-      Keep every recurring charge in one place: subscriptions for streaming, cloud storage,
-      domains and software, each with its price and cycle, a calendar of upcoming renewals
-      and monthly/yearly statistics.
+      Keep every recurring charge in one place: subscriptions for streaming, cloud storage, domains and software, each with its price and cycle, a calendar of upcoming renewals and monthly/yearly statistics.
 
-      You get a heads-up in your Wonton chat a few days before each due date, so renewals
-      never sneak up on you.
+      You get a heads-up in your Wonton chat a few days before each due date, so renewals never sneak up on you.
 
-      Multiple currencies are supported: pick Frankfurter (free, no key) as the rate source
-      in the app settings for automatic conversion, or enter your own Fixer key. Household
-      members can be added inside the app to track who pays for what.
+      Multiple currencies are supported: pick Frankfurter (free, no key) as the rate source in the app settings for automatic conversion, or enter your own Fixer key. Household members can be added inside the app to track who pays for what.
+    zh-Hant: |
+      把家裡按期扣費的服務（影片會員、網盤、網域、軟體授權……）記到一處：每筆記價格和週期，日曆裡看最近的扣費日，統計裡看每月、每年一共花多少。
 
-      Sign-in uses your Wonton account; the app opens straight into your subscriptions,
-      with no second sign-up or password.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      到期前幾天自動提醒，提醒會出現在你的 Wonton 私聊裡，不用盯著每個服務的續費日。
+
+      支援多幣種：在應用設定裡把匯率來源選成 Frankfurter（免費、不用密鑰）就能自動換算，想用 Fixer 的話自己填密鑰。應用內還能加家庭成員，記錄每筆訂閱是誰付的。
+    ja: |
+      定期的な課金を 1 か所にまとめます。動画配信・クラウド・ドメイン・ソフトのサブスクを、価格と周期付きで記録し、更新日のカレンダーと月額・年額の統計を見られます。
+
+      期限の数日前に Wonton チャットで知らせるので、更新日を見張る必要はありません。
+
+      多通貨に対応します。アプリ設定で為替元を Frankfurter（無料・キー不要）にすれば自動換算され、Fixer を使う場合は自分のキーを入れます。アプリ内で家族を追加し、誰が何を払ったかも記録できます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：货币设置移到「安装后要做的事」，汇率源、密钥等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: the currency setting moved to the pre-install notice, with rate-source/key wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：貨幣設定移到「安裝後要做的事」，匯率來源、密鑰等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、通貨設定を「インストール後の手順」に移し、為替元やキーなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 想按人民币看金额：第一次登录后，在应用的 设置 → 货币 里把主货币换成人民币（CNY）。
-    en: "To see amounts in yuan: after the first sign-in, pick CNY as the main currency under Settings → Currency in the app."
+    zh: 打开就用云吞账号直接进去，不用注册或设密码。想按人民币看金额，第一次进去后在 设置 → 货币 里把主货币换成人民币（CNY）。
+    en: Opening it puts you straight in with your Wonton account — no sign-up or password. To see amounts in yuan, pick CNY as the main currency under Settings → Currency after the first sign-in.
+    zh-Hant: 開啟就用雲吞帳號直接進去，不用註冊或設密碼。想按人民幣看金額，第一次進去後在 設定 → 貨幣 裡把主貨幣換成人民幣（CNY）。
+    ja: 開けば Wonton アカウントでそのまま入れ、登録やパスワードは不要です。人民元で見たい場合は、初回サインイン後に「設定 → 通貨」で主通貨を CNY にします。
   webui:
     service: wallos
     port: 80

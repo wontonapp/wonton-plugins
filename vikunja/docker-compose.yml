@@ -67,12 +67,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: io.vikunja.vikunja
-  version: 0.3.0
+  version: 0.3.1
   kind: app
-  title: { zh: 待办清单（Vikunja）, en: To-Do Lists (Vikunja) }
+  title: { zh: "待办清单（Vikunja）", en: "To-Do Lists (Vikunja)", zh-Hant: "待辦清單（Vikunja）", ja: "To-Do リスト（Vikunja）" }
   description:
     zh: 像贴满便利贴的任务墙：把要做的事列成清单、设截止日期、和家人分工，做完拖到“完成”那栏；快到期会在云吞私聊里提醒你。
     en: "Like a wall of sticky notes: list what needs doing, set due dates, split the work with family and drag tasks to Done; reminders arrive in your Wonton chat."
+    zh-Hant: 像貼滿便利貼的任務牆：把要做的事列成清單、設截止日期、和家人分工，做完拖到「完成」那欄；快到期會在雲吞私聊裡提醒你。
+    ja: 付箋を貼ったタスクの壁のようなものです。やることをリストにし、期限を決め、家族で分担し、終わったら「完了」へドラッグします。期限が近いと Wonton チャットで知らせます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/tasks.png]
@@ -82,20 +84,39 @@ x-wonton:
   tags:
     zh: [待办, 任务, 看板, 清单]
     en: [Todo, Tasks, Kanban, Lists]
+  setup:
+    zh: 打开就用云吞账号直接进去，不用注册或设密码。先建一个清单，再邀请家人分工；快到期的提醒会进你的 Wonton 私聊。
+    en: Opening it puts you straight in with your Wonton account — no sign-up or password. Create a list first, then invite family to share the work; due reminders arrive in your Wonton chat.
+    zh-Hant: 開啟就用雲吞帳號直接進去，不用註冊或設密碼。先建一個清單，再邀請家人分工；快到期的提醒會進你的 Wonton 私聊。
+    ja: 開けば Wonton アカウントでそのまま入れ、登録やパスワードは不要です。まずリストを作り、家族を招いて分担します。期限が近いと Wonton チャットに届きます。
   about:
     zh: |
       待办和任务管理：清单、任务、截止日期、标签、优先级和看板，进度一眼看到。
 
-      登录用云吞的账号，打开就在里面，不用再注册或设密码。
-
-      应用发的信（任务提醒、评论和 @ 提到等通知）会出现在你的 Wonton 私聊里。
+      评论和 @ 提到别人的通知、任务提醒都会出现在私聊里。
     en: |
       Todo and task management: lists, tasks, due dates, labels, priorities and kanban boards, so progress is visible at a glance.
 
-      Sign-in uses your Wonton account; the app opens straight into your work, with no second sign-up or password.
+      Comment and @-mention notices, and task reminders, arrive in your chat.
+    zh-Hant: |
+      待辦和任務管理：清單、任務、截止日期、標籤、優先級和看板，進度一眼看到。
 
-      Emails the app sends (task reminders, comments and @-mentions) arrive in your Wonton chat.
-  release_notes: { zh: "应用发的信接进云吞：任务提醒、评论和 @ 提到等通知转进收件人的 Wonton 私聊。插件包迁入官方插件合仓。", en: "Emails the app sends now arrive in Wonton: task reminders, comments and @-mentions land in the recipient's Wonton chat. Package moved into the official Wonton plugin monorepo." }
+      評論和 @ 提到別人的通知、任務提醒都會出現在私聊裡。
+    ja: |
+      To-Do とタスク管理：リスト、タスク、期限、ラベル、優先度、かんばんがあり、進捗が一目で分かります。
+
+      コメントや @ の通知、タスクのリマインダーはチャットに届きます。
+  release_notes:
+    zh: |
+      应用发的信接进云吞：任务提醒、评论和 @ 提到等通知转进收件人的 Wonton 私聊。插件包迁入官方插件合仓。
+
+      商店介绍重写：登录和建清单移到「安装后要做的事」，看板、@ 提到等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Emails the app sends now arrive in Wonton: task reminders, comments and @-mentions land in the recipient's Wonton chat. Package moved into the official Wonton plugin monorepo.
+
+      Store copy rewritten: sign-in and list creation moved to the pre-install notice, with kanban/@-mention wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "應用發的信接進雲吞：任務提醒、評論和 @ 提到等通知轉進收件人的 Wonton 私聊。外掛包遷入官方外掛合倉。\n\n商店介紹重寫：登入和建清單移到「安裝後要做的事」，看板、@ 提到等說法換成日常用語；補繁體中文和日文。"
+    ja: "アプリからの通知を Wonton につなぎました。タスクのリマインダー、コメント、@ メンションなどを受信者の Wonton ダイレクトメッセージへ転送します。プラグインは公式プラグインリポジトリへ移動しました。\n\nストア紹介を書き直し、サインインとリスト作成を「インストール後の手順」に移し、かんばんや @ などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: vikunja
     port: 3456

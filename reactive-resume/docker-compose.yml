@@ -65,14 +65,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: me.rxresu.resume
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 简历制作（Reactive Resume）, en: Resume Builder (Reactive Resume) }
+  title: { zh: "简历制作（Reactive Resume）", en: "Resume Builder (Reactive Resume)", zh-Hant: "履歷製作（Reactive Resume）", ja: "履歴書作成（Reactive Resume）" }
   description:
     zh: 在线做一份好看的简历：像用现成模板填空，填好经历挑个模板，就能导出 PDF 去投递。
-    en: >-
-      Build a polished resume online: fill in your experience, pick one of dozens of templates
-      and export a PDF.
+    en: "Build a polished resume online: fill in your experience, pick one of dozens of templates and export a PDF."
+    zh-Hant: 線上做一份好看的履歷：像用現成範本填空，填好經歷挑個範本，就能匯出 PDF 去投遞。
+    ja: 見栄えのする履歴書をオンラインで作ります。経歴を埋めてテンプレートを選ぶだけで、応募用の PDF に書き出せます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/dashboard.png, screenshots/builder.png]
@@ -82,29 +82,47 @@ x-wonton:
   tags:
     zh: [简历, 求职, 文档]
     en: [Resume, Job hunting, Documents]
+  setup:
+    zh: 打开就用云吞账号登录，第一次打开会自动建号；家里各人各写各的简历。
+    en: Opening the page signs you in with your Wonton account, created on first visit; everyone at home keeps their own resumes.
+    zh-Hant: 開啟就用雲吞帳號登入，第一次開啟會自動建號；家裡各人各寫各的履歷。
+    ja: 開けば Wonton アカウントでサインインし、初回にアカウントが作られます。家族はそれぞれ自分の履歴書を作ります。
   about:
     zh: |
-      在家里服务器上做简历：写好教育、工作经历和技能，从几十个现成模板里挑一个，一边编辑一边预览，导出 PDF、Word 或网页链接。
+      在家里做简历：写好教育、工作经历和技能，从几十个现成模板里挑一个，一边编辑一边预览，导出 PDF、Word 或网页链接。
 
-      家里每个人都用自己的账号，各写各的简历，互不可见。做完想给谁看，就开一个分享链接；不想公开了随时关掉。
+      各写各的，互不可见；做完想给谁看，就开一个分享链接，不想公开了随时关掉。
 
-      登录用云吞账号，第一次打开会自动建号。编辑器里导出 PDF 在浏览器里完成，不需要联网；接口上的服务器端 PDF
-      导出要访问外网取字体，插件默认不出网时这条路会失败。
-
-      AI 相关功能（求职助手、自动填写）默认关闭，简历数据只存在家里。
+      在编辑器里导出 PDF 不用联网；用网页里那种“服务端导出”的 PDF 要联网取字体，没开外网时会失败。AI 功能（求职助手、自动填写）默认关闭，简历只存在家里。
     en: |
-      Make resumes on your home server: write your education, work experience and skills, pick one of dozens of ready-made
-      templates, edit with a live preview, and export to PDF, Word or a share link.
+      Make resumes at home: write your education, work experience and skills, pick one of dozens of templates, edit with a live preview, and export to PDF, Word or a share link.
 
-      Everyone in the household signs in with their own account and keeps their own resumes. Share any resume by link and
-      turn the link off whenever you like.
+      Each person keeps their own resumes. Share one by link and turn the link off whenever you like.
 
-      You sign in with your Wonton account; the first visit creates it. Exporting a PDF in the editor happens in your
-      browser and needs no internet; the API's server-side PDF export fetches fonts from the internet and fails while
-      the plugin has no network access (the default).
+      Exporting a PDF in the editor needs no internet; the server-side export fetches fonts online and fails without internet. AI features (job-search assistant, autofill) are off by default, and resume data stays at home.
+    zh-Hant: |
+      在家裡做履歷：寫好學歷、工作經歷和技能，從幾十個現成範本裡挑一個，一邊編輯一邊預覽，匯出 PDF、Word 或網頁連結。
 
-      AI features (job-search assistant, autofill) are off by default; resume data stays at home.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      各寫各的，互不可見；做完想給誰看，就開一個分享連結，不想公開了隨時關掉。
+
+      在編輯器裡匯出 PDF 不用連網；用網頁裡那種「伺服器端匯出」的 PDF 要連網取字型，沒開外網時會失敗。AI 功能（求職助手、自動填寫）預設關閉，履歷只存在家裡。
+    ja: |
+      家で履歴書を作ります。学歴・職歴・スキルを書き、数十のテンプレートから選び、編集しながらプレビューし、PDF・Word・共有リンクに書き出せます。
+
+      各自が自分の履歴書を持ちます。共有したいときはリンクを発行し、いつでも止められます。
+
+      エディタでの PDF 書き出しはオフラインででき、サーバー側の書き出しはフォントをネットから取るためオフラインでは失敗します。AI 機能（求職アシスタント、自動入力）は既定でオフで、履歴書は家に残ります。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：登录说明移到「安装后要做的事」，服务器端导出、API 等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: the sign-in note moved to the pre-install notice, with server-side-export/API wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：登入說明移到「安裝後要做的事」，伺服器端匯出、API 等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、サインインの説明を「インストール後の手順」に移し、サーバー側書き出しや API などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: app
     port: 3000

@@ -69,12 +69,14 @@ configs:
 x-wonton:
   spec: "0.13"
   id: org.autobangumi.autobangumi
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 自动追番（AutoBangumi）, en: Anime Auto-Downloader (AutoBangumi) }
+  title: { zh: "自动追番（AutoBangumi）", en: "Anime Auto-Downloader (AutoBangumi)", zh-Hant: "自動追番（AutoBangumi）", ja: "アニメ自動追跡（AutoBangumi）" }
   description:
     zh: 像订追剧日历一样自动追新番：番剧一更新就自动下载、改好名字放进媒体库
     en: Follows new anime for you — each new episode is downloaded, renamed and filed into your media library automatically
+    zh-Hant: 像訂追劇日曆一樣自動追新番：番劇一更新就自動下載、改好名字放進媒體庫
+    ja: 新作アニメを自動で追いかけます。新しい話が配信されるたびに自動でダウンロードし、名前を整えてメディアライブラリに置きます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -89,23 +91,43 @@ x-wonton:
     zh: |
       把想看的番加进来，之后不用管：到了更新时间自动下载新一集，改好名字放进媒体库文件夹。
 
-      第一次打开：用账号 admin、密码 adminadmin 登录，登录后马上在设置里改密码。
+      装了下载工具（qBittorrent）插件的话，下载器已经配好，粘贴订阅地址就能自动下载。在设置的插件页可以打开「硬链接到媒体库」：下载完的剧集会以同一份文件放进媒体库文件夹（Jellyfin 直接能看，不占双份空间），下载目录继续做种（别人也能从你这里下到）不受影响。
 
-      装了下载工具（qBittorrent）插件的话，下载器已经配好，把蜜柑计划给你的 RSS 订阅链接粘进来就能自动下载。在设置的插件页可以打开「硬链接到媒体库」：下载完的剧集会以同一份文件放进媒体库共享文件夹（Jellyfin 直接能看，不占双份空间），下载目录继续做种（别人也能从你这里下到）不受影响。
-
-      机器人能查追番列表、搜番、订阅和退订、看下载进度。追番需要访问外网（订阅源、番剧资料和海报），家里断网时它会把失败如实标出来。
+      机器人能查追番列表、搜番、订阅和退订、看下载进度。追番要能上外网（订阅地址、番剧资料和海报），家里断网时它会把失败如实标出来。
     en: |
       Add a show once and leave it: when a new episode airs it is downloaded, renamed and filed into your media library folder automatically.
 
-      First open: sign in with admin / adminadmin and change the password right away in settings.
+      With the qBittorrent plugin installed the downloader is already configured — paste your subscription address and new episodes download themselves. In Settings → Plugins you can enable "Hardlink to media library": finished episodes appear in the media shared folder as the same file (Jellyfin picks them up, no duplicate space) while the download directory keeps seeding.
 
-      With the qBittorrent plugin installed the downloader is already configured — paste the RSS link Mikan gives you and new episodes download themselves. In Settings → Plugins you can enable "Hardlink to media library": finished episodes appear in the media shared folder as the same file (Jellyfin picks them up, no duplicate space) while the download directory keeps seeding.
+      A bot can list your subscriptions, search anime, subscribe or unsubscribe, and check download progress. Needs internet access for subscription addresses, anime info and posters; failures are reported honestly when offline.
+    zh-Hant: |
+      把想看的番加進來，之後不用管：到了更新時間自動下載新一集，改好名字放進媒體庫資料夾。
 
-      A bot can list your subscriptions, search anime, subscribe or unsubscribe, and check download progress. Needs internet access for feeds, anime info and posters; failures are reported honestly when offline.
-  release_notes: { zh: 介绍重写：首次登录提示单独成段放在最前，硬链接、RSS 抓种子等说法改成日常用语。, en: "Rewritten store copy: the first-open sign-in note stands alone up front, and jargon like hardlinks and RSS is explained in everyday words." }
+      裝了下載工具（qBittorrent）外掛的話，下載器已經設好，貼上訂閱網址就能自動下載。在設定的外掛頁可以開啟「連結到媒體庫」：下載完的劇集會以同一份檔案放進媒體庫資料夾（Jellyfin 直接能看，不佔兩份空間），下載目錄繼續做種（別人也能從你這裡下到）不受影響。
+
+      機器人能查追番清單、搜番、訂閱和退訂、看下載進度。追番要能連上外網（訂閱網址、番劇資料和海報），家裡斷網時它會如實標出失敗。
+    ja: |
+      見たいアニメを一度追加すれば、あとは放っておけます。配信時間になると新しい話を自動でダウンロードし、名前を整えてメディアライブラリのフォルダに置きます。
+
+      ダウンロードツール（qBittorrent）プラグインを入れていればダウンローダーは設定済みです。購読アドレスを貼り付けるだけで自動ダウンロードできます。設定のプラグインページで「メディアライブラリへハードリンク」を有効にすると、落とした話は同じファイルのままメディア共有フォルダに入ります（Jellyfin でそのまま見られ、容量も二重になりません）。ダウンロード先はシードを続けられます。
+
+      ボットは購読一覧の確認、検索、購読と解除、進捗確認ができます。購読アドレス、アニメ情報、ポスターの取得にインターネットが必要で、家がオフラインの時は失敗したことをそのまま表示します。
+  release_notes:
+    zh: |
+      介绍重写：首次登录提示单独成段放在最前，硬链接、RSS 抓种子等说法改成日常用语。
+
+      商店介绍重写：首次登录步骤移到「安装后要做的事」，硬链接、RSS、订阅源等说法改成日常用语；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the first-open sign-in note stands alone up front, and jargon like hardlinks and RSS is explained in everyday words.
+
+      Store copy rewritten: the first-open sign-in moved to the pre-install notice, and hardlink/RSS wording replaced with everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：首次登入提示單獨成段放在最前，硬連結、RSS 抓種子等說法改成日常用語。\n\n商店介紹重寫：首次登入步驟移到「安裝後要做的事」，硬連結、RSS、訂閱來源等說法改成日常用語；補繁體中文和日文。"
+    ja: "紹介を書き直し、初回ログインの注意を最初の段落に分けました。ハードリンクや RSS でのトレント取得などの表現を日常的な言い方に変えました。\n\nストア紹介を書き直し、初回サインインの手順を「インストール後の手順」に移し、ハードリンクや RSS などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 第一次打开用 admin / adminadmin 登录并马上改密码，然后粘贴你的蜜柑计划 RSS 链接。
-    en: Sign in with admin / adminadmin, change the password, then paste your Mikan RSS link.
+    zh: 第一次打开用 admin / adminadmin 登录并马上改密码，然后把蜜柑计划给你的订阅地址粘进来。
+    en: Sign in with admin / adminadmin, change the password, then paste the subscription address Mikan gives you.
+    zh-Hant: 第一次開啟用 admin / adminadmin 登入並馬上改密碼，然後把蜜柑計畫給你的訂閱網址貼進來。
+    ja: 初回は admin / adminadmin でサインインしてすぐパスワードを変更し、蜜柑計画が発行する購読アドレスを貼り付けます。
   webui:
     service: autobangumi
     port: 7892

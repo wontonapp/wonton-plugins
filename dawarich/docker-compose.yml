@@ -148,10 +148,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: app.dawarich.dawarich
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { en: Dawarich }
-  description: { zh: 像谷歌地图的时间线，手机自动记录你去过哪里，网页上看轨迹和统计, en: "Like Google Maps Timeline: your phone reports where you have been, and you browse tracks and stats on the web" }
+  title: { zh: "足迹记录（Dawarich）", en: "Location History (Dawarich)", zh-Hant: "足跡記錄（Dawarich）", ja: "行動履歴（Dawarich）" }
+  description:
+    zh: 像谷歌地图的时间线，手机自动记下去过哪里，网页上看轨迹和统计
+    en: "Like Google Maps Timeline: your phone records where you have been, and you browse tracks and stats on the web"
+    zh-Hant: 像谷歌地圖的時間軸，手機自動記下去過哪裡，網頁上看軌跡和統計
+    ja: Google マップのタイムラインのようなもの。スマホが訪れた場所を自動で記録し、軌跡や統計は Web ページで見ます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/map.png, screenshots/timeline.png]
@@ -164,21 +168,45 @@ x-wonton:
     en: [Location, Travel, Tracking]
   about:
     zh: |
-      像谷歌地图的时间线：手机把去过的地方报给家里这台服务器，网页上能看轨迹、去过哪、每次待了多久和月度统计。数据都在自己家里，不经过任何第三方。
+      像谷歌地图的时间线：手机把去过的地方记到家里这台服务器，网页上能看轨迹、去过哪、每次待了多久和月度统计。数据都在自己家里，不经过任何第三方。
 
-      手机装 Dawarich 官方 App，或 OwnTracks、Overland 这类定位应用，填上网页里的接口密钥就能自动上报。谷歌时间线导出的记录可以导入，搬过来接着看。
+      手机装 Dawarich 官方 App，或 OwnTracks、Overland 这类定位应用，填上网页里的连接密码就能自动记录。谷歌时间线导出的记录可以导入，搬过来接着看。
 
-      在网页右上角头像 → Account 复制接口密钥，填进手机 App 就能自动上报；Agent 查询“我上周去过哪”不用填，插件自己会拿到。
+      问助手「我上周去过哪」也能回答，不用额外设置，插件自己会拿到连接密码。
     en: |
       Like Google Maps Timeline: your phone reports visited places to the server at home, and the web page shows tracks, visits, durations and monthly stats. Everything stays at home, no third party involved.
 
-      Install the official Dawarich app (or a tracker like OwnTracks or Overland) on your phone, enter the key from the web page, and locations report automatically. You can import an exported Google Timeline and keep browsing it.
+      Install the official Dawarich app (or a tracker like OwnTracks or Overland) on your phone, enter the connection password from the web page, and locations report automatically. You can import an exported Google Timeline and keep browsing it.
 
-      Copy the key from the avatar menu → Account on the web page into your phone app to start reporting; agents can answer "where did I go last week" without any setup, the plugin fetches the key itself.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Ask the assistant "where did I go last week" and it answers; no extra setup, the plugin fetches the connection password itself.
+    zh-Hant: |
+      像谷歌地圖的時間軸：手機把去過的地方記到家裡這台伺服器，網頁上能看軌跡、去過哪、每次待了多久和月度統計。資料都在自己家裡，不經過任何第三方。
+
+      手機裝 Dawarich 官方 App，或 OwnTracks、Overland 這類定位應用，填上網頁裡的連線密碼就能自動記錄。谷歌時間軸匯出的記錄可以匯入，搬過來接著看。
+
+      問助手「我上週去過哪」也能回答，不用額外設定，外掛自己會拿到連線密碼。
+    ja: |
+      Google マップのタイムラインのようなものです。スマホが訪れた場所を家のサーバーに記録し、Web ページで軌跡・訪問先・滞在時間・月ごとの統計を見られます。データはすべて家の中にあり、第三者を経由しません。
+
+      スマホに公式の Dawarich アプリ、または OwnTracks や Overland などの位置アプリを入れ、Web ページの接続パスワードを入力すれば自動で記録します。Google タイムラインのエクスポートは読み込んでそのまま見られます。
+
+      アシスタントに「先週どこに行った」と聞いても答えられます。追加の設定は要らず、プラグインが接続パスワードを自分で取得します。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：手机连接步骤集中到「安装后要做的事」，接口密钥改成连接密码；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: phone setup now lives in the pre-install notice and the API key is called a connection password; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：手機連線步驟集中到「安裝後要做的事」，介面金鑰改成連線密碼；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、スマホの設定を「インストール後の手順」にまとめ、API キーを接続パスワードと呼ぶようにしました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 打开网页即可用。要在手机上自动上报位置，装 Dawarich App（或 OwnTracks、Overland），把网页 Account 页里的接口密钥填进去。
-    en: Open the web page and it works. To report locations from your phone, install the Dawarich app (or OwnTracks, Overland) and enter the key shown on the Account page.
+    zh: 打开网页就能用。要让手机自动记录，先装 Dawarich App（或 OwnTracks、Overland），再把网页 Account 页里显示的连接密码填进 App。
+    en: Open the web page and it works. To record from your phone, install the Dawarich app (or OwnTracks, Overland) and enter the connection password shown on the Account page.
+    zh-Hant: 開啟網頁就能用。要讓手機自動記錄，先裝 Dawarich App（或 OwnTracks、Overland），再把網頁 Account 頁裡顯示的連線密碼填進 App。
+    ja: Web ページを開けば使えます。スマホから記録するには Dawarich アプリ（または OwnTracks、Overland）を入れ、Web ページの Account に出る接続パスワードをアプリに入力します。
   webui:
     service: app
     port: 3000

@@ -79,12 +79,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: com.stirlingtools.stirling-pdf
-  version: 0.2.0
+  version: 0.2.1
   kind: app
-  title: { zh: PDF 工具箱（Stirling-PDF）, en: PDF Toolbox (Stirling-PDF) }
+  title: { zh: "PDF 工具箱（Stirling-PDF）", en: "PDF Toolbox (Stirling-PDF)", zh-Hant: "PDF 工具箱（Stirling-PDF）", ja: "PDF ツールボックス（Stirling-PDF）" }
   description:
-    zh: "处理 PDF 的万能工具箱：合并、拆分、压缩、加密码、转图片、认字等 60 多种操作，打开网页就能用，文件只在家里处理。"
+    zh: 处理 PDF 的万能工具箱：合并、拆分、压缩、加密码、转图片、认字等 60 多种操作，打开网页就能用，文件只在家里处理。
     en: "An all-in-one PDF toolbox: merge, split, compress, add a password, convert to images, recognize text and more — over 60 tools in the browser, with files processed at home."
+    zh-Hant: 處理 PDF 的萬能工具箱：合併、拆分、壓縮、加密碼、轉圖片、辨識文字等 60 多種操作，開啟網頁就能用，檔案只在家裡處理。
+    ja: PDF を扱う万能ツールボックスです。結合・分割・圧縮・パスワード付与・画像変換・文字認識など 60 以上の操作を、ページを開くだけで使え、ファイルは家の中で処理されます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/phone.png]
@@ -96,33 +98,55 @@ x-wonton:
   tags:
     zh: [PDF, 文档, 工具]
     en: [PDF, Documents, Tools]
+  setup:
+    zh: 打开网页就用，不用登录。处理完的文件要当场下载走，只临时放着，重装不保留。
+    en: "Open the page and work — no login. Download finished files right away: they are only kept temporarily and do not survive reinstalls."
+    zh-Hant: 開啟網頁就用，不用登入。處理完的檔案要當場下載走，只臨時放著，重裝不保留。
+    ja: ページを開けば使え、ログインは不要です。処理したファイルはその場でダウンロードしてください。一時的に置かれるだけで、入れ直すと残りません。
   about:
     zh: |
-      60 多个 PDF 工具：合并、拆分、压缩、加密码、去密码、转图片、图片转 PDF、Office 互转、认字（OCR）、页面整理、水印、签名、修改文件信息等，全部在本机处理。
+      60 多个 PDF 工具：合并、拆分、压缩、加密码、去密码、转图片、图片转 PDF、Office 互转、认字、页面整理、水印、签名、修改文件信息等，全部在自己家里处理。
 
-      中文 OCR 开箱即用（内置简体中文语言包）。应用不另设账号，打开网页登录云吞后直接用。
-      登录、用户管理等模块按上游的专有许可发布，免费版即可用（5 个用户上限）。
+      中文认字开箱即用（内置简体中文语言包）。
 
-      处理的文件只在处理过程中临时存放，完成即取走，重装不保留；不申请出网。
+      应用发的信（签名邀请、把文件发到邮箱）会出现在收件人的 Wonton 私聊里，收件人限家里人；发给外部邮箱会发送失败，应用当场报错。
 
-      应用发的信（签名邀请、把文件发到邮箱）会出现在收件人的「Wonton」私聊里，收件人限家里人；
-      发给外部邮箱会发送失败，应用当场报错。
+      登录、用户管理等模块按上游的专有许可发布，免费版即可用，最多 5 个用户。只在家里处理，不连外网。
     en: |
-      Over 60 PDF tools: merge, split, compress, add or remove passwords, convert to images, images to PDF, Office conversion, text recognition (OCR), page organizing, watermarks, signing, editing file details and more, all processed locally.
+      Over 60 PDF tools: merge, split, compress, add or remove passwords, convert to images, images to PDF, Office conversion, text recognition, page organizing, watermarks, signing, editing file details and more, all processed at home.
 
-      Chinese OCR works out of the box (Simplified Chinese language pack included). The app keeps
-      no accounts of its own — sign in to Wonton and you are in. Sign-in, user management and
-      similar modules ship under the upstream proprietary licence; the free tier is fully usable
-      (5-user limit).
+      Chinese text recognition works out of the box (Simplified Chinese language pack included).
 
-      Processed files are temporary while you work — download them when you're done; they do not
-      survive reinstalls. No internet permission is requested.
+      Emails the app sends (signing invites, emailing a file) arrive in the recipient's Wonton chat, household members only; sending to outside addresses fails on the spot.
 
-      Emails the app sends (signing invites, emailing a file) arrive in the recipient's Wonton
-      chat, household members only; sending to outside addresses fails on the spot.
+      Sign-in, user management and similar modules ship under the upstream proprietary licence; the free tier is usable with up to 5 users. Everything is processed at home, with no internet connection.
+    zh-Hant: |
+      60 多個 PDF 工具：合併、拆分、壓縮、加密碼、去密碼、轉圖片、圖片轉 PDF、Office 互轉、辨識文字、頁面整理、浮水印、簽名、修改檔案資訊等，全部在自己家裡處理。
+
+      中文辨識開箱即用（內建簡體中文語言包）。
+
+      應用寄的信（簽名邀請、把檔案寄到信箱）會出現在收件人的 Wonton 私聊裡，收件人限家裡人；寄給外部信箱會發送失敗，應用當場報錯。
+
+      登入、使用者管理等模組按上游的專有授權發布，免費版即可用，最多 5 個使用者。只在家裡處理，不連外網。
+    ja: |
+      60 以上の PDF ツールがあります。結合・分割・圧縮・パスワードの付与と解除・画像変換・画像から PDF・Office 相互変換・文字認識・ページ整理・透かし・署名・ファイル情報の編集などを、すべて自宅で処理します。
+
+      中国語の文字認識はすぐ使えます（簡体字中国語の言語パック内蔵）。
+
+      アプリが送るメール（署名依頼、ファイルのメール送信）は受け取った人の Wonton チャットに届き、宛先は家族だけです。外部アドレスに送るとその場で失敗します。
+
+      サインインやユーザー管理などのモジュールは上流の独自ライセンスで提供され、無料版は 5 ユーザーまで使えます。処理はすべて家の中で行い、インターネットには出ません。
   release_notes:
-    zh: "接上云吞的内部邮箱：签名邀请、邮件发送等应用发的信会送进收件人的「Wonton」私聊；收件人限家里人，发外部地址会失败。"
-    en: "Connected to Wonton's internal mailbox: emails the app sends (signing invites, the email tool) arrive in the recipient's Wonton chat; recipients are limited to household members, external addresses fail."
+    zh: |
+      接上云吞的内部邮箱：签名邀请、邮件发送等应用发的信会送进收件人的「Wonton」私聊；收件人限家里人，发外部地址会失败。
+
+      商店介绍重写：登录和临时文件的说明移到「安装后要做的事」，专有许可、出网等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Connected to Wonton's internal mailbox: emails the app sends (signing invites, the email tool) arrive in the recipient's Wonton chat; recipients are limited to household members, external addresses fail.
+
+      Store copy rewritten: sign-in and temporary-file notes moved to the pre-install notice, with proprietary-licence/outbound wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "接上雲吞的內部郵箱：簽名邀請、郵件傳送等應用發的信會送進收件人的「Wonton」私聊；收件人限家裡人，發外部地址會失敗。\n\n商店介紹重寫：登入和臨時檔案的說明移到「安裝後要做的事」，專有授權、外網等說法換成日常用語；補繁體中文和日文。"
+    ja: "Wonton の内部メールにつなぎました。署名依頼やメール送信など、アプリが送るメールは受信者の Wonton ダイレクトメッセージに届きます。宛先は家族に限られ、外部アドレスへの送信は失敗します。\n\nストア紹介を書き直し、サインインと一時ファイルの説明を「インストール後の手順」に移し、独自ライセンスや外部通信などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   # 镜像支持 amd64 和 arm64（docker buildx imagetools inspect）；上游未写最低内存，JVM 按容器内存自动调，
   # OCR 加 LibreOffice 转换按 2G 报。
   requirements:

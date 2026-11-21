@@ -57,12 +57,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: org.eclipse.mosquitto
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 设备消息中心（Mosquitto）, en: Device Message Hub (Mosquitto) }
+  title: { zh: "设备消息中转（Mosquitto）", en: "Device Message Relay (Mosquitto)", zh-Hant: "裝置訊息中轉（Mosquitto）", ja: "機器メッセージ中継（Mosquitto）" }
   description:
-    zh: 像家里的邮局，把智能设备发来的消息送到各个软件，再把指令送回设备。
-    en: A post office for your smart home — it relays messages from devices to your apps and sends commands back.
+    zh: 像家里的邮局：智能设备发来的消息经它送到各个软件，软件的指令也经它送回设备。
+    en: "A post office for your smart home: messages from devices are carried to your apps, and commands are carried back."
+    zh-Hant: 像家裡的郵局：智慧裝置發來的訊息經它送到各個軟體，軟體的指令也經它送回裝置。
+    ja: 家の中の郵便局のようなものです。機器からのメッセージを各アプリに届け、アプリの指示を機器へ送り返します。
   icon: icon.svg
   notices: [NOTICE]
   author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
@@ -76,19 +78,35 @@ x-wonton:
     zh: |
       智能设备（ESP 开发板、网关）和 Zigbee2MQTT、ESPHome、Home Assistant、Node-RED 这类软件之间互传消息，都经过它。
 
-      装好就能用：它没有自己的网页，由别的软件和设备来连。
-
-      要连家里的设备：在插件详情里打开“在局域网开放”，把显示的地址和账号填进设备。
+      装好就能用，由别的软件和设备来连；地址和账号都在插件详情里。
     en: |
       Smart devices (ESP boards, gateways) and apps like Zigbee2MQTT, ESPHome, Home Assistant and Node-RED all exchange messages through it.
 
-      Ready to use out of the box: there is no web page of its own — other apps and devices connect to it.
+      Ready to use out of the box — other apps and devices do the connecting, and the address and account are in the plugin details.
+    zh-Hant: |
+      智慧裝置（ESP 開發板、閘道）和 Zigbee2MQTT、ESPHome、Home Assistant、Node-RED 這類軟體之間互傳訊息，都經過它。
 
-      To connect devices in your home: turn on "Open on LAN" in the plugin details and enter the address and account shown there into the device.
+      裝好就能用，由別的軟體和裝置來連；位址和帳號都在外掛詳情裡。
+    ja: |
+      スマート機器（ESP ボード、ゲートウェイ）と Zigbee2MQTT、ESPHome、Home Assistant、Node-RED などのアプリの間のメッセージは、すべてこれを通ります。
+
+      導入すればすぐ使え、つなぐのは他のアプリや機器側です。アドレスとアカウントはプラグイン詳細にあります。
   setup:
-    zh: 要连家里的智能设备：打开本插件详情，把“在局域网开放”打开，再把显示的地址和账号填进设备。
-    en: "To connect smart devices: open this plugin's details, turn on \"Open on LAN\", then enter the address and account shown there into the device."
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+    zh: 它没有自己的网页。连家里的设备或软件：在插件详情里打开「在局域网开放」，把显示出来的地址和账号填进去。
+    en: It has no web page of its own. To connect devices or apps at home, turn on "Open on LAN" in the plugin details and enter the address and account shown there.
+    zh-Hant: 它沒有自己的網頁。連家裡的裝置或軟體：在外掛詳情裡開啟「在區域網路開放」，把顯示出來的位址和帳號填進去。
+    ja: 専用の Web ページはありません。家の機器やアプリをつなぐには、プラグイン詳細で「LAN で公開」をオンにし、表示されるアドレスとアカウントを入力します。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：把连接步骤收进「安装后要做的事」，去掉和说明重复的一段；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: the connection steps moved to the pre-install notice and a duplicated paragraph dropped; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：把連線步驟收進「安裝後要做的事」，去掉和說明重複的一段；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、接続の手順を「インストール後の手順」にまとめ、重複した段落を削りました。繁体字中国語と日本語を追加。"
   # 局域网设备（ESP 开发板、网关）直连 1883；账号在详情页显示，默认不开。
   lan:
     ports:

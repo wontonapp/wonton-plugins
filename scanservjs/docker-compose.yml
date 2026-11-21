@@ -34,12 +34,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: io.github.sbs20.scanservjs
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 网页扫描（scanservjs）, en: scanservjs }
+  title: { zh: "网页扫描（scanservjs）", en: "Web Scanning (scanservjs)", zh-Hant: "網頁掃描（scanservjs）", ja: "Web スキャン（scanservjs）" }
   description:
-    zh: 把网络扫描仪变成网页，手机上点一下就扫，文件自动进“文档”文件夹
-    en: Turn a network scanner into a web page — scan from your phone, files land in the Documents folder
+    zh: 把网络扫描仪变成网页，手机上点一下就扫，文件自动进「文档」文件夹。
+    en: Turn a network scanner into a web page — scan from your phone, and files land in the Documents folder.
+    zh-Hant: 把網路掃描器變成網頁，手機上點一下就掃，檔案自動進「文件」資料夾。
+    ja: ネットワークスキャナーを Web ページに変えます。スマホからワンタップで読み取り、ファイルは「ドキュメント」フォルダへ自動で入ります。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -52,25 +54,53 @@ x-wonton:
     en: [Tools, Documents]
   about:
     zh: |
-      像把扫描仪搬进了网页：手机、平板、电脑打开就能扫描，不用装任何驱动，扫好的文件自动存进共享文件夹“文档”，可以接着交给 paperless-ngx 归档。
+      像把扫描仪搬进了网页：手机、平板、电脑打开就能扫描，不用装任何驱动，扫好的文件自动存进共享文件夹「文档」，可以接着交给 paperless-ngx 归档。
 
-      支持两种网络扫描仪：免驱的 eSCL/AirScan（大多数带网络扫描功能的一体机）和 SANE 网络共享（saned）。装好后把扫描仪的地址填进插件设置就能用，多台用分号隔开。
+      支持两种网络扫描仪：免驱的一体机（多数带网络扫描功能的打印机）和装了 saned 的机器。多台用分号隔开。
 
-      输出格式有 JPG、PNG、PDF，多页可以合成一个 PDF 或压缩包，还能做文字识别（OCR）。扫描结果存在“文档”文件夹的“扫描件”子目录里。
+      输出格式有 JPG、PNG、PDF，多页可以合成一个 PDF 或压缩包，还能做文字识别。扫描结果存在「文档」文件夹的「扫描件」子目录里。
 
-      接在电脑 USB 口上的扫描仪暂时接不进来：底座还不能把宿主 USB 设备交给插件，支持后会在扫描仪设置里加上。也扫描不到广播出来的新扫描仪（自动发现要宿主网络），地址要手动填。
+      接在电脑 USB 口上的扫描仪暂时接不进来，云吞还不能把宿主上的 USB 设备交给插件，支持后会在扫描仪设置里加上。也扫描不到广播出来的新扫描仪，地址要手动填。
     en: |
       Your scanner, on a web page: open it from a phone, tablet or computer and scan — no drivers to install. Scanned files land in the Documents shared folder automatically, ready for archiving with paperless-ngx.
 
-      Two kinds of network scanners work: driverless eSCL/AirScan (most all-in-one printers with network scanning) and SANE network sharing (saned). Enter the scanner address in the plugin settings after install; separate multiple scanners with semicolons.
+      Two kinds of network scanners work: driverless all-in-ones (most printers with network scanning) and machines running saned. Separate multiple scanners with semicolons.
 
-      Output formats include JPG, PNG and PDF; multi-page scans can be merged into one PDF or a zip, with optional OCR. Scans are stored in the “扫描件” subfolder of the Documents folder.
+      Output formats include JPG, PNG and PDF; multi-page scans can be merged into one PDF or a zip, with optional text recognition. Scans are stored in the "扫描件" subfolder of the Documents folder.
 
-      USB scanners attached to the server are not supported yet: the platform cannot hand host USB devices to plugins. Scanners are not discovered automatically either (that needs host networking) — enter addresses manually.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      USB scanners attached to the server are not supported yet: Wonton cannot hand host USB devices to plugins. Scanners are not discovered automatically either — enter addresses manually.
+    zh-Hant: |
+      像把掃描器搬進了網頁：手機、平板、電腦開啟就能掃描，不用裝任何驅動，掃好的檔案自動存進共享資料夾「文件」，可以接著交給 paperless-ngx 歸檔。
+
+      支援兩種網路掃描器：免驅動的一體機（多數帶網路掃描功能的印表機）和裝了 saned 的機器。多台用分號隔開。
+
+      輸出格式有 JPG、PNG、PDF，多頁可以合成一個 PDF 或壓縮檔，還能做文字辨識。掃描結果存在「文件」資料夾的「掃描件」子目錄裡。
+
+      接在電腦 USB 口上的掃描器暫時接不進來，雲吞還不能把宿主上的 USB 裝置交給外掛，支援後會在掃描器設定裡加上。也掃描不到廣播出來的新掃描器，位址要手動填。
+    ja: |
+      スキャナーを Web ページに移したようなものです。スマホ・タブレット・パソコンから開けば読み取れ、ドライバは要りません。読み取ったファイルは共有フォルダ「ドキュメント」に自動で入り、paperless-ngx での整理にそのまま渡せます。
+
+      対応するのは 2 種類のネットワークスキャナーです。ドライバ不要の複合機（ネットワークスキャン付きの大半のプリンタ）と、saned を動かすマシンです。複数はセミコロンで区切ります。
+
+      出力は JPG・PNG・PDF で、複数ページは 1 つの PDF や ZIP にまとめられ、文字認識もできます。結果は「ドキュメント」フォルダの「スキャン」サブフォルダに保存されます。
+
+      パソコンの USB に挿したスキャナーはまだ使えません。Wonton がホストの USB 機器をプラグインに渡せないためです。対応したらスキャナー設定に追加します。ブロードキャストされたスキャナーの自動検出もできず、アドレスは手で入力します。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：填扫描仪地址移到「安装后要做的事」，eSCL、saned、底座等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: entering the scanner address moved to the pre-install notice, with eSCL/saned/platform wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：填掃描器位址移到「安裝後要做的事」，eSCL、saned、底座等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、スキャナーアドレスの入力を「インストール後の手順」に移し、eSCL や saned、プラットフォームなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 装好后打开插件设置，把网络扫描仪的地址填进去，例如 "家里的一体机" = "http://192.0.2.10/eSCL"。没有网络扫描仪时网页会显示“找不到扫描仪”。
-    en: After install, open the plugin settings and enter your network scanner's address, e.g. "Home MFP" = "http://192.0.2.10/eSCL". With no scanner configured the page reports “no devices”.
+    zh: 打开插件设置，把网络扫描仪的地址填进去，例如“家里的一体机” = “http://192.0.2.10/eSCL”。没有填时网页会显示“找不到扫描仪”。
+    en: Open the plugin settings and enter your network scanner's address, e.g. "Home MFP" = "http://192.0.2.10/eSCL". With no address set the page reports "no devices".
+    zh-Hant: 開啟外掛設定，把網路掃描器的位址填進去，例如「家裡的一體機」 = 「http://192.0.2.10/eSCL」。沒有填時網頁會顯示「找不到掃描器」。
+    ja: プラグイン設定を開き、ネットワークスキャナーのアドレスを入力します（例:「家の複合機」=「http://192.0.2.10/eSCL」）。未設定だとページに「デバイスがない」と出ます。
   webui:
     service: scanservjs
     port: 8080
