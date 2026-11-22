@@ -53,7 +53,7 @@ x-wonton:
   author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
   homepage: https://jellyfin.org
   license: GPL-2.0-only
-  license_url: https://github.com/jellyfin/jellyfin/blob/master/LICENSE
+  license_url: https://github.com/jellyfin/jellyfin/blob/v12.4/LICENSE
   tags:
     zh: [视频, 音乐]
     en: [Video, Music]
@@ -76,8 +76,8 @@ x-wonton:
       The plugin preselects Chinese artwork metadata; the web UI language follows the browser.
   release_notes: { zh: 插件迁入官方合仓，说明改成日常说法，补上架信息和首次登录说明。, en: "Moved into the official Wonton plugin monorepo, with plain-language copy, store information and first-login notes." }
   setup:
-    zh: 第一次打开要建管理员：完成后到 设置 → 服务器 打开「允许 Quick Connect」，家人第一次登录时就能用配对码自动配对。
-    en: The first opening creates the administrator; afterwards turn on Quick Connect under Settings → Server so family members can pair with a code from the login page.
+    zh: 第一次打开要建管理员：完成后到 控制台 → 服务器 → 常规 确认「在此服务器上启用快速连接」是开着的（默认开），家人第一次登录时就能用配对码自动配对。
+    en: The first opening creates the administrator; afterwards check that "Enable Quick Connect on this server" is on under Dashboard → Server → General (it is on by default), so family members can pair with a code from the login page.
   webui:
     service: jellyfin
     port: 8096

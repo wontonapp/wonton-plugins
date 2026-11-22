@@ -24,7 +24,7 @@ WONTON_PLUGIN=jellyfin scripts/dev.sh install
 
 第一次打开是 Jellyfin 上游的初始化向导：创建管理员、把媒体目录填成 `/media`。插件在第一次创建数据目录时只用同一个官方镜像复制一份 `config/system.xml`，预置中文海报信息和中国地区，已有配置不会覆盖；管理员账号和密码由向导创建，插件不写默认密码。
 
-之后的家人各有各的 Jellyfin 账号。Jellyfin 的 Quick Connect 让家人第一次登录时不用输密码：登录页给出配对码，管理员在自己的 Jellyfin 里批准。Quick Connect 是服务器级开关（设置 → 服务器 → 允许 Quick Connect），`setup` 里写了这一步。
+之后的家人各有各的 Jellyfin 账号。Jellyfin 的 Quick Connect 让家人第一次登录时不用输密码：登录页给出配对码，管理员在自己的 Jellyfin 里批准。Quick Connect 是服务器级开关（控制台 → 服务器 → 常规 →「在此服务器上启用快速连接」，默认开），`setup` 里写了这一步。
 
 Jellyfin 12.4 没有原生 OIDC，反向代理请求头也不是 Jellyfin 核心支持的登录方式，所以清单用 `sso: none`：云吞网关挡住网页，Jellyfin 保留自己的登录。不做自研认证侧车，也不把用户凭据交给插件。
 
