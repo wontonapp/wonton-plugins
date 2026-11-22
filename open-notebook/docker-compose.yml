@@ -111,10 +111,10 @@ x-wonton:
     port: 8502
     # 应用自带口令登录（单口令、无多用户），网关照常先验云吞登录。
     sso: none
+  # 问问题、生成摘要和播客都用大模型，只走可选能力模型网关。
+  # Questions, summaries and podcasts all use models through the optional gateway only.
+  wants: [models]
   permissions:
-    # 问问题、生成摘要和播客都用大模型，只走模型网关。
-    # Models go through the model gateway only.
-    - models
     # 添加网址资料要抓取网页和视频字幕，应用还会查上游有没有新版本。
     # Adding web sources crawls pages and video subtitles; the app also checks for new upstream versions.
     - network.egress

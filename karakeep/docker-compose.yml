@@ -219,9 +219,10 @@ x-wonton:
     oidc:
       # 上游固定回调 /api/auth/callback/custom（见上游 OIDC 文档）。
       redirect_paths: [/api/auth/callback/custom]
+  # AI 摘要和问答走可选能力模型网关；没接上网关时相关功能如实报不可用。
+  wants: [models]
   permissions:
     - network.egress
-    - models
     - notify
     # 一次性服务要对出主人账号，用的是核心给的内部邮箱（owner.identity 才注入 WONTON_OWNER_EMAIL）。
     - owner.identity

@@ -166,12 +166,13 @@ x-wonton:
     # MCP 令牌：init 签发后写进数据目录，核心从这里收存；吊销后重建容器时重签。
     mcp_token:
       collect: { service: init, path: /ebk-bridge/token }
+  # 小票/文字识别走模型网关（可选能力：没接上网关时 AI 识别如实显示不可用）。
+  wants: [models]
   permissions:
     # init 要知道主人的用户名和邮箱来建账号。
     - owner.identity
-    # 汇率数据源（欧洲央行）在应用里拉取，要出网；AI 识别经模型网关（内部地址，不走代理）。
+    # 汇率数据源（欧洲央行）在应用里拉取，要出网。
     - network.egress
-    - models
   # 上游没写最低内存；本机空闲实测后取整（见 PR 验证）。镜像有 amd64 和 arm64。
   requirements:
     arch: [amd64, arm64]

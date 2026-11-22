@@ -118,10 +118,10 @@ x-wonton:
     port: 8000
     # 应用有自己的多用户登录（default-user 自动登录，家人各自登录），网关照常校验会话。
     sso: none
+  # 模型只走可选能力模型网关。
+  # Models go through the optional model gateway only.
+  wants: [models]
   permissions:
-    # 模型只走模型网关。
-    # Models go through the model gateway only.
-    - models
     # 角色卡、扩展、分词器和语音模型从网上下载；接别的模型服务商也要出网。
     # Character cards, extensions, tokenizers and speech models are downloaded from the internet;
     # other model providers need outbound access too.
