@@ -26,7 +26,7 @@ Memos（[usememos.com](https://usememos.com)，MIT）是自托管的碎片笔记
 2. 邀请家人。App 暂时没有成员页（待补），只能调核心接口：`POST /_wonton/api/members`，请求体
    `{"display_name":"…","private_bot":false}`（`role_id` 只有主人能指定，如 `family`；不写就用默认角色）；再
    `POST /_wonton/api/members/{username}/pairing-code` 出配对码。
-3. 家人用自己的设备扫码；管理员在「等你确认」里同意后，这台设备才加入（ADR-0088 第 4 节）。
+3. 家人用自己的设备扫码；管理员在「等你确认」里同意后，这台设备才登记到他名下。
 
 家人首次通过云吞登录会自动建立自己的账号，不用手工注册或另设密码。`config/wonton.json` 使用 Memos
 官方声明式配置 `instance/settings/GENERAL` 的两个字段：
