@@ -98,7 +98,7 @@ configs:
     file: config/init.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.13"
   id: com.usememos.memos
   version: 0.1.6
   kind: app
@@ -141,11 +141,12 @@ x-wonton:
 
       Notification emails for comments and mentions arrive in your Wonton chat; mail only reaches people in your household.
   release_notes:
-    zh: 在插件详情页把笔记打开给家人后，家人第一次打开会自动建各自的账号；需要管理笔记时，主人可在应用里把家人设为管理员。
-    en: Once you open Memos to your family in its plugin detail page, members get their own account the first time they open it; the owner can promote them to administrator in the app when needed.
+    zh: 在插件详情页的「谁能打开这个应用」里勾上「家人」后，家人第一次打开会自动建各自的账号；需要管理笔记时，主人可在应用里把家人设为管理员。
+    en: After you tick “Family” under “Who can open this app” in the plugin detail page, members get their own account the first time they open Memos; the owner can promote them to administrator in the app when needed.
   webui:
     service: memos
     port: 5230
+    accounts: per_user
     sso: oidc
     oidc:
       redirect_paths: [/auth/callback]

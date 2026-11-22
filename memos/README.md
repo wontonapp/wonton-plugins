@@ -20,18 +20,26 @@ Memos（[usememos.com](https://usememos.com)，MIT）是自托管的碎片笔记
 
 ## 家人账号
 
-应用默认没开放给家人，家人的列表里也看不到。先邀请家人、给家人的设备配对，再在插件详情页打开「给家人用」，应用才会
-出现在家人的列表里。家人首次通过云吞登录会自动建立自己的账号，不用手工注册或另设密码。`config/wonton.json` 使用 Memos
+应用默认没开放给家人，家人的列表里也看不到。要让家人用：
+
+1. 在插件详情页的「谁能打开这个应用」里勾上「家人」。「管理员」已经勾上，不能取消。
+2. 邀请家人。App 暂时没有成员页（待补），只能调核心接口：`POST /_wonton/api/members`，请求体
+   `{"display_name":"…","private_bot":false}`（`role_id` 只有主人能指定，如 `family`；不写就用默认角色）；再
+   `POST /_wonton/api/members/{username}/pairing-code` 出配对码。
+3. 家人用自己的设备扫码；管理员在「等你确认」里同意后，这台设备才加入（ADR-0088 第 4 节）。
+
+家人首次通过云吞登录会自动建立自己的账号，不用手工注册或另设密码。`config/wonton.json` 使用 Memos
 官方声明式配置 `instance/settings/GENERAL` 的两个字段：
 
 - `generalSetting.disallowUserRegistration: false`：允许首次 SSO 登录开户。固定上游 26.11.0 的
   `server/api/auth_service_sso.go` 为新账号设置 `RoleUser`，不读取角色或组声明。
 - `generalSetting.disallowPasswordAuth: true`：禁止匿名密码注册和普通用户密码登录。管理员密码登录仍可用，但开着这个
-  开关时登录页不显示密码表单、会直接跳转 SSO；要用密码时在地址栏加上 `/auth/admin` 打开管理员登录页。实例仍为
-  `PRIVATE`，身份提供方只有云吞。
-- 这两个开关由声明式配置锁定，界面上改不动（会提示由配置管理），每次启动都会重新应用配置。
+  开关时登录页不显示密码表单、会直接跳转 SSO；要用密码时在能输入网址的地方（比如浏览器）打开插件网页并加上
+  `/auth/admin`，App 的插件页没有地址栏，暂时只能这样进。实例仍为 `PRIVATE`，身份提供方只有云吞。
+- 这两个开关由声明式配置锁定：设置分节旁标明由配置管理，开关是灰的；每次启动都会重新应用配置。
 
-账号各自独立只针对网页：Bot 仍以主人的身份访问，搜到和改的是主人的笔记。
+清单用 `webui.accounts: per_user` 声明按人分账号，App 不再提示「大家共用一份数据」；这只针对网页，Bot 仍以主人的身份访问，
+搜到和改的是主人的笔记。
 
 需要管理员权限的家人先通过云吞登录开户，再由主人在 Memos 的「设置 → 成员」里修改角色；改回普通用户也在这里操作。
 上游对应 `UpdateUser` 的 `role` 字段只允许管理员修改，并保护最后一位管理员。Memos 不支持 `role_claim` 或
