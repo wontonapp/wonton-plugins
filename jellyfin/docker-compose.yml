@@ -1,0 +1,90 @@
+services:
+  prepare:
+    # Jellyfin 12.4 的实际配置目录是 /config/config，不是 /config。
+    image: jellyfin/jellyfin:12.4@sha256:fea863d0cd9ec445985d9c75fc6ed64e38a1d2766cf0c250a33d553f4fc1b771
+    user: "${PUID}:${PGID}"
+    entrypoint: ["/bin/sh", "-ec", "mkdir -p /data/config && test -e /data/config/system.xml || install -m 0644 /seed/system.xml /data/config/system.xml"]
+    volumes:
+      - ${WONTON_APP_DATA}/config:/data
+    configs:
+      - source: system_config
+        target: /seed/system.xml
+    network_mode: none
+    restart: "no"
+
+  jellyfin:
+    depends_on:
+      prepare:
+        condition: service_completed_successfully
+    image: jellyfin/jellyfin:12.4@sha256:fea863d0cd9ec445985d9c75fc6ed64e38a1d2766cf0c250a33d553f4fc1b771
+    # Jellyfin 12.4 官方多架构清单摘要；不启用转码显卡、DLNA 或局域网端口。
+    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+      JELLYFIN_PublishedServerUrl: ${WONTON_APP_URL}
+    volumes:
+      - ${WONTON_APP_DATA}/config:/config
+      - ${WONTON_APP_DATA}/cache:/cache
+      - ${WONTON_SHARE_MEDIA}:/media:ro
+    healthcheck:
+      test: ["CMD", "curl", "--noproxy", "localhost", "-Lk", "-fsS", "http://localhost:8096/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+      start_interval: 2s
+
+configs:
+  system_config:
+    file: config/system.xml
+
+x-wonton:
+  spec: "0.15"
+  id: org.jellyfin.media
+  version: 0.2.0
+  kind: app
+  title: { zh: 家庭影院（Jellyfin）, en: Home Theater (Jellyfin) }
+  description:
+    zh: 像自家的爱奇艺：存在家里的电影、剧集和音乐排成一面墙，手机、电脑上打开网页就能看。适合把存下的片子全家一起看。
+    en: "Like your own Netflix: the movies, shows and music you keep at home become a poster wall to watch from any phone or computer."
+  icon: icon.svg
+  notices: [NOTICE]
+  screenshots: [screenshots/home.png]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://jellyfin.org
+  license: GPL-2.0-only
+  license_url: https://github.com/jellyfin/jellyfin/blob/v12.4/LICENSE
+  tags:
+    zh: [视频, 音乐]
+    en: [Video, Music]
+  about:
+    zh: |
+      共享文件夹里的电影、剧集和音乐，打开网页就能看，能搜、能播，全家的手机和电脑都行。
+
+      配置、缓存和海报信息放在插件自己的数据目录；共享文件夹只读，Jellyfin 不会改动里面的文件。
+
+      家里人各用各的账号，观看进度分开记。第一次打开先建管理员，家人第一次登录时在登录页拿一个配对码，管理员点一下批准就行，不用输密码。
+
+      插件预置了中文海报信息，网页界面语言跟着浏览器走。
+    en: |
+      The movies, shows and music in your shared folder are ready to watch in the browser, on any phone or computer in the house.
+
+      Configuration, cache and artwork live in the plugin's own data directory; the shared folder is read-only and Jellyfin never changes it.
+
+      Everyone in the house gets their own account and keeps their own progress. The first opening creates the administrator; when a family member first signs in, their login page shows a pairing code that the administrator approves — no password to type.
+
+      The plugin preselects Chinese artwork metadata; the web UI language follows the browser.
+  release_notes: { zh: 插件迁入官方合仓，说明改成日常说法，补上架信息和首次登录说明。, en: "Moved into the official Wonton plugin monorepo, with plain-language copy, store information and first-login notes." }
+  setup:
+    zh: 第一次打开要建管理员：完成后到 控制台 → 服务器 → 常规 确认「在此服务器上启用快速连接」是开着的（默认开），家人第一次登录时就能用配对码自动配对。
+    en: The first opening creates the administrator; afterwards check that "Enable Quick Connect on this server" is on under Dashboard → Server → General (it is on by default), so family members can pair with a code from the login page.
+  webui:
+    service: jellyfin
+    port: 8096
+    sso: none
+  permissions:
+    - storage.share.media:read
+    - network.egress
+  requirements:
+    arch: [amd64, arm64]
+    memory: 2G
