@@ -328,15 +328,15 @@ x-wonton:
       After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
 
       Emails the app sends (welcome mail for new users, shared-album invites and updates) arrive in the recipient's Wonton chat; only household members can receive them — creating a user with an outside address fails to send its welcome mail.
-  release_notes: { zh: "家人首次打开相册时自动建立自己的账号，并按云吞已有的应用管理员权限登录；不开放公共注册。", en: "Family members get their own account on first opening Photos, with application administrator access following their existing Wonton permissions. Public registration remains closed." }
+  release_notes: { zh: "家人首次打开相册时自动建立自己的账号（默认普通用户），需要管理权限时由主人在后台提权；不开放公共注册。", en: "Family members get their own account on first opening Photos (a regular user by default); the owner promotes them in the admin settings when needed. Public registration remains closed." }
   webui:
     service: server
     port: 2283
+    accounts: per_user
     sso: oidc
     oidc:
       redirect_paths: [/auth/login, /user-settings]
       token_endpoint_auth_method: client_secret_post
-      role_claim: { name: immich_role, admin: admin, user: user }
   mcp:
     service: mcp
     port: 8080
