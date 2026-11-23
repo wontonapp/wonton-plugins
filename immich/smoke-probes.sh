@@ -165,7 +165,8 @@ extra_check() {
   cfg="$(docker exec "$server" cat /usr/src/app/wonton-config.json)" || { echo "读不到 immich 配置文件"; return 1; }
   jq -e '.notifications.smtp.enabled == true and .notifications.smtp.from == $f and
     .notifications.smtp.transport.host == "smtp.wonton.internal" and
-    .notifications.smtp.transport.port == 25 and .notifications.smtp.transport.secure == false' \
+    .notifications.smtp.transport.port == 25 and .notifications.smtp.transport.secure == false and
+    .notifications.smtp.transport.ignoreCert == true' \
     --arg f "$mail_from" <<<"$cfg" >/dev/null ||
     { echo "配置文件的 SMTP 不是核心注入的值：$(head -c 300 <<<"$cfg")"; return 1; }
   echo "配置文件 notifications.smtp = 核心注入的值"
@@ -176,7 +177,7 @@ extra_check() {
   rc=$?
   if ((rc == 0)); then
     out="$(curl -sS --noproxy '*' --fail-with-body -b "$SMOKE_JAR" -H 'Content-Type: application/json' \
-      -d "{\"enabled\":true,\"from\":\"$mail_from\",\"replyTo\":\"\",\"transport\":{\"host\":\"$mail_host\",\"port\":$mail_port,\"secure\":false,\"ignoreCert\":false,\"username\":\"\",\"password\":\"\"}}" \
+      -d "{\"enabled\":true,\"from\":\"$mail_from\",\"replyTo\":\"\",\"transport\":{\"host\":\"$mail_host\",\"port\":$mail_port,\"secure\":false,\"ignoreCert\":true,\"username\":\"\",\"password\":\"\"}}" \
       "$base/api/admin/notifications/test-email")"
     rc=$?
     if ((rc == 0)) && jq -e '.messageId | length > 0' <<<"$out" >/dev/null; then

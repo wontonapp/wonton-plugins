@@ -141,7 +141,7 @@ services:
   # （Immich 的 smart search），经核心的 MCP 总线给 Bot 用。它只调 Immich 的读接口；key 失效时工具
   # 会报“权限失效，重启插件会重建”。取舍见 README。
   mcp:
-    image: ghcr.io/wontonapp/wonton-plugins/immich/immich-mcp:0.3.7@sha256:7fe6b174c8f051eb11e2291b22bde77a31bad757554a85e13df42003b9ddc713
+    image: ghcr.io/wontonapp/wonton-plugins/immich/immich-mcp:0.3.7@sha256:b6813e79edf143a4c6aab0569c0b7699d867c349f38c8ba5e3097d5c5ad6f0f6
     restart: unless-stopped
     user: "${PUID}:${PGID}"
     read_only: true
@@ -230,9 +230,10 @@ configs:
   immich-config:
     # 只写下面这几节：设置文件里没写的键沿用默认值。
     # notifications.smtp：应用发的信（新用户欢迎、共享相册邀请和更新）经核心的 SMTP 转进收件人的 Wonton
-    # 私聊。核心的 SMTP 不认证不加密：`secure` 保持默认 false，`username`/`password` 留默认空值——Immich
-    # 只在两者非空时才发 AUTH（上游 email.repository.ts 的 createTransport）；核心不宣告 STARTTLS，不会
-    # 升级加密。replyTo 留默认空值，上游发送时回退为 from。管理界面只读，用户改不了这里的开关。
+    # 私聊。核心的 SMTP 不认证、证书自签：`secure` 保持默认 false，`username`/`password` 留默认空值——Immich
+    # 只在两者非空时才发 AUTH（上游 email.repository.ts 的 createTransport）；核心宣告 STARTTLS，Nodemailer 会
+    # 升级，`ignoreCert` 关掉证书校验接受自签证书（核心不分发 CA）。replyTo 留默认空值，上游发送时回退为
+    # from。管理界面只读，用户改不了这里的开关。
     # 收件人只能是家里人：给外部邮箱建用户、发欢迎信这类操作在 SMTP 阶段被核心拒收（550），Immich 报发送失败。
     # clip.modelName 换成多语言模型（上游 docs 的中文检索 recall 表：SigLIP2 与 i18n 相当、英文更好，且
     # 不依赖查询语言设置——Bot 的 search_photos 不传 language，nllb 系要靠它加语言前缀才能搜准中文）。
@@ -255,6 +256,7 @@ configs:
           "tokenEndpointAuthMethod": "client_secret_post",
           "autoLaunch": true,
           "autoRegister": true,
+          "roleClaim": "immich_role",
           "buttonText": "Wonton"
         },
         "passwordLogin": {
@@ -285,7 +287,8 @@ configs:
             "transport": {
               "host": "${WONTON_SMTP_HOST}",
               "port": ${WONTON_SMTP_PORT},
-              "secure": false
+              "secure": false,
+              "ignoreCert": true
             }
           }
         }
@@ -359,19 +362,19 @@ x-wonton:
       Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
   release_notes:
     zh: |
-      家人首次打开相册时自动建立自己的账号（默认普通用户），需要管理权限时由主人在后台提权；不开放公共注册。
+      家人第一次打开相册就自动建好自己的账号（默认普通用户，不开放公共注册）。角色的应用清单里要勾上本应用，没勾时登录被拒，账号建不出来。勾了在本应用当管理员的人建成管理员，每次登录按当前角色同步，后台手工改的角色下次登录会被覆盖。升级前先把以前手工建过的账号邮箱改成内部地址，否则第一次登录会另建一个账号。
 
       插件迁入官方合仓，自建镜像改由官方仓库发布；本版包含源 main 的 Immich v3.4.1 更新。
 
       商店介绍重写：登录和建号移到「安装后要做的事」，容器、签发方等说法换成日常用语；补繁体中文和日文。
     en: |
-      Family members get their own account on first opening Photos (a regular user by default); the owner promotes them in the admin settings when needed. Public registration remains closed.
+      Family members get their own account the first time they open Photos (a regular user by default; public registration stays closed). The app must be ticked in the person's role; without the tick the login is rejected and no account is created. Those ticked as this app's admin become admins, synced to their current role on each login and overriding manual admin toggles on the next login. Before upgrading, change the email of any manually created account to its internal address, or the first login creates a second account.
 
       Moved the plugin into the official monorepo, with custom images published from the official repository. Includes the Immich v3.4.1 update from the source main branch.
 
       Store copy rewritten: sign-in and account creation moved to the pre-install notice, with container/issuer wording in everyday words; Traditional Chinese and Japanese added.
-    zh-Hant: "家人首次開啟相簿時自動建立自己的帳號（預設一般使用者），需要管理權限時由主人在後台提權；不開放公開註冊。\n\n外掛遷入官方合倉，自建映象改由官方倉庫釋出；本版包含源 main 的 Immich v3.4.1 更新。\n\n商店介紹重寫：登入和建號移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
-    ja: "家族は初めて写真を開いたときに自分のアカウントが自動で作られます（既定では一般ユーザー）。管理権限が必要なときはオーナーが管理画面で昇格させます。一般からの登録は受け付けません。\n\nプラグインを公式リポジトリへ移動し、自前ビルドのイメージは公式リポジトリからの配布に変わりました。本版には source main の Immich v3.4.1 更新が入っています。\n\nストア紹介を書き直し、サインインとアカウント作成を「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
+    zh-Hant: "家人第一次開啟相簿就自動建好自己的帳號（預設一般使用者，不開放公開註冊）。角色的應用清單裡要勾上本應用，沒勾時登入被拒，帳號建不出來。勾了在本應用當管理員的人建成管理員，每次登入按目前角色同步，後台手動改的角色下次登入會被覆蓋。升級前先把以前手動建過的帳號信箱改成內部位址，否則第一次登入會另建一個帳號。\n\n外掛遷入官方合倉，自建映象改由官方倉庫釋出；本版包含源 main 的 Immich v3.4.1 更新。\n\n商店介紹重寫：登入和建號移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
+    ja: "家族が初めて写真を開くと、自分のアカウントが自動で作られます（既定では一般ユーザー、一般からの登録は受け付けません）。その人のロールのアプリ一覧で本アプリにチェックが要り、無いとログインが拒否されアカウントは作られません。本アプリの管理者にチェックした人は管理者として作られ、ログインのたびに現在のロールへ同期され、管理画面で手動変更したロールは次のログインで上書きされます。更新前に、以前手動で作ったアカウントのメールアドレスを内部アドレスへ変えてください。そうしないと最初のログインで別のアカウントが作られます。\n\nプラグインを公式リポジトリへ移動し、自前ビルドのイメージは公式リポジトリからの配布に変わりました。本版には source main の Immich v3.4.1 更新が入っています。\n\nストア紹介を書き直し、サインインとアカウント作成を「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: server
     port: 2283
@@ -379,6 +382,7 @@ x-wonton:
     sso: oidc
     oidc:
       redirect_paths: [/auth/login, /user-settings]
+      role_claim: {name: immich_role, admin: admin, user: user}
       token_endpoint_auth_method: client_secret_post
   mcp:
     service: mcp
