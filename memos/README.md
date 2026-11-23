@@ -8,8 +8,8 @@ Memos（[usememos.com](https://usememos.com)，MIT）是自托管的碎片笔记
 
 ## 插件行为
 
-- 主人账号在安装时建好：一次性 `init` 服务等 Memos 健康后，用核心注入的用户名（`WONTON_OWNER_NAME`）和生成的密钥
-  （`WONTON_SECRET_OWNER_PASSWORD`）注册管理员并接上核心身份提供方（`config/wonton.json`），之后打开网页就是自己的账号。
+- 主人账号在启动时由声明式配置建好：`config/wonton.json` 写明管理员账号、密码和核心身份链接，Memos 启动时照配置创建；
+  之后打开网页就是自己的账号。
 - MCP 经 nginx 侧车：核心的 MCP 总线不带凭据，侧车把用户账号的 PAT 加上再转发给 Memos（PAT 也是 `init` 建的）。
 - 数据目录先由一次性 `chown` 服务统一属主再交给 Memos（以 `PUID:PGID` 非 root 运行）；每次创建容器都跑一遍，幂等。
 - `network.egress` 只给 Webhook 推送、链接预览和 AI 语音转写用，笔记本身不出网也照常用。
@@ -36,8 +36,9 @@ Memos（[usememos.com](https://usememos.com)，MIT）是自托管的碎片笔记
 - `generalSetting.disallowUserRegistration: false`：允许首次 SSO 登录开户。固定上游 26.11.0 的
   `server/api/auth_service_sso.go` 为新账号设置 `RoleUser`，不读取角色或组声明。
 - `generalSetting.disallowPasswordAuth: true`：禁止匿名密码注册和普通用户密码登录。管理员密码登录仍可用，但开着这个
-  开关时登录页不显示密码表单、会直接跳转 SSO；要用密码时在能输入网址的地方（比如浏览器）打开插件网页并加上
-  `/auth/admin`，打开后按页面提示用主人令牌登录；App 的插件页没有地址栏，暂时只能这样进。实例仍为 `PRIVATE`，身份提供方只有云吞。
+  开关时登录页不显示密码表单、会直接跳转 SSO；要用密码时在能输入网址的地方（比如浏览器）打开插件网页，先用主人令牌
+  过核心网关，进入 `/auth/admin` 再用主人用户名和插件详情里的「管理员密码」登录；App 的插件页没有地址栏，暂时只能这样进。
+  实例仍为 `PRIVATE`，身份提供方只有云吞。
 - 这两个开关由声明式配置锁定：设置分节旁标明由配置管理，开关是灰的；每次启动都会重新应用配置。
 
 清单用 `webui.accounts: per_user` 声明按人分账号，App 不再提示「这个应用不区分个人账号。能打开它的人可能看到和修改同一份数据。」这种警告；
@@ -62,7 +63,7 @@ scripts/dev.sh install
 | 路径 | 内容 |
 | --- | --- |
 | `docker-compose.yml` | 插件本身：compose 加上 `x-wonton` 清单 |
-| `config/wonton.json`、`config/init.sh` | 声明式身份配置和建用户账号、MCP 令牌的一次性脚本 |
+| `config/wonton.json`、`config/init.sh` | 声明式身份配置（含主人账号）和只签 MCP 令牌的一次性脚本 |
 | `icon.png` | 插件图标 |
 | `screenshots/` | 商店详情页里的截图 |
 | `scripts/check.sh` | 检查插件包，规则和安装时一样 |
