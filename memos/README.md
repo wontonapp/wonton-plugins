@@ -27,7 +27,7 @@ Memos（[usememos.com](https://usememos.com)，MIT）是自托管的碎片笔记
    `{"display_name":"…","private_bot":false,"role_id":"family"}`。`username` 用响应里的值；`role_id` 不写会用默认角色
    （初始是「朋友」），朋友打不开这个应用。再 `POST /_wonton/api/members/{username}/pairing-code` 出配对码。
 3. 家人用自己的设备扫码，这时只是发出加入请求。同意也没有 App 入口：管理员 `GET /_wonton/api/members/join-requests`
-   拿 `id`，再 `POST /_wonton/api/members/join-requests/{id}/approve`（拒绝用 `/reject`）。
+   列出请求，从 `requests[].id` 取 `id`，再 `POST /_wonton/api/members/join-requests/{id}/approve`（拒绝用 `/reject`）。
 4. 同意后家人用同一个码再扫一次，设备才真正配上。
 
 家人首次通过云吞登录会自动建立自己的账号，不用手工注册或另设密码。`config/wonton.json` 使用 Memos
