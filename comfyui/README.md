@@ -19,7 +19,9 @@
 
 ## 镜像
 
-上游（comfyanonymous/ComfyUI）没有发布官方镜像，`images/comfyui/Dockerfile` 基于官方 PyTorch cu128 运行时镜像构建（RTX 50 系需要 CUDA 12.8+），ComfyUI 用上游发布的 v0.44.0，不改上游源码。构建由 `scripts/publish.sh` 完成。
+上游（comfyanonymous/ComfyUI）没有发布官方镜像。NVIDIA 主机用 `images/comfyui/Dockerfile` 基于官方 PyTorch cu128 运行时镜像构建（RTX 50 系需要 CUDA 12.8+），ComfyUI 用上游发布的 v0.44.0，不改上游源码；AMD 主机用 AMD 官方发布的 `rocm/comfyui` 镜像（ROCm 7.2）。构建由 `scripts/publish.sh` 完成。
+
+AMD 镜像自带的 PyTorch 只编译了数据中心卡（gfx942/950），Radeon 核显上第一次生成会崩。AMD 第一次启动会把官方 ROCm 7.2 的 PyTorch 轮子装进插件数据目录（约 6.4 GB，只需一次，之后重启复用）。
 
 ## 图标
 

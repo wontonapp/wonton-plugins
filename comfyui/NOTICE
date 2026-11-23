@@ -23,6 +23,16 @@ ComfyUI 的代码按 GNU General Public License v3.0 发布
 manager_requirements.txt，含 comfyui-frontend-package、comfyui-workflow-templates、
 comfyui-manager 等）随其上游发布渠道分发，许可证以上游声明为准。
 
+AMD 镜像
+--------
+
+AMD 主机用 AMD 官方发布的 rocm/comfyui 镜像（https://hub.docker.com/r/rocm/comfyui），
+按摘要固定。镜像里的 ComfyUI 仍按 GPL-3.0 发布，其余组件（ROCm、PyTorch）的许可证以
+AMD 和相应项目的上游声明为准。
+
+AMD 第一次启动装的 PyTorch ROCm 轮子来自 PyTorch 官方索引
+（https://download.pytorch.org/whl/rocm7.2），按 BSD-3-Clause 发布。
+
 插件包许可证
 ------------
 
