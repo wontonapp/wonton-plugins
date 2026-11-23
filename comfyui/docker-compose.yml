@@ -34,24 +34,38 @@ services:
       TZ: ${TZ}
       # 镜像默认 HOME 是 /root，按 PUID 运行时不可写；torch、节点的缓存放数据目录。
       HOME: /data/home
-      # 按同代 RDNA3 的 gfx1100 报，ROCm 才把这块核显当成可用目标；NVIDIA 镜像忽略这个变量。
+      # 官方 ROCm 轮子里没有 gfx115x 的内核，启动命令只在 gfx115x 上按同代 gfx1100 报（见下）；
+      # 这里先写上，rocminfo 查不到型号时保留，其他 Radeon 有原生内核，由启动命令去掉。
       HSA_OVERRIDE_GFX_VERSION: "11.0.0"
       # 核心只在插件引用了这个变量时才会把它放进容器环境，启动命令要靠它区分厂商。
       WONTON_GPU_VENDOR: ${WONTON_GPU_VENDOR}
     # 两个厂商的镜像里 ComfyUI 的位置不同（NVIDIA 版 /opt、AMD 版 /workload），以同样的参数从数据目录跑。
     # AMD 镜像自带的 PyTorch 只为 MI300 编译（gfx942/950），在 Radeon 核显上第一次 kernel 就崩；换成官方
-    # ROCm 7.2 的通用轮子装进数据目录，之后重启直接复用。
+    # ROCm 7.2 的通用轮子装进数据目录，装完写标记，之后重启直接复用。
     command:
       - /bin/bash
       - -c
       - |
+        set -e
         if [ "$$WONTON_GPU_VENDOR" = amd ]; then
-          if ! PYTHONPATH=/data/python python3 -c 'import torch; print(torch.__version__)' 2>/dev/null | grep -q '^2\.14\.'; then
+          # 标记文件只在 pip 成功后写：被打断的半次下载不会被当成装好，import 过不了也会重装。
+          if [ ! -f /data/python/.wonton-torch-2.14.1 ] ||
+            ! PYTHONPATH=/data/python python3 -c 'import torch' 2>/dev/null; then
             pip install --no-cache-dir --target /data/python \
               torch==2.14.1+rocm7.2 torchvision==0.29.1+rocm7.2 \
               --index-url https://download.pytorch.org/whl/rocm7.2
+            touch /data/python/.wonton-torch-2.14.1
           fi
           export PYTHONPATH=/data/python
+          # 轮子里只有 MI300 的内核：gfx115x（实测 gfx1151）要冒充同代 gfx1100 才用得了，其他 Radeon 有
+          # 原生内核，强制覆盖反而跑不相配的代码对象。rocminfo 自己也受这个变量影响、会把 gfx115x 报成
+          # gfx1100，所以先去掉再查真实架构，只有 gfx115x 或查不到时保留。
+          override=$$HSA_OVERRIDE_GFX_VERSION
+          unset HSA_OVERRIDE_GFX_VERSION
+          arch=$$(/opt/rocm/bin/rocminfo 2>/dev/null | grep -m1 'Name: *gfx') || arch=
+          case "$$arch" in
+            '' | *gfx115*) export HSA_OVERRIDE_GFX_VERSION=$$override ;;
+          esac
         fi
         cd /opt/ComfyUI 2>/dev/null || cd /workload/ComfyUI
         exec python3 main.py --listen 0.0.0.0 --port 8188 --base-directory /data --temp-directory /tmp/comfy --enable-manager
@@ -62,12 +76,13 @@ services:
     depends_on:
       init:
         condition: service_completed_successfully
-    # 查的是 API 真的能答话（无鉴权的系统状态接口），不只是进程活着。
+    # 查的是 API 真的能答话（无鉴权的系统状态接口），不只是进程活着。第一次启动要下 6.4 GB 轮子，
+    # start_period 给 30 分钟；再加 3×interval 的判定窗，约 31 分钟仍没装完就会被判不健康、安装失败。
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8188/api/system_stats', timeout=5)"]
       interval: 30s
       timeout: 10s
-      start_period: 3m
+      start_period: 30m
       start_interval: 5s
 
 x-wonton:

@@ -19,9 +19,11 @@
 
 ## 镜像
 
-上游（comfyanonymous/ComfyUI）没有发布官方镜像。NVIDIA 主机用 `images/comfyui/Dockerfile` 基于官方 PyTorch cu128 运行时镜像构建（RTX 50 系需要 CUDA 12.8+），ComfyUI 用上游发布的 v0.44.0，不改上游源码；AMD 主机用 AMD 官方发布的 `rocm/comfyui` 镜像（ROCm 7.2）。构建由 `scripts/publish.sh` 完成。
+上游（comfyanonymous/ComfyUI）没有发布官方镜像。NVIDIA 主机用 `images/comfyui/Dockerfile` 基于官方 PyTorch cu128 运行时镜像构建（RTX 50 系需要 CUDA 12.8+），ComfyUI 用上游发布的 v0.44.0，不改上游源码；AMD 主机用 AMD 官方发布的 `rocm/comfyui` 镜像（ROCm 7.2），里面的 ComfyUI 是 AMD 的 `amd-integration` 分支（0.18.1），和 NVIDIA 镜像的版本不同，界面和功能有差别。构建由 `scripts/publish.sh` 完成。
 
 AMD 镜像自带的 PyTorch 只编译了数据中心卡（gfx942/950），Radeon 核显上第一次生成会崩。AMD 第一次启动会把官方 ROCm 7.2 的 PyTorch 轮子装进插件数据目录（约 6.4 GB，只需一次，之后重启复用）。
+
+AMD 第一次启动的下载计入安装等待：`start_period` 30 分钟，再加约 1.5 分钟的判定窗，约 31 分钟下不完就会判不健康、安装失败；安装等健康的期限平台最多也只等到 60 分钟。6.4 GB 要稳定在 3.5 MB/s 以上，慢于此的网络第一次装会失败，重装会从头下载。只在 Radeon 8060S（gfx1151）上验证过，其他 Radeon 型号没有实测。
 
 ## 图标
 
