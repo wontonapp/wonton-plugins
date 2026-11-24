@@ -1,0 +1,80 @@
+# Scrutiny：读主公选的硬盘的健康数据（S.M.A.R.T.），网页里看坏道、温度和通电时间的变化。
+# omnibus 变体一个容器里带 influxdb、网页和每天跑一次的 collector；collector 要 SYS_RAWIO（勾 NVMe 时还要
+# SYS_ADMIN），由核心随 devices.disk 给，所以这里不写 cap_add，也不写宿主 devices:。
+services:
+  scrutiny:
+    # 上游官方镜像，amd64 和 arm64 都有，按清单列表的摘要固定（v0.10.0）。
+    image: ghcr.io/analogj/scrutiny:v0.10.0-omnibus@sha256:90062edac57a2bd891d641344184f5f730f19394b1124f6fc53904a3d8cb21c2
+    # s6 以 root 起 influxdb、网页和 cron 里的 collector，smartctl 也以 root 读盘；没有要迁就的宿主 uid。
+    environment:
+      TZ: ${TZ}
+    volumes:
+      # SQLite 数据库、首次启动写回的 influx 令牌和历史数据。
+      - ${WONTON_APP_DATA}/config:/opt/scrutiny/config
+      - ${WONTON_APP_DATA}/influxdb:/opt/scrutiny/influxdb
+    healthcheck:
+      # /api/health 同时查 SQLite 和 influxdb；镜像自带 curl。
+      test: ["CMD", "curl", "--noproxy", "*", "-fsS", "http://127.0.0.1:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # 首次启动要初始化 influxdb。
+      start_period: 90s
+      start_interval: 2s
+
+x-wonton:
+  spec: "0.15"
+  id: io.github.analogj.scrutiny
+  version: 0.1.0
+  kind: app
+  title: { zh: 硬盘体检（Scrutiny）, en: Drive Health (Scrutiny) }
+  description:
+    zh: 像定期给硬盘体检：每天读一次硬盘的健康数据，坏道、温度、通电时间有变化就在网页上标出来，趁硬盘彻底坏掉之前换掉。
+    en: "A regular check-up for your hard drives: it reads their health data every day and flags rising bad sectors, temperature and power-on hours on a web page, so you can replace a drive before it fails."
+  icon: icon.svg
+  notices: [NOTICE]
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/AnalogJ/scrutiny
+  license: MIT
+  license_url: https://github.com/AnalogJ/scrutiny/blob/v0.10.0/LICENSE
+  tags:
+    zh: [系统, 工具]
+    en: [System, Tools]
+  about:
+    zh: |
+      给硬盘做体检：装上以后每天读一次硬盘自己记录的健康数据（坏道、温度、通电时间、重试次数），网页里每块盘一张仪表盘，指标变差时标红。
+
+      安装时勾要监控的盘；核心不要求一定选，一块不选也装得上，只是没有仪表盘，要在 App 里改授权补上。装着系统的盘也列在里面、默认不勾。盘只读交给插件，健康数据只读不改，也不碰盘上的文件。
+
+      NVMe 盘要额外确认一次：读它的健康数据要更多权限，勾了以后插件拿到的权力更大，提示里会写清。
+
+      数据都留在本机，网页在云吞网关的登录后面，应用自己没有账号。
+    en: |
+      A check-up for your drives: every day it reads the health data the drive keeps itself (bad sectors, temperature, power-on hours, retries), and each drive gets a dashboard that turns red as metrics get worse.
+
+      Pick the drives to watch at install time; nothing is required — with no disk selected the plugin still installs, just without dashboards until you add the grant in the app. The system disk is listed too and left unticked by default. Drives are handed over read-only — the plugin reads health data and never modifies the files on them.
+
+      NVMe drives ask for one extra confirmation: reading their health data needs a wider privilege, and the warning spells out what the plugin gains.
+
+      Data stays on this machine. The page sits behind Wonton's login; the app has no account of its own.
+  release_notes:
+    zh: 首个版本：勾选要监控的硬盘，读健康数据，在网页里看仪表盘和指标变化。
+    en: "First release: pick the drives to watch, read their health data, follow dashboards and metric trends on the web page."
+  webui:
+    service: scrutiny
+    port: 8080
+    # 上游没有身份头或 OIDC 支持，默认无登录；网页始终在核心网关后面。
+    sso: none
+  tunnel:
+    ports:
+      - { service: scrutiny, port: 8080 }
+  # 整块盘只读交给容器，具体是哪块盘在安装时选；SYS_RAWIO 和 NVMe 的 SYS_ADMIN 由核心附带。
+  permissions:
+    - devices.disk
+  devices:
+    disk:
+      - { service: scrutiny }
+  requirements:
+    arch: [amd64, arm64]
+    # 上游没写最低内存；含 influxdb 空载和采集时实测约 82 MiB（v0.10.0，单盘），按三倍取整。
+    memory: 256M

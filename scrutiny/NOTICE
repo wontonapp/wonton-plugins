@@ -1,0 +1,36 @@
+图标
+====
+
+`icon.svg` 取自上游 Scrutiny 仓库的 `webapp/frontend/src/assets/images/logo/scrutiny-logo-dark.svg`
+（https://github.com/AnalogJ/scrutiny ，提交 v0.10.0）。
+
+- 处理：线条和配色不变，只在背后垫白色满幅底、补正方形 `viewBox`（原图透明、无 viewBox），放大到 512×512。
+- 版权与许可：Scrutiny 以 MIT 发布，图标随项目分发，版权归 Jason Kulatunga 及贡献者所有（许可全文见下）。
+- 商标说明：“Scrutiny” 名称和眼镜标志是上游项目的标志；本插件包只用它标识所集成的应用，不暗示与上游官方合作或获得背书。
+
+插件包其余文件（清单、文档、图标处理）按本仓库 LICENSE（MIT）分发。
+
+上游应用和图标许可证
+====================
+
+MIT License
+
+Copyright (c) 2020 Jason Kulatunga
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

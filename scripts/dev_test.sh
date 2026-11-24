@@ -147,6 +147,18 @@ PY
     done
     cat "${FAKE_RESULT_FILE:?}"
     ;;
+  */_wonton/api/plugins/preview)
+    [[ -n "${FAKE_HIT_FILE:-}" ]] && printf 'POST %s\n' "$url" >>"$FAKE_HIT_FILE"
+    if [[ -n "${FAKE_PREVIEW_FAIL:-}" ]]; then
+      printf '%s\n' "$FAKE_PREVIEW_FAIL"
+      exit 22
+    fi
+    cat "${FAKE_PREVIEW_FILE:?}"
+    ;;
+  */_wonton/api/plugins?grant=*)
+    [[ -n "${FAKE_HIT_FILE:-}" ]] && printf 'POST %s\n' "$url" >>"$FAKE_HIT_FILE"
+    cat "${FAKE_INSTALL_FILE:?}"
+    ;;
   */settings)
     cat "${FAKE_STORED_FILE:?}"
     ;;
@@ -204,6 +216,17 @@ printf '%s\n' '{"plugin":{"id":"com.example.app","title":"示例","version":"1.2
 printf '%s\n' '{"title":"示例","id":"com.example.app","version":"1.2.4","permissions":[],"notices":[],"blocked":"这台主机缺 GPU"}' >"$work/blocked.json"
 export FAKE_PREVIEW_FILE="$work/preview.json" FAKE_RESULT_FILE="$work/result.json"
 not_installed='{"error":{"kind":"not_installed","message":"插件 com.example.app 没有安装"}}'
+# install / reinstall 的假接口：预览里两块盘（第一块标系统盘），auto 要选第二块并把它编码进请求；
+# 只有系统盘的预览看 auto 会不会退而选它；没有 devices 键、devices 为 null、空数组都看报错。
+printf '%s\n' '{"title":"示例","id":"com.example.app","version":"1.2.4","permissions":[{"permission":"devices.disk","text":"读写勾选的整块硬盘","risk":true}],"notices":[],"blocked":null,"devices":[{"id":"disk:/dev/disk/by-id/a","kind":"disk","system":true,"chosen":false,"name":"A 盘","target":"/dev/nvme0n1"},{"id":"disk:/dev/disk/by-id/b","kind":"disk","system":false,"chosen":false,"name":"B 盘","target":"/dev/nvme1n1"}]}' >"$work/install-preview.json"
+printf '%s\n' '{"title":"示例","id":"com.example.app","version":"1.2.4","permissions":[{"permission":"devices.disk","text":"读写勾选的整块硬盘","risk":true}],"notices":[],"blocked":null,"devices":[{"id":"disk:/dev/disk/by-id/a","kind":"disk","system":true,"chosen":false,"name":"A 盘","target":"/dev/nvme0n1"}]}' >"$work/install-preview-systemonly.json"
+printf '%s\n' '{"title":"示例","id":"com.example.app","version":"1.2.4","permissions":[],"notices":[],"blocked":null,"devices":[]}' >"$work/install-preview-nodisk.json"
+printf '%s\n' '{"title":"示例","id":"com.example.app","version":"1.2.4","permissions":[],"notices":[],"blocked":null}' >"$work/install-preview-nodevices.json"
+printf '%s\n' '{"title":"示例","id":"com.example.app","version":"1.2.4","permissions":[],"notices":[],"blocked":null,"devices":null}' >"$work/install-preview-nulldevices.json"
+printf '%s\n' '{"id":"com.example.app","title":"示例","version":"1.2.4","web_url":"http://app.example.localhost:18480"}' >"$work/install-result.json"
+printf '%s\n' '{"form":{"fields":[]}}' >"$work/unsupported.json"
+export FAKE_INSTALL_FILE="$work/install-result.json"
+
 
 run 0 -- logs || true
 has "$out" core-logs:core "不给参数时跟核心"
@@ -268,6 +291,26 @@ has "$err" "取不到等回答的卡片" "取不到卡片要报错"
 # 没有等回答的卡片：说明，不算失败。
 run 0 'FAKE_CARDS={"confirmations":[]}' -- approve || true
 has "$out" "没有等回答的卡片" "没有卡片时说明"
+
+## install 的宿主设备：--device <id> 原样编码，auto 从预览里挑非系统盘、只剩系统盘时也选它；预览没有盘时报错。
+: >"$work/dev-hit"
+run 0 "FAKE_HIT_FILE=$work/dev-hit" "FAKE_PREVIEW_FILE=$work/install-preview.json" -- install --yes --device auto || true
+has "$out" "装好了：示例" "带设备安装要成功"
+has "$err" "设备：disk:/dev/disk/by-id/a（系统盘） → /dev/nvme0n1" "预览逐条打印设备 ID 并标出系统盘"
+has "$err" "设备：disk:/dev/disk/by-id/b → /dev/nvme1n1" "第二块盘也逐条打印"
+has "$(cat "$work/dev-hit")" "devices=disk%3A%2Fdev%2Fdisk%2Fby-id%2Fb" "auto 选非系统盘并把 ID 编码进请求"
+run 0 "FAKE_HIT_FILE=$work/dev-hit" "FAKE_PREVIEW_FILE=$work/install-preview.json" -- install --yes --device "disk:/dev/disk/by-id/a" || true
+has "$(cat "$work/dev-hit")" "devices=disk%3A%2Fdev%2Fdisk%2Fby-id%2Fa" "显式设备 ID 编码进请求"
+run 0 "FAKE_HIT_FILE=$work/dev-hit" "FAKE_PREVIEW_FILE=$work/install-preview-systemonly.json" -- install --yes --device auto || true
+has "$(cat "$work/dev-hit")" "devices=disk%3A%2Fdev%2Fdisk%2Fby-id%2Fa" "只有系统盘时 auto 也选它"
+for empty in install-preview-nodisk install-preview-nodevices install-preview-nulldevices; do
+  run 1 "FAKE_PREVIEW_FILE=$work/$empty.json" -- install --yes --device auto || true
+  has "$err" "预览里没有可选的整盘" "预览没有盘时要报错（$empty）"
+done
+# reinstall 先卸载再装，设备选择同样带到安装请求；设置读成不支持，省掉沿用设置那一步。
+: >"$work/re-hit"
+run 0 "FAKE_HIT_FILE=$work/re-hit" "FAKE_PREVIEW_FILE=$work/install-preview.json" "FAKE_STORED_FILE=$work/unsupported.json" -- reinstall --yes --device auto || true
+has "$(cat "$work/re-hit")" "devices=disk%3A%2Fdev%2Fdisk%2Fby-id%2Fb" "reinstall 也带设备"
 
 # upgrade：打包→POST upgrade/preview→（--yes）→POST upgrade?grant=，grant 取自预览的权限。
 : >"$work/hit"

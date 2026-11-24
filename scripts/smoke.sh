@@ -201,6 +201,15 @@ setting_args=()
 for pair in "${SMOKE_SETTINGS[@]}" "${cli_settings[@]}"; do
   setting_args+=(--setting "$pair")
 done
+# 宿主设备（清单 x-wonton.devices）：探针写 export SMOKE_DEVICE=<预览 id|auto>，每次安装、重装都带上。
+# auto 由 dev.sh 从预览里挑（硬盘优先非系统盘，只有系统盘时才选它），探针再从容器里读实际交进来的节点。
+# 清单没声明 devices 却写了 SMOKE_DEVICE 是探针写错，直接报。
+device_args=()
+if [[ -n "${SMOKE_DEVICE:-}" ]]; then
+  [[ -n "$(jq -c '."x-wonton".devices // empty' <<<"$PROBES_FACTS" 2>/dev/null)" ]] ||
+    die "清单没有声明 x-wonton.devices，探针却设了 SMOKE_DEVICE"
+  device_args=(--device "$SMOKE_DEVICE")
+fi
 
 gpu_rc=0
 "$copy/scripts/smoke-gpu.sh" "$facts_dir" || gpu_rc=$?
@@ -272,7 +281,7 @@ data_wrote=0
 data_upgrade_base=0
 if [[ "$DATA_NA" != 1 ]] && (( DATA_HOOKS )) && [[ -n "$upgrade_from" ]]; then
   say "装 tag $upgrade_from（写数据后升级）"
-  if probes_dev_t 600 install --yes "${setting_args[@]}" "$upgrade_from" >>"$LOG" 2>&1 &&
+  if probes_dev_t 600 install --yes "${setting_args[@]}" "${device_args[@]}" "$upgrade_from" >>"$LOG" 2>&1 &&
     probes_status_wait "$PROBES_PLUGIN_ID" 40 >/dev/null; then
     data_upgrade_base=1
     # 钩子要用网页地址和用户会话：这一轮在主安装之前，probes_run 还没取过、也没登录过。
@@ -288,7 +297,7 @@ fi
 # 装过升级起点时，核心不接受 install 覆盖已装的插件（同一版本号也一样）：升级用 reinstall，保留数据。
 install_cmd=install
 ((data_upgrade_base == 1)) && install_cmd=reinstall
-if ! probes_dev "$install_cmd" --yes "${setting_args[@]}" >>"$LOG" 2>&1; then
+if ! probes_dev "$install_cmd" --yes "${setting_args[@]}" "${device_args[@]}" >>"$LOG" 2>&1; then
   fail 装得上 "dev.sh $install_cmd --yes 失败，看 $LOG"
   for item in 网页打得开 用户身份能用 工具Bot调得到; do fail "$item" "装不上"; done
   exit 0
@@ -325,7 +334,7 @@ else
     fi
   fi
   if [[ "$data_wrote" == 1 ]]; then
-    if probes_dev_t 900 reinstall --yes "${setting_args[@]}" >>"$LOG" 2>&1 &&
+    if probes_dev_t 900 reinstall --yes "${setting_args[@]}" "${device_args[@]}" >>"$LOG" 2>&1 &&
       probes_status_wait "$PROBES_PLUGIN_ID" 40 >/dev/null; then
       probes_data_check 重装保数据 "reinstall 后"
     else
