@@ -8,9 +8,9 @@
 #                                             --setting 填插件设置（清单 x-wonton.settings 的 Schema），可以给多次
 #                                             --device <id|auto> 选宿主设备（清单 x-wonton.devices）：给预览里的设备 id，
 #                                             `auto` 按预览自动挑（硬盘优先非系统盘）；可以给多次
-#   scripts/dev.sh reinstall [--yes] [--setting <名字>=<值>]…
+#   scripts/dev.sh reinstall [--yes] [--setting <名字>=<值>]… [--device <id|auto>]…
 #                                             卸载（保留数据）再装上工作区里的：改了插件包以后用；装着时的设置值带过去
-#   scripts/dev.sh upgrade [--yes] [--setting <名字>=<值>]… [<引用>]
+#   scripts/dev.sh upgrade [--yes] [--setting <名字>=<值>]… [--device <id|auto>]… [<引用>]
 #                                             升级已装的插件：换容器不吊销 Bot 的设备，数据、密钥和设置都留着
 #   scripts/dev.sh rebuild                    强制重建核心栈，再保数据重装工作区插件；其他插件容器不重建
 #   scripts/dev.sh uninstall [--purge]        卸载；--purge 连插件的数据一起删
@@ -378,7 +378,7 @@ PY
     fi
     ids+=("$one")
   done
-  printf '&devices=%s' "$(jq -rn --arg v "$(IFS=,; printf '%s' "${ids[*]}")" '$v|@uri')"
+  printf '&devices=%s' "$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]).replace("/", "%2F"))' "$(IFS=,; printf '%s' "${ids[*]}")")"
 }
 
 install_plugin() {
