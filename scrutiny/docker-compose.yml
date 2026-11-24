@@ -1,6 +1,6 @@
 # Scrutiny：读主公选的硬盘的健康数据（S.M.A.R.T.），网页里看坏道、温度和通电时间的变化。
 # omnibus 变体一个容器里带 influxdb、网页和每天跑一次的 collector；collector 要 SYS_RAWIO（勾 NVMe 时还要
-# SYS_ADMIN），由核心随 devices.disk 给，所以这里不写 cap_add，也不写宿主 devices:（ADR-0036）。
+# SYS_ADMIN），由核心随 devices.disk 给，所以这里不写 cap_add，也不写宿主 devices:。
 services:
   scrutiny:
     # 上游官方镜像，amd64 和 arm64 都有，按清单列表的摘要固定（v0.10.0）。
