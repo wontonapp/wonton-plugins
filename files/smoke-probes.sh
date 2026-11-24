@@ -5,9 +5,9 @@
 export DATA_NA=1
 export SMOKE_NOTE="只读文件搜索 MCP：共享文件夹只读挂载、根文件系统只读，服务没有可写读回的用户数据"
 
-# 本机没有清单里那个摘要时按 README 构建，再把清单里的引用换成构建出来的（只改冒烟的副本）。
+# 本机没有清单里那个摘要时按 README 构建，再把清单里的引用换成本地标签并让核心只用本机镜像（只改冒烟的副本）。
 before_install() {
-  local ref dig proxy="${https_proxy:-${HTTPS_PROXY:-}}" args=()
+  local ref proxy="${https_proxy:-${HTTPS_PROXY:-}}" args=()
   ref="$(awk '/^ *image: /{print $2}' "$SMOKE_PLUGIN/docker-compose.yml" | grep '/files/mcp:' | head -1)"
   [[ -n "$ref" ]] || { echo "清单里没有 files/mcp 镜像"; return 1; }
   if [[ -z "${SMOKE_BUILD:-}" ]] && docker manifest inspect "$ref" >/dev/null 2>&1; then
@@ -19,9 +19,9 @@ before_install() {
   [[ -n "$proxy" ]] && args=(--build-arg "https_proxy=$proxy")
   (cd "$SMOKE_PLUGIN" && nice -n 19 env CARGO_BUILD_JOBS=8 timeout 1800 docker build --network host \
     "${args[@]}" -f images/mcp/Dockerfile -t wonton-files:dev images/mcp) || return 1
-  dig="$(docker image inspect wonton-files:dev --format '{{.Id}}')" || return 1
-  sed -i -E "s#image: [^ ]*/files/mcp:[^ ]*#image: wonton-files:dev@$dig#" "$SMOKE_PLUGIN/docker-compose.yml"
-  grep -qF "wonton-files:dev@$dig" "$SMOKE_PLUGIN/docker-compose.yml" || { echo "清单摘要没换成功"; return 1; }
+  sed -i -E "s#image: [^ ]*/files/mcp:[^ ]*#image: wonton-files:dev\n    pull_policy: never#" "$SMOKE_PLUGIN/docker-compose.yml"
+  grep -qF "wonton-files:dev" "$SMOKE_PLUGIN/docker-compose.yml" || { echo "清单没换成本地镜像"; return 1; }
+  grep -qF "pull_policy: never" "$SMOKE_PLUGIN/docker-compose.yml" || { echo "清单没写 pull_policy"; return 1; }
 }
 
 mcp_check() { # tools/list 必须有全部工具且都标只读；search_files 真搜到探针放进 documents 的文件
