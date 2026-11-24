@@ -202,9 +202,14 @@ for pair in "${SMOKE_SETTINGS[@]}" "${cli_settings[@]}"; do
   setting_args+=(--setting "$pair")
 done
 # 宿主设备（清单 x-wonton.devices）：探针写 export SMOKE_DEVICE=<预览 id|auto>，每次安装、重装都带上。
-# auto 由 dev.sh 从预览里挑（硬盘优先非系统盘），探针再从容器里读实际交进来的节点。
+# auto 由 dev.sh 从预览里挑（硬盘优先非系统盘，只有系统盘时才选它），探针再从容器里读实际交进来的节点。
+# 清单没声明 devices 却写了 SMOKE_DEVICE 是探针写错，直接报。
 device_args=()
-[[ -z "${SMOKE_DEVICE:-}" ]] || device_args=(--device "$SMOKE_DEVICE")
+if [[ -n "${SMOKE_DEVICE:-}" ]]; then
+  [[ -n "$(jq -c '."x-wonton".devices // empty' <<<"$PROBES_FACTS" 2>/dev/null)" ]] ||
+    die "清单没有声明 x-wonton.devices，探针却设了 SMOKE_DEVICE"
+  device_args=(--device "$SMOKE_DEVICE")
+fi
 
 gpu_rc=0
 "$copy/scripts/smoke-gpu.sh" "$facts_dir" || gpu_rc=$?

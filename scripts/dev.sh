@@ -312,7 +312,7 @@ for line in p["permissions"]:
     say(f"  权限：{line['text']}（{line['permission']}）{mark}")
 if not p["permissions"]:
     say("  不需要权限")
-for d in p.get("devices", []):
+for d in p.get("devices") or []:
     mark = "（系统盘）" if d.get("system") else ""
     where = f" → {d['target']}" if d.get("target") else ""
     name = f"  {d['name']}" if d.get("name") else ""
@@ -371,7 +371,7 @@ device_query_args() { # <预览 JSON 文件>
     if [[ "$one" == auto ]]; then
       one="$(python3 - "$1" <<'PY'
 import json, sys
-devices = [d for d in json.load(open(sys.argv[1])).get("devices", []) if d.get("kind") == "disk"]
+devices = [d for d in (json.load(open(sys.argv[1])).get("devices") or []) if d.get("kind") == "disk"]
 devices.sort(key=lambda d: bool(d.get("system")))
 if not devices:
     sys.exit("预览里没有可选的整盘（宿主没有可读的物理盘）")
