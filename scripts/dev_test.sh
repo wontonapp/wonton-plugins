@@ -297,6 +297,7 @@ has "$out" "没有等回答的卡片" "没有卡片时说明"
 run 0 "FAKE_HIT_FILE=$work/dev-hit" "FAKE_PREVIEW_FILE=$work/install-preview.json" -- install --yes --device auto || true
 has "$out" "装好了：示例" "带设备安装要成功"
 has "$err" "设备：disk:/dev/disk/by-id/a（系统盘） → /dev/nvme0n1" "预览逐条打印设备 ID 并标出系统盘"
+has "$err" "设备：disk:/dev/disk/by-id/b → /dev/nvme1n1" "第二块盘也逐条打印"
 has "$(cat "$work/dev-hit")" "devices=disk%3A%2Fdev%2Fdisk%2Fby-id%2Fb" "auto 选非系统盘并把 ID 编码进请求"
 run 0 "FAKE_HIT_FILE=$work/dev-hit" "FAKE_PREVIEW_FILE=$work/install-preview.json" -- install --yes --device "disk:/dev/disk/by-id/a" || true
 has "$(cat "$work/dev-hit")" "devices=disk%3A%2Fdev%2Fdisk%2Fby-id%2Fa" "显式设备 ID 编码进请求"
