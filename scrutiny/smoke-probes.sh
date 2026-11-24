@@ -12,7 +12,7 @@ export SMOKE_DEVICE=auto
 
 # 页面纯前端，身份由网关会话保证；应用自己没有“当前用户”接口。
 export IDENTITY_NA=1
-SMOKE_NOTE="应用无账号体系，身份由网关保证"
+export SMOKE_NOTE="应用无账号体系，身份由网关保证"
 
 _container() { # <插件 id> <服务名>：本实例里这个服务的容器
   local inst="${SMOKE_INSTANCE:-}" id
@@ -94,16 +94,16 @@ extra_check() {
 
   # collector 在启动时跑一次，日志里要有这块盘和它跑完的记录；最多等 120 秒。
   # smartctl 对 NVMe 写的是控制器名（nvme0），不是交付给容器的命名空间（nvme0n1），所以按控制器路径找。
-  local base="${node%n1}" logs
+  local ctrl="${node%n1}" logs
   for _ in $(seq 1 60); do
     logs="$(docker logs "$id" 2>&1)"
-    if grep -qF -- "--device" <<<"$logs" && grep -qF "$base" <<<"$logs" &&
+    if grep -qF -- "--device" <<<"$logs" && grep -qF "$ctrl" <<<"$logs" &&
       grep -qF "Publishing smartctl results for" <<<"$logs"; then
-      extra_item PASS collector "日志里读了 $base 并把结果交给了网页"
+      extra_item PASS collector "日志里读了 $ctrl 并把结果交给了网页"
       return
     fi
     sleep 2
   done
-  extra_item FAIL collector "120 秒内日志里没有 $base 的采集结果，末尾：$(docker logs "$id" 2>&1 | tail -c 300 | tr '\n' ' ')"
+  extra_item FAIL collector "120 秒内日志里没有 $ctrl 的采集结果，末尾：$(docker logs "$id" 2>&1 | tail -c 300 | tr '\n' ' ')"
   return 1
 }
