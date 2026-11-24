@@ -312,8 +312,11 @@ for line in p["permissions"]:
     say(f"  权限：{line['text']}（{line['permission']}）{mark}")
 if not p["permissions"]:
     say("  不需要权限")
-for notice in p["notices"]:
-    say(f"  提示：{notice['text']}")
+for d in p.get("devices", []):
+    mark = "（系统盘）" if d.get("system") else ""
+    where = f" → {d['target']}" if d.get("target") else ""
+    name = f"  {d['name']}" if d.get("name") else ""
+    say(f"  设备：{d['id']}{mark}{where}{name}")
 if p.get("blocked"):
     say(f"装不了：{p['blocked']}")
     sys.exit(1)

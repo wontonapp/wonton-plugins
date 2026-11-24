@@ -57,8 +57,13 @@ kit_update() (
     mkdir -p "$stage/$(dirname "$path")"
     curl_t "$SMOKE_DOWNLOAD_MAX_TIME" "$base/$path" -sSL --connect-timeout "$SMOKE_CONNECT_TIMEOUT" \
       -o "$stage/$path" || die "取不到开发套件文件 $path（$sha），没有替换文件"
-    case "$path" in scripts/*.sh) chmod +x "$stage/$path" ;; esac
   done <"$stage/scripts/kit.files"
+  # 执行权限按套件的约定给：只有这些脚本要能直接跑，其余 .sh 是 source 用的，保持 644。
+  local exec_path
+  for exec_path in scripts/check.sh scripts/dev-kit.sh scripts/dev.sh scripts/dev_test.sh scripts/lib.sh \
+    scripts/publish.sh scripts/smoke-gpu.sh scripts/smoke-probes.sh scripts/smoke.sh; do
+    [[ -f "$stage/$exec_path" ]] && chmod +x "$stage/$exec_path"
+  done
   if ! grep -qxF scripts/kit.files "$stage/scripts/kit.files" ||
     ! grep -qxF .github/workflows/check.yml "$stage/scripts/kit.files"; then
     die "开发套件清单缺少 kit.files 或 check.yml"
