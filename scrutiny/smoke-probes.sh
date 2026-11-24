@@ -51,7 +51,7 @@ data_write() {
 
 data_check() {
   local uuid marker details
-  read -r uuid marker <"$SMOKE_STATE" || { echo 'SMOKE_STATE 里没有 uuid 和标记'; return 1; }
+  read -r uuid marker <"$SMOKE_STATE" || true
   [[ -n "$uuid" && -n "$marker" ]] || { echo 'SMOKE_STATE 里没有 uuid 和标记'; return 1; }
   details="$(dweb "/api/device/$uuid/details")" || { echo "读设备详情失败：$details"; return 1; }
   jq -e --arg name "$marker" '.data.device.friendly_name == $name' <<<"$details" >/dev/null ||
