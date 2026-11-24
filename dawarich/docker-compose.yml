@@ -104,7 +104,7 @@ services:
     restart: "no"
 
   redis:
-    image: redis:8.2-alpine@sha256:fe9daae35cd4fd6ec22416aa4fe0cf6b3e36741e06ff45b9986253fe2a81c041
+    image: redis:8.10-alpine@sha256:7958cfbb9d152f87dadfbc89f1b0b15938f0b81ff8982feb327476f4911935c3
     # 上游命令原样：快照存队列，后台任务的活不丢。
     command: ["redis-server", "--save", "900", "1", "--save", "300", "10", "--appendonly", "no"]
     volumes:

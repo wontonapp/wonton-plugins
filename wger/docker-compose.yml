@@ -49,7 +49,7 @@ services:
     # 1200 行默认配置：redis-server 对没写的指令用内置默认值。
     # 密码由核心生成：申请了 network.egress 的插件网络里，redis 不设密码
     # 时能被经用户代理可达的进程连上（规范"网络"的建议）。
-    image: redis:8.4.8-alpine3.22@sha256:44b295aedd412d52a9846f51573e906e0a9c7d83ba431f4134b1b338d45ba732
+    image: redis:8.4.8-alpine3.22@sha256:ff72f74e4f471df79ed920aa8bbc35efe72ff8a1f8acdc50aad5dbb9b14a4034
     read_only: true
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     environment:
