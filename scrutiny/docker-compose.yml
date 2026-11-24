@@ -14,7 +14,7 @@ services:
       - ${WONTON_APP_DATA}/influxdb:/opt/scrutiny/influxdb
     healthcheck:
       # /api/health 同时查 SQLite 和 influxdb；镜像自带 curl。
-      test: ["CMD", "curl", "--noproxy", "localhost", "-fsS", "http://127.0.0.1:8080/api/health"]
+      test: ["CMD", "curl", "--noproxy", "*", "-fsS", "http://127.0.0.1:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -44,7 +44,7 @@ x-wonton:
     zh: |
       给硬盘做体检：装上以后每天读一次硬盘自己记录的健康数据（坏道、温度、通电时间、重试次数），网页里每块盘一张仪表盘，指标变差时标红。
 
-      安装时勾要监控的盘，要选一块整盘；装着系统的盘也列在里面、默认不勾。盘只读交给插件，健康数据只读不改，也不碰盘上的文件。
+      安装时勾要监控的盘；核心不要求一定选，一块不选也装得上，只是没有仪表盘，要在 App 里改授权补上。装着系统的盘也列在里面、默认不勾。盘只读交给插件，健康数据只读不改，也不碰盘上的文件。
 
       NVMe 盘要额外确认一次：读它的健康数据要更多权限，勾了以后插件拿到的权力更大，提示里会写清。
 
@@ -52,7 +52,7 @@ x-wonton:
     en: |
       A check-up for your drives: every day it reads the health data the drive keeps itself (bad sectors, temperature, power-on hours, retries), and each drive gets a dashboard that turns red as metrics get worse.
 
-      Pick the drives to watch at install time; at least one whole disk. The system disk is listed too and left unticked by default. Drives are handed over read-only — the plugin reads health data and never modifies the files on them.
+      Pick the drives to watch at install time; nothing is required — with no disk selected the plugin still installs, just without dashboards until you add the grant in the app. The system disk is listed too and left unticked by default. Drives are handed over read-only — the plugin reads health data and never modifies the files on them.
 
       NVMe drives ask for one extra confirmation: reading their health data needs a wider privilege, and the warning spells out what the plugin gains.
 

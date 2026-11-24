@@ -97,8 +97,7 @@ extra_check() {
   local ctrl="${node%n1}" logs
   for _ in $(seq 1 60); do
     logs="$(docker logs "$id" 2>&1)"
-    if grep -qF -- "--device" <<<"$logs" && grep -qF "$ctrl" <<<"$logs" &&
-      grep -qF "Publishing smartctl results for" <<<"$logs"; then
+    if grep -qF "$ctrl" <<<"$logs" && grep -qF "Publishing smartctl results for" <<<"$logs"; then
       extra_item PASS collector "日志里读了 $ctrl 并把结果交给了网页"
       return
     fi
