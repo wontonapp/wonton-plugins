@@ -92,14 +92,18 @@ extra_check() {
     extra_item FAIL udev "容器里没挂 /run/udev"
   fi
 
-  # collector 在启动时跑一次，日志里应有这块盘；最多等 120 秒。
-  for _ in $(seq 1 120); do
-    if docker logs "$id" 2>&1 | grep -qF "Collecting smartctl results for $node"; then
-      extra_item PASS collector "日志里有 $node"
+  # collector 在启动时跑一次，日志里要有这块盘和它跑完的记录；最多等 120 秒。
+  # smartctl 对 NVMe 写的是控制器名（nvme0），不是交付给容器的命名空间（nvme0n1），所以按控制器路径找。
+  local base="${node%n1}" logs
+  for _ in $(seq 1 60); do
+    logs="$(docker logs "$id" 2>&1)"
+    if grep -qF -- "--device" <<<"$logs" && grep -qF "$base" <<<"$logs" &&
+      grep -qF "Publishing smartctl results for" <<<"$logs"; then
+      extra_item PASS collector "日志里读了 $base 并把结果交给了网页"
       return
     fi
-    sleep 1
+    sleep 2
   done
-  extra_item FAIL collector "120 秒内日志里没有 $node，末尾：$(docker logs "$id" 2>&1 | tail -c 300 | tr '\n' ' ')"
+  extra_item FAIL collector "120 秒内日志里没有 $base 的采集结果，末尾：$(docker logs "$id" 2>&1 | tail -c 300 | tr '\n' ' ')"
   return 1
 }

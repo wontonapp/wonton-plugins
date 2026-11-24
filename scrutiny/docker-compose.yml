@@ -76,5 +76,5 @@ x-wonton:
       - { service: scrutiny }
   requirements:
     arch: [amd64, arm64]
-    # 上游没写最低内存；空载实测（含 influxdb）后取整。
-    memory: 512M
+    # 上游没写最低内存；含 influxdb 空载和采集时实测约 82 MiB（v0.10.0，单盘），按三倍取整。
+    memory: 256M
