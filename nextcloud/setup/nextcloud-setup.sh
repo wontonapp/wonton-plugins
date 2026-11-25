@@ -78,9 +78,10 @@ curl -fsS --max-time 10 --noproxy '*' "$WONTON_OIDC_ISSUER/.well-known/openid-co
 	exit 1
 }
 
-# 发信（notify）：找回密码、分享邀请这些信交给核心的内部邮箱 SMTP（不认证、不加密），由核心转进收件人的
-# “Wonton”私聊，所以不配 SMTP 用户名密码。发件地址是完整的 WONTON_MAIL_FROM，而 Nextcloud 把发件人存成
-# mail_from_address（本地部分）拼 mail_domain（域名）两段，这里按 @ 拆开写。
+# 发信（notify）：找回密码、分享邀请这些信交给核心的内部邮箱 SMTP（不认证，证书是核心自己签的），由核心
+# 转进收件人的“Wonton”私聊，所以不配 SMTP 用户名密码。发件地址是完整的 WONTON_MAIL_FROM，而 Nextcloud 把
+# 发件人存成 mail_from_address（本地部分）拼 mail_domain（域名）两段，这里按 @ 拆开写。
+#
 [ -n "$WONTON_SMTP_HOST" ] && [ -n "$WONTON_SMTP_PORT" ] ||
 	{ echo "核心没注入 WONTON_SMTP_HOST/WONTON_SMTP_PORT（notify 权限没生效？），发不了信" >&2; exit 1; }
 case "$WONTON_MAIL_FROM" in
@@ -91,3 +92,7 @@ occ config:system:set mail_smtphost --value="$WONTON_SMTP_HOST"
 occ config:system:set mail_smtpport --value="$WONTON_SMTP_PORT"
 occ config:system:set mail_from_address --value="${WONTON_MAIL_FROM%%@*}"
 occ config:system:set mail_domain --value="${WONTON_MAIL_FROM#*@}"
+# Mailpit 宣告 STARTTLS，Symfony Mailer 就升级并校验证书；核心的证书是自签的（实测 Nextcloud 35.0.2
+# 不放开这一步就报 certificate verify failed，分享邮件静默发不出去）。只放开自签，域名校验照旧：
+# 证书的 SAN 就是 $WONTON_SMTP_HOST。
+occ config:system:set mail_smtpstreamoptions --type=json --value='{"ssl":{"allow_self_signed":true}}'
