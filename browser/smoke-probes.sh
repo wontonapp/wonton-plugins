@@ -4,9 +4,9 @@
 export IDENTITY_NA=1
 SMOKE_NOTE="noVNC 无账号体系（网关把关），身份项 N/A"
 
-# 本机没有清单里那个摘要时按 README 构建，再把清单里的引用换成构建出来的（只改冒烟的副本）。
+# 本机没有清单里那个摘要时按 README 构建，再把清单里的引用换成本地标签并让核心只用本机镜像（只改冒烟的副本）。
 before_install() {
-  local ref dig proxy="${https_proxy:-${HTTPS_PROXY:-}}" args=()
+  local ref proxy="${https_proxy:-${HTTPS_PROXY:-}}" args=()
   ref="$(awk '/^ *image: /{print $2}' "$SMOKE_PLUGIN/docker-compose.yml" | grep '/browser:' | head -1)"
   [[ -n "$ref" ]] || { echo "清单里没有 browser 镜像"; return 1; }
   if [[ -z "${SMOKE_BUILD:-}" ]] && docker manifest inspect "$ref" >/dev/null 2>&1; then
@@ -18,9 +18,9 @@ before_install() {
   [[ -n "$proxy" ]] && args=(--build-arg "https_proxy=$proxy")
   (cd "$SMOKE_PLUGIN" && nice -n 19 timeout 2400 docker buildx build --platform linux/amd64 --load \
     --network host "${args[@]}" -t ghcr.io/wontonapp/wonton-plugins/browser/browser:dev images/browser) || return 1
-  dig="$(docker image inspect ghcr.io/wontonapp/wonton-plugins/browser/browser:dev --format '{{.Id}}')" || return 1
-  sed -i -E "s#image: [^ ]*/browser:[^ ]*#image: ghcr.io/wontonapp/wonton-plugins/browser/browser:dev@$dig#" "$SMOKE_PLUGIN/docker-compose.yml"
-  grep -qF "ghcr.io/wontonapp/wonton-plugins/browser/browser:dev@$dig" "$SMOKE_PLUGIN/docker-compose.yml" || { echo "清单摘要没换成功"; return 1; }
+  sed -i -E "s#image: [^ ]*browser[^ ]*#image: ghcr.io/wontonapp/wonton-plugins/browser/browser:dev\n    pull_policy: never#" "$SMOKE_PLUGIN/docker-compose.yml"
+  grep -qF "ghcr.io/wontonapp/wonton-plugins/browser/browser:dev" "$SMOKE_PLUGIN/docker-compose.yml" || { echo "清单没换成本地镜像"; return 1; }
+  grep -qF "pull_policy: never" "$SMOKE_PLUGIN/docker-compose.yml" || { echo "清单没写 pull_policy"; return 1; }
 }
 
 web_assert() { grep -qiE 'novnc|vnc'; }   # 标准输入：noVNC 页面
