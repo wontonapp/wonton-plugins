@@ -31,16 +31,23 @@ _curl() { # <参数…>：对 couchdb 服务名发请求
   docker run --rm --network "${net%% *}" "$img" "$@" 2>&1
 }
 
-_client_creds() { # 客户端账号：init 容器 env 里的用户名和核心生成的密码（密码不回显）
+# 客户端账号是 init 里的固定字面量，和主人用户名无关。
+CLIENT_USER=wonton
+
+_client_creds() { # 客户端账号：固定用户名和核心生成的密码（密码不回显）
   local ct
   ct="$(_container "$PROBES_PLUGIN_ID" init)"
   [[ -n "$ct" ]] || { echo "找不到 init 容器"; return 1; }
-  docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$ct" \
-    | awk -F= '/^WONTON_OWNER_NAME=/{u=$2} /^WONTON_SECRET_CLIENT_/{p=substr($0, index($0,"=")+1)} END{print u "\t" p}'
+  printf '%s\t%s' "$CLIENT_USER" "$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$ct" \
+    | sed -n 's/^WONTON_SECRET_CLIENT_PASSWORD=//p')"
+}
+
+_setup_done() { # <couchdb 容器>：跑 setup-done.sh，返回它的退出码
+  docker exec "$1" /bin/sh /setup-done.sh >/dev/null
 }
 
 data_write() {
-  local unauth code origin creds user pw marker body
+  local unauth code origin creds user pw marker ct rc mark
   echo "-- CouchDB /_up 与身份"
 
   unauth="$(_curl -s -o /dev/null -w '%{http_code}' http://couchdb:5984/_up)"
@@ -69,10 +76,22 @@ data_write() {
   [ "$code" = "201" ] || [ "$code" = "202" ] || { echo "写探针文档得到 $code"; return 1; }
   printf '%s' "$marker" >"$SMOKE_STATE"
   echo "   写入文档 smoke-probe（标记 $marker）"
+
+  # clients.http.auth.app.setup_done：标记在时 0；挪开标记时 1，挪回（数据不动）。
+  ct="$(_container "$PROBES_PLUGIN_ID" couchdb)" || { echo "找不到 couchdb 容器"; return 1; }
+  [[ -n "$ct" ]] || { echo "找不到 couchdb 容器"; return 1; }
+  mark=/opt/couchdb/data/.wonton-initialized
+  _setup_done "$ct" || { echo "已初始化后 setup-done.sh 退出非 0，要 0"; return 1; }
+  docker exec "$ct" /bin/sh -c "mv $mark $mark.probe" || return 1
+  rc=0
+  _setup_done "$ct" || rc=$?
+  docker exec "$ct" /bin/sh -c "mv $mark.probe $mark" || return 1
+  [ "$rc" = 1 ] || { echo "挪开标记后 setup-done.sh 退出 $rc，要 1"; return 1; }
+  echo "   setup_done 跟着标记：有标记 0，挪开 1"
 }
 
 data_check() { # 重装、升级后文档还在，标记一致
-  local marker body creds user pw got
+  local marker body creds user pw got ct
   marker="$(cat "$SMOKE_STATE")"
   [[ -n "$marker" ]] || { echo "SMOKE_STATE 里没有标记"; return 1; }
   creds="$(_client_creds)" || { echo "$creds"; return 1; }
@@ -82,4 +101,6 @@ data_check() { # 重装、升级后文档还在，标记一致
   got="$(jq -r '.marker // empty' <<<"$body" 2>/dev/null)"
   [ "$got" = "$marker" ] || { echo "文档里的标记是 ${got:-无}，要 $marker：$(head -c 200 <<<"$body")"; return 1; }
   echo "   重装后 smoke-probe 的标记还在：$got"
+  ct="$(_container "$PROBES_PLUGIN_ID" couchdb)" || { echo "找不到 couchdb 容器"; return 1; }
+  _setup_done "$ct" || { echo "重装后 setup-done.sh 退出非 0，要 0"; return 1; }
 }

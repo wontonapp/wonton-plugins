@@ -7,7 +7,8 @@ services:
     # 不写 user：镜像入口脚本以 root 修 /opt/couchdb 属主、写入 docker.ini 后再降回 5984（上游镜像约定），
     # 数据目录随之归 5984:5984（上游 setup_own_server.md 也这么提示）。
     environment:
-      # 管理员账号由镜像入口脚本写进 local.d/docker.ini；密码是核心生成的密钥。
+      # 服务器管理员固定 admin（镜像入口脚本写进 local.d/docker.ini）；密码是核心生成的密钥。
+      # 客户端账号另用固定名 wonton，不与主人用户名挂钩：主人用户名也是 admin 时会被管理员遮住。
       COUCHDB_USER: admin
       COUCHDB_PASSWORD: ${WONTON_SECRET_ADMIN_PASSWORD}
     volumes:
@@ -39,7 +40,6 @@ services:
     environment:
       COUCHDB_USER: admin
       WONTON_SECRET_ADMIN_PASSWORD: ${WONTON_SECRET_ADMIN_PASSWORD}
-      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME:?核心没有注入用户名}
       WONTON_SECRET_CLIENT_PASSWORD: ${WONTON_SECRET_CLIENT_PASSWORD}
     volumes:
       - ${WONTON_APP_DATA}/data:/opt/couchdb/data
@@ -100,7 +100,7 @@ x-wonton:
       - { service: couchdb, port: 5984 }
     client:
       address: "http://{host}:5984"
-      username: "{user}"
+      username: "wonton"
       password: "{secret:client_password}"
   clients:
     http:
@@ -122,8 +122,6 @@ x-wonton:
   permissions:
     - network.lan
     - network.clients
-    # 知道用户名：客户端账号按注入的用户名建。
-    - owner.identity
   # 空闲实测约 160M（docker stats）；镜像支持 amd64 和 arm64（docker buildx imagetools inspect）。
   requirements:
     arch: [amd64, arm64]

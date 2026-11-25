@@ -1,8 +1,11 @@
 插件包
 ======
 
-本插件包（docker-compose.yml、couchdb.ini、init.sh、smoke-probes.sh、README）为原创内容，
+`docker-compose.yml`、`init.sh`、`setup-done.sh`、`smoke-probes.sh`、README 为本插件包原创内容，
 按本仓库 LICENSE（MIT）分发。
+
+`couchdb.ini` 按上游 Self-hosted LiveSync 服务端仓库的 `conf/local.ini` 改写（Apache License 2.0），
+只删去 `[chttpd_auth] authentication_redirect` 一行。
 
 图标
 ====
