@@ -211,7 +211,7 @@ configs:
 x-wonton:
   spec: "0.11"
   id: com.nextcloud.nextcloud
-  version: 0.2.1
+  version: 0.2.2
   kind: app
   title: { zh: 网盘全家桶（Nextcloud）, en: All-in-One Cloud (Nextcloud) }
   description:
@@ -257,7 +257,7 @@ x-wonton:
       is down.
 
       After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
-  release_notes: { zh: 插件包迁入官方插件合仓，并更新 Nextcloud 35.0.2 镜像摘要。, en: "Moved into the official Wonton plugin monorepo and updated the Nextcloud 35.0.2 image digest." }
+  release_notes: { zh: 分享邮件能发出去了：信任核心内部邮箱的自签证书，不再被 STARTTLS 校验挡住。, en: "Share mail goes out again: the core's internal mailbox uses a self-signed certificate, which is now trusted instead of breaking the STARTTLS check." }
   webui:
     service: nextcloud
     port: 8080

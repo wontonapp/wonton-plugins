@@ -86,9 +86,9 @@ services:
       start_interval: 5s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.13"
   id: app.romm.romm
-  version: 0.2.0
+  version: 0.2.1
   kind: app
   title: { zh: 复古游戏厅（RomM）, en: Retro Game Room (RomM) }
   description:
@@ -129,14 +129,17 @@ x-wonton:
 
       After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
   release_notes:
-    zh: 应用发的信（密码重置、通知确认码）走云吞的内部邮箱，出现在你的 Wonton 私聊里。
-    en: Emails the app sends (password resets, notification codes) go through Wonton's internal mailbox and land in your Wonton private chat.
+    zh: 主人打开网页就是管理员，保存设置、管理资料不再被拒（登录令牌里带上应用认的 owner 组）。
+    en: The owner now arrives as admin — saving settings and managing content is no longer refused (the sign-in token carries the owner group again).
   webui:
     service: romm
     port: 8080
     sso: oidc
     oidc:
       redirect_paths: [/api/oauth/openid]
+      # RomM 按 ID 令牌的 groups 里有没有 owner 决定给不给管理员（OIDC_ROLE_ADMIN=owner），而核心只把清单
+      # 这里声明的组名放进 groups：不声明时 OIDC 回调 403「User has not been granted any roles」，连登录都不成。
+      admin_groups: [owner]
   secrets:
     db_password:
       generate: { bytes: 32 }
