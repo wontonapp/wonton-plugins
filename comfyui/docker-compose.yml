@@ -1,5 +1,5 @@
-# ComfyUI：节点式生图工作流。上游没有发布官方镜像，镜像由 images/comfyui/Dockerfile 构建
-# （PyTorch cu128 官方基础镜像 + 上游 v0.44.0 发布源码），发布时由 scripts/publish.sh 推送并按摘要固定。
+# ComfyUI：节点式生图工作流。上游没有官方镜像，NVIDIA 用 images/comfyui/Dockerfile 构建的 CUDA 镜像
+# （PyTorch cu128 官方基础镜像 + 上游 v0.44.0 发布源码），AMD 用 AMD 官方的 rocm/comfyui 镜像（gpu.images）。
 # RTX 50 系需要 CUDA 12.8+，清单 arch 只写 amd64。
 services:
   init:
@@ -34,6 +34,44 @@ services:
       TZ: ${TZ}
       # 镜像默认 HOME 是 /root，按 PUID 运行时不可写；torch、节点的缓存放数据目录。
       HOME: /data/home
+      # 官方 ROCm 轮子里没有 gfx115x 的内核，启动命令只在 gfx115x 上按同代 gfx1100 报（见下）；
+      # 这里先写上，rocminfo 查不到型号时保留，其他 Radeon 有原生内核，由启动命令去掉。
+      HSA_OVERRIDE_GFX_VERSION: "11.0.0"
+      # 核心只在插件引用了这个变量时才会把它放进容器环境，启动命令要靠它区分厂商。
+      WONTON_GPU_VENDOR: ${WONTON_GPU_VENDOR}
+    # 两个厂商的镜像里 ComfyUI 的位置不同（NVIDIA 版 /opt、AMD 版 /workload），以同样的参数从数据目录跑。
+    # AMD 镜像自带的 PyTorch 只为 MI300 编译（gfx942/950），在 Radeon 核显上第一次 kernel 就崩；换成官方
+    # ROCm 7.2 的通用轮子装进数据目录，装完写标记，之后重启直接复用。
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        if [ "$$WONTON_GPU_VENDOR" = amd ]; then
+          # 标记只在 pip 成功后写。有标记、import 成功还不够：数据目录里没有 torch 时 import 会落到镜像自带的
+          # 2.10.0a0 照样 import 得通，所以还要 2.14.1 且装在数据目录下。--target 遇到已存在的文件只警告
+          # already exists、不覆盖，被打断的半装会一直是坏的，所以加 --upgrade 让它重写。
+          if [ ! -f /data/python/.wonton-torch-2.14.1 ] ||
+            ! PYTHONPATH=/data/python python3 -c 'import torch; assert torch.__file__.startswith("/data/python/"), torch.__file__; assert torch.__version__.startswith("2.14.1"), torch.__version__' 2>/dev/null; then
+            pip install --upgrade --no-cache-dir --target /data/python \
+              torch==2.14.1+rocm7.2 torchvision==0.29.1+rocm7.2 \
+              --index-url https://download.pytorch.org/whl/rocm7.2
+            PYTHONPATH=/data/python python3 -c 'import torch; assert torch.__file__.startswith("/data/python/"), torch.__file__; assert torch.__version__.startswith("2.14.1"), torch.__version__'
+            touch /data/python/.wonton-torch-2.14.1
+          fi
+          export PYTHONPATH=/data/python
+          # 轮子里只有 MI300 的内核：gfx115x（实测 gfx1151）要冒充同代 gfx1100 才用得了，其他 Radeon 有
+          # 原生内核，强制覆盖反而跑不相配的代码对象。rocminfo 自己也受这个变量影响、会把 gfx115x 报成
+          # gfx1100，所以先去掉再查真实架构，只有 gfx115x 或查不到时保留。
+          override=$$HSA_OVERRIDE_GFX_VERSION
+          unset HSA_OVERRIDE_GFX_VERSION
+          arch=$$(/opt/rocm/bin/rocminfo 2>/dev/null | grep -m1 'Name: *gfx') || arch=
+          case "$$arch" in
+            '' | *gfx115*) export HSA_OVERRIDE_GFX_VERSION=$$override ;;
+          esac
+        fi
+        cd /opt/ComfyUI 2>/dev/null || cd /workload/ComfyUI
+        exec python3 main.py --listen 0.0.0.0 --port 8188 --base-directory /data --temp-directory /tmp/comfy --enable-manager
     volumes:
       - ${WONTON_APP_DATA}:/data
     # PyTorch 用共享内存传进程间张量，默认 64 MiB 不够；规范对 ComfyUI 的示例也是 8g。
@@ -41,16 +79,19 @@ services:
     depends_on:
       init:
         condition: service_completed_successfully
-    # 查的是 API 真的能答话（无鉴权的系统状态接口），不只是进程活着。
+    # 查的是 API 真的能答话（无鉴权的系统状态接口），不只是进程活着。第一次启动要下 6.4 GB 轮子，
+    # start_period 给 30 分钟；再加 3×interval 的判定窗，约 31 分钟仍没装完就会被判不健康、安装失败。
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8188/api/system_stats', timeout=5)"]
       interval: 30s
       timeout: 10s
-      start_period: 3m
+      start_period: 30m
       start_interval: 5s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.14"
+  # AMD 第一次启动要下载 6.4 GB 的 PyTorch ROCm 轮子。
+  install_timeout_secs: 1800
   # 反向域名：上游是 comfy.org。
   id: org.comfy.comfyui
   version: 0.1.2
@@ -72,10 +113,10 @@ x-wonton:
     zh: [AI, 视频]
     en: [AI, Video]
   setup:
-    zh: 先放模型：把模型文件放进插件文件夹的 models 下（大图模型放 checkpoints），也能在网页里用自带的 Manager 下载。有 NVIDIA 显卡就自动用显卡；1024×1024 出图最低约要 8 GB 显存。
-    en: "Put models in place first: drop model files under models in the plugin folder (checkpoints for image models), or download them in the web UI with the bundled Manager. An NVIDIA card is used automatically; 1024×1024 needs about 8 GB of video memory at minimum."
-    zh-Hant: 先放模型：把模型檔案放進外掛資料夾的 models 下（大圖模型放 checkpoints），也能在網頁裡用自帶的 Manager 下載。有 NVIDIA 顯示卡就自動用顯示卡；1024×1024 出圖最低約要 8 GB 顯示記憶體。
-    ja: まずモデルを置きます。モデルファイルはプラグインフォルダの models に入れ（画像モデルは checkpoints）、ページ内の同梱 Manager でダウンロードもできます。NVIDIA のカードがあれば自動で使います。1024×1024 の生成には最低約 8 GB のビデオメモリが要ります。
+    zh: 先放模型：把模型文件放进插件文件夹的 models 下（大图模型放 checkpoints），也能在网页里用自带的 Manager 下载。有 NVIDIA 或 AMD 显卡就自动用显卡；1024×1024 出图最低约要 8 GB 显存。
+    en: "Put models in place first: drop model files under models in the plugin folder (checkpoints for image models), or download them in the web UI with the bundled Manager. An NVIDIA or AMD card is used automatically; 1024×1024 needs about 8 GB of video memory at minimum."
+    zh-Hant: 先放模型：把模型檔案放進外掛資料夾的 models 下（大圖模型放 checkpoints），也能在網頁裡用自帶的 Manager 下載。有 NVIDIA 或 AMD 顯示卡就自動用顯示卡；1024×1024 出圖最低約要 8 GB 顯示記憶體。
+    ja: まずモデルを置きます。モデルファイルはプラグインフォルダの models に入れ（画像モデルは checkpoints）、ページ内の同梱 Manager でダウンロードもできます。NVIDIA または AMD のカードがあれば自動で使います。1024×1024 の生成には最低約 8 GB のビデオメモリが要ります。
   about:
     zh: |
       在自己家里生成图片和视频，用自己的显卡，数据不出门。
@@ -103,15 +144,23 @@ x-wonton:
       モデルは同梱されず、自分で置きます。モデルの取得とノードの導入にはインターネットが必要です。
   release_notes:
     zh: |
+      AMD 主机用 AMD 官方发的 ROCm 版镜像，NVIDIA 和 CPU 行为不变。
+
       插件包迁入官方插件合仓，保留 ComfyUI v0.44.0 构建镜像和 web_get 数据探针。
 
       商店介绍重写：放模型和显存要求移到「安装后要做的事」，数据目录、自定义节点、出网权限等说法换成日常用语；补繁体中文和日文。
+
+      判重装也看 torch 版本。
     en: |
+      AMD hosts use AMD's official ROCm image; NVIDIA and CPU behave the same.
+
       Moved into the official Wonton plugin monorepo; keeps the ComfyUI v0.44.0 image build and web_get data probes.
 
       Store copy rewritten: model placement and VRAM needs moved to the pre-install notice, with data-directory/custom-node/outbound wording in everyday words; Traditional Chinese and Japanese added.
-    zh-Hant: "外掛包遷入官方外掛合倉，保留 ComfyUI v0.44.0 構建映象和 web_get 資料探針。\n\n商店介紹重寫：放模型和顯示記憶體要求移到「安裝後要做的事」，資料目錄、自訂節點、外網權限等說法換成日常用語；補繁體中文和日文。"
-    ja: "プラグインを公式プラグインリポジトリへ移動しました。ComfyUI v0.44.0 のビルドイメージと web_get データプローブは維持しています。\n\nストア紹介を書き直し、モデルの配置とビデオメモリ要件を「インストール後の手順」に移し、データディレクトリやカスタムノード、外部通信などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
+
+      Reinstall decisions also check the torch version.
+    zh-Hant: "AMD 主機用 AMD 官方發的 ROCm 版映像，NVIDIA 和 CPU 行為不變。\n\n外掛包遷入官方外掛合倉，保留 ComfyUI v0.44.0 構建映象和 web_get 資料探針。\n\n商店介紹重寫：放模型和顯示記憶體要求移到「安裝後要做的事」，資料目錄、自訂節點、外網權限等說法換成日常用語。補繁體中文和日文。\n\n判重裝也看 torch 版本。"
+    ja: "AMD ホストは AMD 公式の ROCm 版イメージを使います。NVIDIA と CPU の動作は変わりません。\n\nプラグインを公式プラグインリポジトリへ移動しました。ComfyUI v0.44.0 のビルドイメージと web_get データプローブは維持しています。\n\nストア紹介を書き直し、モデルの配置とビデオメモリ要件を「インストール後の手順」に移し、データディレクトリやカスタムノード、外部通信などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加しました。\n\n再インストールの判断でも torch のバージョンを確認します。"
   # ComfyUI 没有登录页（网关挡着，只有登录用户打得开），也不支持 OIDC 或代理用户名，所以 none。
   webui:
     service: comfyui
@@ -121,11 +170,17 @@ x-wonton:
   permissions:
     - devices.gpu
     - network.egress
-  # 显卡给 comfyui 服务；required：本插件就是为显卡准备的，CPU 跑不动主流模型。
+  # 显卡给 comfyui 和 init 服务；init 也声明，AMD 主机上只用 ROCm 版镜像、不再为它单独拉 CUDA 镜像。
+  # required：本插件就是为显卡准备的，CPU 跑不动主流模型。
   gpu:
-    services: [comfyui]
+    services: [init, comfyui]
+    images:
+      init:
+        amd: rocm/comfyui:comfyui-0.18.2.amd0_rocm7.2.0_ubuntu24.04@sha256:06c77fc20cebc8da81816ca534a2234a68cb9c83ecf6b005fd9ad23d741b0a78
+      comfyui:
+        amd: rocm/comfyui:comfyui-0.18.2.amd0_rocm7.2.0_ubuntu24.04@sha256:06c77fc20cebc8da81816ca534a2234a68cb9c83ecf6b005fd9ad23d741b0a78
   requirements:
     arch: [amd64]
     # 空闲约 1.5 GiB，跑 SDXL 生成时峰值更高；取 4G。
     memory: 4G
-    gpu: { need: required }
+    gpu: { need: required, vendors: [nvidia, amd] }
