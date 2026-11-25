@@ -50,10 +50,10 @@ _test_zim() { # 输出测试 ZIM 的本机路径，没有就现下载到临时�
   fi
   local dst="/tmp/pb-kiwix-$TEST_ZIM_NAME"
   if [[ ! -s "$dst" ]]; then
-    # GitHub 的托管机能直连外网；本地开发环境直连不通时，经代理再试。先直连，失败再退代理。
+    # 直连不通、环境变量给了代理时才经代理再试；两个变量都空就只直连——不落到写死的本机端口（CI 的 runner 上没有代理）。先直连，失败再退代理。
+    local proxy="${https_proxy:-${HTTPS_PROXY:-}}"
     curl -fsSL --max-time 120 -o "$dst.part" "$TEST_ZIM_URL" ||
-      curl -fsSL --max-time 120 --proxy "${https_proxy:-${HTTPS_PROXY:-http://127.0.0.1:7890}}" \
-        -o "$dst.part" "$TEST_ZIM_URL" ||
+      { [[ -n "$proxy" ]] && curl -fsSL --max-time 120 --proxy "$proxy" -o "$dst.part" "$TEST_ZIM_URL"; } ||
       { rm -f "$dst.part"; echo "下载测试 ZIM 失败：$TEST_ZIM_URL"; return 1; }
     mv "$dst.part" "$dst"
   fi
