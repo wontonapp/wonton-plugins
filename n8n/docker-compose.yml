@@ -140,13 +140,13 @@ x-wonton:
     port: 5678
     # 社区版没有 SSO（OIDC/SAML 是企业版功能），第一次打开自己注册管理员。
     sso: none
+  # 流程里的 AI 步骤走可选能力模型网关（OpenAI 兼容接口）。
+  # AI steps in flows go through the optional model gateway (OpenAI-compatible API).
+  wants: [models]
   permissions:
     # 出网：调用流程里的外部服务、安装社区节点、拉取工作流模板。
     # Egress: call external services in flows, install community nodes, fetch workflow templates.
     - network.egress
-    # 流程里的 AI 步骤走模型网关（OpenAI 兼容接口）。
-    # AI steps in flows go through the model gateway (OpenAI-compatible API).
-    - models
     # MCP Client Tool 节点经云吞工具总线调用家里其他应用的能力。
     # The MCP Client Tool node reaches other home apps through the Wonton tool bus.
     - tools

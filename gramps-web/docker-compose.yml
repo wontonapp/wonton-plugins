@@ -199,9 +199,9 @@ x-wonton:
     # Flask 的会话签名密钥；换值会让所有人重新登录，由核心生成、保留数据重装沿用。
     secret_key:
       generate: { bytes: 32 }
-  permissions:
-    # AI 问答经模型网关；没接上网关时聊天如实报不可用，其余功能不受影响。
-    - models
+  # AI 问答走可选能力模型网关；没接上网关时聊天如实报不可用，其余功能不受影响。
+  wants: [models]
+  permissions: []
   requirements:
     # 两个镜像都有 amd64 和 arm64（docker buildx imagetools inspect 实测）。
     arch: [amd64, arm64]

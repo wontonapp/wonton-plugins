@@ -120,10 +120,10 @@ x-wonton:
     service: astrbot
     port: 6185
     sso: none
+  # 模型走模型网关（可选能力：没接上网关时用户在面板里配自己的模型服务商）。
+  # Models go through the optional model gateway; without one, users configure their own provider in the panel.
+  wants: [models]
   permissions:
-    # 模型走模型网关；没接上网关时用户在面板里配自己的模型服务商。
-    # Models go through the model gateway; without one, users configure their own provider in the panel.
-    - models
     # 经核心的工具总线调用家里其他应用提供的工具。
     # Calls tools provided by other apps through the core's tool bus.
     - tools

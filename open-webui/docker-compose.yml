@@ -241,8 +241,9 @@ x-wonton:
     oidc:
       redirect_paths: [/oauth/oidc/callback]
       post_logout_paths: [/auth]
+  # 模型对话走可选能力模型网关；没接上网关时用户在应用里配自己的服务商。
+  wants: [models]
   permissions:
-    - models
     - owner.identity
   secrets:
     webui_secret_key: { generate: { bytes: 32 } }

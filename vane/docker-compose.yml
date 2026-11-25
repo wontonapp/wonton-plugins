@@ -138,10 +138,10 @@ x-wonton:
     port: 3000
     # Vane 没有账号体系，本来不需要登录（规范：proxy 要应用官方支持代理头认证或固定密钥）；网关照常校验会话。
     sso: none
+  # 模型只走可选能力模型网关。
+  # Models go through the optional model gateway only.
+  wants: [models]
   permissions:
-    # 模型只走模型网关。
-    # Models go through the model gateway only.
-    - models
     # SearXNG 要访问外部的搜索引擎，本地 embedding 模型从 Hugging Face 下载。
     # SearXNG queries external search engines and the local embedding model comes from Hugging Face.
     - network.egress
