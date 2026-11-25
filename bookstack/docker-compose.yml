@@ -76,7 +76,7 @@ services:
     restart: "no"
 
   db:
-    image: mariadb:12.3.2@sha256:a02fe89cb597d4375812b2eac90cf9d0775d4686daa7f7cc750ebbcad7525bbc
+    image: mariadb:12.3.3@sha256:4ebbcf100a3ba320766dfa0e1af008df12261301db6ef72798c7650f70794aed
     environment:
       MARIADB_DATABASE: bookstack
       MARIADB_USER: bookstack
