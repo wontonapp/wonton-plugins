@@ -68,12 +68,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: software.homebox
-  version: 0.2.0
+  version: 0.2.1
   kind: app
-  title: { zh: 家庭物品清单（HomeBox）, en: Home Inventory (HomeBox) }
+  title: { zh: "物品登记（HomeBox）", en: "Home Inventory (HomeBox)", zh-Hant: "物品登記（HomeBox）", ja: "家財目録（HomeBox）" }
   description:
     zh: 把家里的东西登记在册：放在哪、多少钱买的、保修到哪天，一查就知道；还能打印二维码贴上，扫一下就找到。
     en: "A record of everything you own: where it is, what it cost and when the warranty ends. Print a QR label, stick it on, and a scan pulls up the item."
+    zh-Hant: 把家裡的東西登記在冊：放在哪、多少錢買的、保固到哪天，一查就知道；還能印二維碼貼上，掃一下就找到。
+    ja: 家の物を台帳に記録します。どこにあり、いくらで買い、保証がいつ切れるかがすぐわかります。QR ラベルを印刷して貼れば、スキャンでその品にたどり着けます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -83,24 +85,47 @@ x-wonton:
   tags:
     zh: [物品清单, 家庭]
     en: [Inventory, Home]
+  setup:
+    zh: 打开就用云吞账号登录，进去就是自己的清单，不用注册。
+    en: Opening the page signs you in with your Wonton account, straight into your inventory — no sign-up.
+    zh-Hant: 開啟就用雲吞帳號登入，進去就是自己的清單，不用註冊。
+    ja: 開けば Wonton アカウントでサインインし、自分の目録が開きます。登録は不要です。
   about:
     zh: |
-      把家里的东西登记成清单：每件物品记下放在哪个位置、拍了什么照片、值多少钱、保修到什么时候。位置一层层往下分，
-      每个位置和物品都有自己的资产编号和二维码，打印出来贴上，扫码就能找到。
+      把家里的东西登记成清单：每件物品记下放在哪个位置、拍了什么照片、值多少钱、保修到什么时候。位置一层层往下分，每个位置和物品都有自己的编号和二维码，打印出来贴上，扫码就能找到。
 
-      清单存在自己家里，登录走云吞的身份，打开就是自己的清单。应用发的信（保养到期提醒）会出现在你的 Wonton 私聊里。
+      清单存在自己家里；应用发的保养到期提醒会出现在你的 Wonton 私聊里。
 
-      核心升级后，插件容器会按新的签发方自动重建，打开照常，不用重装。
+      云吞更新后插件会跟着自动重建，打开照常，不用重装。
     en: |
-      Register what you own as an inventory: for each item note where it is, what it looks like, what it's worth
-      and when the warranty ends. Locations nest level by level; every location and item gets an asset ID and a
-      QR code you can print and stick on, so finding things is a scan away.
+      Register what you own as an inventory: for each item note where it is, what it looks like, what it's worth and when the warranty ends. Locations nest level by level; every location and item gets an ID and a QR code you can print and stick on, so finding things is a scan away.
 
-      Your inventory stays at home. Sign-in goes through Wonton's identity, and it opens straight to your own
-      inventory. Mail the app sends (maintenance reminders) shows up in your Wonton chat.
+      Your inventory stays at home; maintenance reminders the app sends show up in your Wonton chat.
 
-      After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
-  release_notes: { zh: 插件包迁入官方插件合仓，保留当前分支的内部邮箱通知支持。, en: "Package moved into the official Wonton plugin monorepo; retains the current branch's internal-mail notification support." }
+      After a Wonton update the plugin is rebuilt automatically; pages open as before, with nothing to reinstall.
+    zh-Hant: |
+      把家裡的東西登記成清單：每件物品記下放在哪個位置、拍了什麼照片、值多少錢、保固到什麼時候。位置一層層往下分，每個位置和物品都有自己的編號和二維碼，印出來貼上，掃碼就能找到。
+
+      清單存在自己家裡；應用寄的保養到期提醒會出現在你的 Wonton 私聊裡。
+
+      雲吞更新後外掛會跟著自動重建，開啟照常，不用重裝。
+    ja: |
+      家の物を目録として登録します。品ごとに置き場所、写真、価値、保証の期限を残します。場所は階層に分けられ、場所にも品にも固有の番号と QR コードが付き、印刷して貼ればスキャンで見つかります。
+
+      目録は家に残ります。アプリが送る手入れ時期のリマインダは Wonton の個別チャットに届きます。
+
+      Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，保留当前分支的内部邮箱通知支持。
+
+      商店介绍重写：登录说明移到「安装后要做的事」，容器重建、签发方等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; retains the current branch's internal-mail notification support.
+
+      Store copy rewritten: the sign-in note moved to the pre-install notice, with container-rebuild/issuer wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，保留當前分支的內部郵箱通知支援。\n\n商店介紹重寫：登入說明移到「安裝後要做的事」，容器重建、簽發方等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。現行ブランチの内部メール通知は維持しています。\n\nストア紹介を書き直し、サインインの説明を「インストール後の手順」に移し、コンテナ再構築や発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: homebox
     port: 7745

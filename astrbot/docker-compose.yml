@@ -58,12 +58,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: app.astrbot.chatbot
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: AI 聊天机器人（AstrBot）, en: "AI Chatbot (AstrBot)" }
+  title: { zh: "AI 聊天机器人（AstrBot）", en: "AI Chatbot (AstrBot)", zh-Hant: "AI 聊天機器人（AstrBot）", ja: "AI チャットボット（AstrBot）" }
   description:
-    zh: 把 AI 助手接进飞书、钉钉、QQ、Telegram 等聊天软件，在群里或私聊里帮你回答
-    en: Connect an AI assistant to Feishu, DingTalk, QQ, Telegram and more
+    zh: 把 AI 助手接进飞书、钉钉、QQ、Telegram 等聊天软件，在群里或私聊里帮你回答问题
+    en: Connect an AI assistant to Feishu, DingTalk, QQ, Telegram and more, so it answers for you in group or direct chats
+    zh-Hant: 把 AI 助手接進飛書、釘釘、QQ、Telegram 等聊天軟體，在群組或私聊裡幫你回答問題
+    ja: AI アシスタントを Feishu、DingTalk、QQ、Telegram などのチャットアプリにつなぎ、グループや個人チャットで代わりに答えてもらえます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/dashboard.png, screenshots/chat.png, screenshots/providers.png]
@@ -75,21 +77,45 @@ x-wonton:
     en: [AI, Communication]
   about:
     zh: |
-      像给家里请了一个会在聊天软件里说话的 AI 助手：在飞书、钉钉、QQ、Telegram、Discord、Slack 这些聊天软件里 @ 它，它就替你回答、查资料、干活的机器人。
+      像给家里请了一个会在聊天软件里说话的 AI 助手：在飞书、钉钉、QQ、Telegram、Discord、Slack 这些聊天软件里 @ 它，它就替你回答、查资料、干活。
 
-      管理面板里配好聊天软件的机器人凭据就能用；不接聊天软件时，面板自带的聊天页也能直接和它对话。模型默认用云吞的模型网关，不用自己填 key；家里其他应用提供的工具它也能调用。
+      在管理面板里填好聊天软件的接入信息就能用；不接聊天软件时，面板自带的聊天页也能直接和它对话。模型默认用云吞自带的 AI 服务，不用自己填；家里其他应用提供的功能它也能调用。
 
-      注意：机器人能在群聊里替你说话、调用你授予的工具，接好聊天软件前先把面板密码保管好。企业微信等需要对方服务器回调的接入方式，家里的服务器没有公网回调地址，用不了；飞书（长连接）、钉钉（Stream）、QQ 官方机器人、Telegram、Discord、Slack 这类不需要回调的都能用。
+      注意：它能在群聊里替你说话、调用你交给它的功能，接好聊天软件前先把面板密码保管好。企业微信这类要对方服务器反过来连你的接入方式，家里的服务器没有公网地址，用不了；飞书、钉钉、QQ 官方机器人、Telegram、Discord、Slack 这类由你连出去的都能用。
     en: |
       Like hiring an assistant who can talk in your chat apps: mention it in Feishu, DingTalk, QQ, Telegram, Discord or Slack, and it answers, looks things up and runs tasks for you.
 
-      Set up the bot credentials of your chat app in the admin panel and it works. Without a chat app, the built-in chat page in the panel already talks to it. Models come from Wonton's model gateway by default — no key to fill in — and it can call tools provided by other apps in your Wonton.
+      Set up the bot information your chat app gives you in the admin panel and it works. Without a chat app, the built-in chat page in the panel already talks to it. Models come from the AI service built into Wonton by default — nothing to fill in — and it can call features your other home apps provide.
 
-      Note: the bot can speak on your behalf in group chats and call the tools you grant it. Keep the panel password safe before you connect a chat app. Platforms that require a public callback URL (e.g. WeCom callback mode) cannot receive callbacks on a home server; long-connection platforms such as Feishu, DingTalk Stream, official QQ bot, Telegram, Discord and Slack all work.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容基于上游 AstrBot v4.29.4。, en: "Moved into the official Wonton plugin monorepo; based on upstream AstrBot v4.29.4." }
+      Note: the bot can speak on your behalf in group chats and call what you hand it. Keep the panel password safe before you connect a chat app. Platforms where the other side has to call back into your server (such as WeCom callback mode) cannot work without a public address at home; platforms you dial out to — Feishu, DingTalk, official QQ bot, Telegram, Discord, Slack — all work.
+    zh-Hant: |
+      像給家裡請了一個會在聊天軟體裡說話的 AI 助手：在飛書、釘釘、QQ、Telegram、Discord、Slack 這些聊天軟體裡 @ 它，它就替你回答、查資料、做事。
+
+      在管理面板裡填好聊天軟體的接入資訊就能用；不接聊天軟體時，面板自帶的聊天頁也能直接和它對話。模型預設用雲吞內建的 AI 服務，不用自己填；家裡其他應用提供的功能它也能呼叫。
+
+      注意：它能在群組裡替你說話、呼叫你交給它的功能，接好聊天軟體前先把面板密碼保管好。企業微信這類要對方伺服器反過來連你的接入方式，家裡的伺服器沒有公網地址，用不了；飛書、釘釘、QQ 官方機器人、Telegram、Discord、Slack 這類由你連出去的都能用。
+    ja: |
+      家に、チャットアプリで話せる AI アシスタントを置くようなものです。Feishu、DingTalk、QQ、Telegram、Discord、Slack でメンションすると、代わりに答えて調べて仕事をします。
+
+      管理パネルにチャットアプリの接続情報を入れると使えます。チャットアプリをつながなくても、パネル内蔵のチャット画面でそのまま会話できます。モデルは初期設定で Wonton 内蔵の AI サービスを使うので何も入力せずに済み、家の他のアプリが提供する機能も呼び出せます。
+
+      注意：グループで代わりに発言し、あなたが渡した機能を呼び出せます。チャットアプリをつなぐ前にパネルのパスワードを大切に保管してください。WeCom のコールバック方式のように相手のサーバーから家のサーバーへ接続しに来る方式は、家に公開アドレスがないと使えません。Feishu、DingTalk、公式 QQ ボット、Telegram、Discord、Slack のようにこちらから接続する方式はすべて使えます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容基于上游 AstrBot v4.29.4。
+
+      商店介绍重写：凭据、模型网关、回调这类说法改成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo; based on upstream AstrBot v4.29.4.
+
+      Store copy rewritten in everyday words (credentials, model gateway, callbacks); Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容基於上游 AstrBot v4.29.4。\n\n商店介紹重寫：憑證、模型閘道、回呼這類說法改成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は上流の AstrBot v4.29.4 に基づきます。\n\nストア紹介を書き直し、認証情報・モデルゲートウェイ・コールバックなどを日常的な言葉にしました。繁体字中国語と日本語を追加。"
   setup:
     zh: 打开插件详情页，点开「登录密码」复制密码；打开 AstrBot，用用户名 astrbot 和这个密码登录。
-    en: "Open the plugin details, tap “Login password” to copy it, then sign in to AstrBot as astrbot with that password."
+    en: Open the plugin details, tap “Login password” to copy it, then sign in to AstrBot as astrbot with that password.
+    zh-Hant: 開啟外掛詳情頁，點開「登入密碼」複製密碼；開啟 AstrBot，用使用者名稱 astrbot 和這個密碼登入。
+    ja: プラグインの詳細を開き、「ログインパスワード」を開いてコピーします。AstrBot を開き、ユーザー名 astrbot とそのパスワードでサインインします。
   webui:
     service: astrbot
     port: 6185

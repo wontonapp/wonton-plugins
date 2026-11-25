@@ -296,8 +296,12 @@ x-wonton:
   id: app.immich.immich
   version: 0.3.8
   kind: app
-  title: { zh: 手机相册备份（Immich）, en: Phone Photo Backup (Immich) }
-  description: { zh: "像 Google 相册：手机里的照片和视频备份到家里，能按人脸、地点和画面内容搜，还能建共享相册给家人看。照片类里最全面，适合要从手机备份照片的人。", en: "Like Google Photos: back up your phone's photos and videos to your home server, search by face, place or what's in the picture, and share albums with family. The most complete photo app, best if you want phone backups." }
+  title: { zh: "手机相册备份（Immich）", en: "Phone Photo Backup (Immich)", zh-Hant: "手機相簿備份（Immich）", ja: "スマホ写真バックアップ（Immich）" }
+  description:
+    zh: 像 Google 相册：手机里的照片和视频备份到家里，能按人脸、地点和画面内容搜，还能建共享相册给家人看。照片类里最全面，适合要从手机备份照片的人。
+    en: "Like Google Photos: back up your phone's photos and videos to your home server, search by face, place or what's in the picture, and share albums with family. The most complete photo app, best if you want phone backups."
+    zh-Hant: 像 Google 相簿：手機裡的照片和影片備份到家裡，能按人臉、地點和畫面內容搜，還能建共享相簿給家人看。照片類裡最全面，適合要從手機備份照片的人。
+    ja: Google フォトのようなものです。スマホの写真と動画を家にバックアップし、顔・場所・写っている内容で検索でき、家族と共有アルバムも作れます。写真アプリの中で最も充実しており、スマホからのバックアップに向いています。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/timeline.jpg, screenshots/viewer.jpg, screenshots/search.jpg]
@@ -307,28 +311,67 @@ x-wonton:
   tags:
     zh: [相册, AI]
     en: [Photos, AI]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；家人在应用里各自建号，就能用各自的手机备份。
+    en: Opening the page signs you in with your Wonton account — no sign-up. Family members create their own account in the app and back up from their own phone.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；家人在應用裡各自建號，就能用各自的手機備份。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。家族はアプリ内で各自アカウントを作り、自分のスマホからバックアップします。
   about:
     zh: |
       照片和视频从手机备份到家里的主机，时间线、相册和人脸、内容搜索都在网页里。
 
-      原图存进共享文件夹 photos，别的应用也读得到；缩略图和转码视频另存，不占共享文件夹。别人放进 photos 的照片和视频（让 Bot 存的、在电脑上拖进去的）也会出现在你的时间线里。
+      原图存进共享文件夹 photos，别的应用也读得到；缩略图和转码后的视频另存，不占共享文件夹。别人放进 photos 的照片和视频（让助手存的、在电脑上拖进去的）也会出现在你的时间线里。
 
-      Bot 也能帮你找照片：问它“找海滩上的日落”这类画面描述，它按内容在照片库里搜，拿到文件名、日期和缩略图。
-
-      核心升级后，插件容器会按新的签发方自动重建，打开照常，不用重装。
+      助手也能帮你找照片：问它“找海滩上的日落”这类画面描述，它按内容在照片库里搜，拿到文件名、日期和缩略图。
 
       应用发的信（新用户欢迎、共享相册的邀请和更新）会出现在收件人的 Wonton 私聊里；收件人只能是家里人，给外部邮箱建用户发欢迎信会失败。
+
+      云吞更新后插件会自动重建，打开照常，不用重装。
     en: |
       Photos and videos are backed up from your phone to your server; browse the timeline, albums and search by face or content in the web page.
 
-      Originals go into the photos shared folder, where other apps can read them; thumbnails and transcoded videos are kept elsewhere. Photos and videos put into photos some other way (saved by a bot, dragged in from a computer) also show up in your timeline.
+      Originals go into the photos shared folder, where other apps can read them; thumbnails and transcoded videos are kept elsewhere. Photos and videos put into photos some other way (saved by an assistant, dragged in from a computer) also show up in your timeline.
 
-      Bots can also find photos for you: describe the scene ("a sunset at the beach") and the bot searches the library by content, getting file names, dates and thumbnails.
-
-      After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
+      Assistants can also find photos for you: describe the scene ("a sunset at the beach") and the search runs by content, returning file names, dates and thumbnails.
 
       Emails the app sends (welcome mail for new users, shared-album invites and updates) arrive in the recipient's Wonton chat; only household members can receive them — creating a user with an outside address fails to send its welcome mail.
-  release_notes: { zh: "家人首次打开相册时自动建立自己的账号（默认普通用户），需要管理权限时由主人在后台提权；不开放公共注册。", en: "Family members get their own account on first opening Photos (a regular user by default); the owner promotes them in the admin settings when needed. Public registration remains closed." }
+
+      After a Wonton update the plugin is rebuilt automatically; pages open as before, with nothing to reinstall.
+    zh-Hant: |
+      照片和影片從手機備份到家裡的主機，時間軸、相簿和人臉、內容搜尋都在網頁裡。
+
+      原圖存進共享資料夾 photos，別的應用也讀得到；縮圖和轉檔後的影片另存，不佔共享資料夾。別人放進 photos 的照片和影片（讓助手存的、在電腦上拖進去的）也會出現在你的時間軸裡。
+
+      助手也能幫你找照片：問它「找海灘上的日落」這類畫面描述，它按內容在照片庫裡搜，拿到檔案名、日期和縮圖。
+
+      應用寄的信（新使用者歡迎、共享相簿的邀請和更新）會出現在收件人的 Wonton 私聊裡；收件人只能是家裡人，給外部信箱建使用者發歡迎信會失敗。
+
+      雲吞更新後外掛會自動重建，開啟照常，不用重裝。
+    ja: |
+      写真と動画をスマホから家のサーバにバックアップし、タイムライン・アルバム・顔や内容での検索を Web ページで使えます。
+
+      元の画像は共有フォルダ photos に入り、他のアプリからも読めます。サムネイルと変換した動画は別に保存され、共有フォルダを圧迫しません。アシスタントに保存させたものやパソコンからドラッグした写真もタイムラインに現れます。
+
+      アシスタントに「ビーチの夕日」のような場面を伝えれば、内容で検索し、ファイル名・日付・サムネイルを返します。
+
+      アプリが送るメール（新規ユーザーの歓迎、共有アルバムの招待と更新）は受け取った人の Wonton チャットに届きます。受け取れるのは家族だけで、外部アドレスでユーザーを作ると歓迎メールの送信に失敗します。
+
+      Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
+  release_notes:
+    zh: |
+      家人首次打开相册时自动建立自己的账号（默认普通用户），需要管理权限时由主人在后台提权；不开放公共注册。
+
+      插件迁入官方合仓，自建镜像改由官方仓库发布；本版包含源 main 的 Immich v3.4.1 更新。
+
+      商店介绍重写：登录和建号移到「安装后要做的事」，容器、签发方等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Family members get their own account on first opening Photos (a regular user by default); the owner promotes them in the admin settings when needed. Public registration remains closed.
+
+      Moved the plugin into the official monorepo, with custom images published from the official repository. Includes the Immich v3.4.1 update from the source main branch.
+
+      Store copy rewritten: sign-in and account creation moved to the pre-install notice, with container/issuer wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "家人首次開啟相簿時自動建立自己的帳號（預設一般使用者），需要管理權限時由主人在後台提權；不開放公開註冊。\n\n外掛遷入官方合倉，自建映象改由官方倉庫釋出；本版包含源 main 的 Immich v3.4.1 更新。\n\n商店介紹重寫：登入和建號移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
+    ja: "家族は初めて写真を開いたときに自分のアカウントが自動で作られます（既定では一般ユーザー）。管理権限が必要なときはオーナーが管理画面で昇格させます。一般からの登録は受け付けません。\n\nプラグインを公式リポジトリへ移動し、自前ビルドのイメージは公式リポジトリからの配布に変わりました。本版には source main の Immich v3.4.1 更新が入っています。\n\nストア紹介を書き直し、サインインとアカウント作成を「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: server
     port: 2283

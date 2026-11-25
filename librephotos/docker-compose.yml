@@ -124,12 +124,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: app.librephotos.librephotos
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 智能相册（LibrePhotos）, en: Smart Photo Album (LibrePhotos) }
+  title: { zh: "智能相册（LibrePhotos）", en: "Smart Photo Album (LibrePhotos)", zh-Hant: "智慧相簿（LibrePhotos）", ja: "スマートアルバム（LibrePhotos）" }
   description:
-    zh: 会认人、认地点的相册：把共享文件夹里的照片按人物、地点、事件整理好，搜画面内容甚至照片里的字都能找到，网页里也能直接传新照片。适合想按人和地点翻旧照片的人。
-    en: "An album that recognizes people and places: it organizes the photos in your shared folder by who, where and when, finds them by what's in the picture or even text inside it, and lets you upload new ones from the browser. For digging through old photos by person or place."
+    zh: 会认人、认地点的相册：把共享文件夹里的照片按人物、地点、事件整理好，搜画面内容甚至照片里的字都能找到。适合想按人和地点翻旧照片的人。
+    en: "An album that recognizes people and places: it organizes the photos in your shared folder by who, where and when, finds them by what's in the picture or even text inside it. For digging through old photos by person or place."
+    zh-Hant: 會認人、認地點的相簿：把共享資料夾裡的照片按人物、地點、事件整理好，搜畫面內容甚至照片裡的字都能找到。適合想按人和地點翻舊照片的人。
+    ja: 人と場所を見分けるアルバムです。共有フォルダの写真を人物・場所・出来事的に整理し、写っている内容や写真の中の文字でも見つけられます。人や場所で古い写真を探す人向けです。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/timeline.jpg, screenshots/detail.png, screenshots/search.png]
@@ -140,26 +142,47 @@ x-wonton:
   tags:
     zh: [相册, AI]
     en: [Photos, AI]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；首次扫描在网页里点一下开始，认人脸和文字的模型会自动下载。
+    en: Opening the page signs you in with your Wonton account — no sign-up. Start the first scan with one click; the face and text recognition models download on their own.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；首次掃描在網頁裡點一下開始，認人臉和文字的模型會自動下載。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。最初のスキャンはページで一度クリックするだけで始まり、顔と文字の認識モデルは自動でダウンロードされます。
   about:
     zh: |
-      把共享文件夹 photos 变成自己的相册：时间线、人物、地点、事件都整理好，按人脸、画面内容和照片里的文字搜索。认人脸、认文字用的 AI 在首次扫描时自动下载，之后都在家里运行。
-
-      网页登录走云吞的身份，打开就是自己的账号，不用再注册；首次扫描在网页里点一下开始。
+      把共享文件夹 photos 变成自己的相册：时间线、人物、地点、事件都整理好，按人脸、画面内容和照片里的文字搜索。认人脸、认文字全靠装在插件里的模型，下载完就在家里运行，照片不用传到外面。
 
       应用发的信（找回密码）会出现在收件人的 Wonton 私聊里；只发给家里人，外部邮箱发不出。
 
       手机浏览器即开即用，也可以把网页加到主屏当应用。
     en: |
-      Turn the photos shared folder into your own library: timeline, people, places and events are organized for you; search by face, what's in the picture and text inside photos. The AI for face and text recognition downloads on the first scan and runs at home afterwards.
-
-      Sign-in goes through Wonton's identity, so the page opens as your own account; the first scan starts with one click.
+      Turn the photos shared folder into your own library: timeline, people, places and events are organized for you; search by face, what's in the picture and text inside photos. Face and text recognition run on models installed with the plugin — once downloaded everything runs at home and photos are never uploaded.
 
       Emails the app sends (password resets) arrive in the recipient's Wonton chat; only household members can receive them.
 
       Works in the phone browser as is, and can be added to the home screen as an app.
+    zh-Hant: |
+      把共享資料夾 photos 變成自己的相簿：時間軸、人物、地點、事件都整理好，按人臉、畫面內容和照片裡的字搜尋。認人臉、認文字全靠裝在外掛裡的模型，下載完就在家裡執行，照片不用傳到外面。
+
+      應用寄的信（找回密碼）會出現在收件人的 Wonton 私聊裡；只發給家裡人，外部信箱發不出。
+
+      手機瀏覽器即開即用，也可以把網頁加到主畫面當應用。
+    ja: |
+      共有フォルダ photos を自分のアルバムに変えます。タイムライン・人物・場所・出来事が整理され、顔・写っている内容・写真の中の文字で検索できます。顔と文字の認識はプラグインに付属するモデルで動き、ダウンロード後はすべて家の中で処理され、写真は外に出ません。
+
+      アプリが送るメール（パスワード再設定）は受け取った人の Wonton チャットに届きます。受け取れるのは家族だけです。
+
+      スマホのブラウザでそのまま使え、ホーム画面にアプリとして追加もできます。
   release_notes:
-    zh: 接上云吞的内部邮箱：找回密码的邮件发到收件人的 Wonton 私聊里。
-    en: "Outgoing email now goes through Wonton's internal mailbox: password-reset emails arrive in the recipient's Wonton chat."
+    zh: |
+      接上云吞的内部邮箱：找回密码的邮件发到收件人的 Wonton 私聊里。
+
+      商店介绍重写：登录和首次扫描移到「安装后要做的事」，去掉重复的扫描说明；补繁体中文和日文。
+    en: |
+      Outgoing email now goes through Wonton's internal mailbox: password-reset emails arrive in the recipient's Wonton chat.
+
+      Store copy rewritten: sign-in and the first scan moved to the pre-install notice, with the duplicated scan mention dropped; Traditional Chinese and Japanese added.
+    zh-Hant: "接上雲吞的內部郵箱：找回密碼的郵件發到收件人的 Wonton 私聊裡。\n\n商店介紹重寫：登入和首次掃描移到「安裝後要做的事」，去掉重複的掃描說明；補繁體中文和日文。"
+    ja: "Wonton の内部メールにつなぎました。パスワード再設定のメールは受信者の Wonton ダイレクトメッセージに届きます。\n\nストア紹介を書き直し、サインインと最初のスキャンを「インストール後の手順」に移し、重複したスキャンの説明を削りました。繁体字中国語と日本語を追加。"
   webui:
     service: backend
     port: 8001

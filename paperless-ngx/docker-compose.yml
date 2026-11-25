@@ -196,10 +196,14 @@ volumes:
 x-wonton:
   spec: "0.11"
   id: com.paperless-ngx.paperless-ngx
-  version: 0.1.3
+  version: 0.1.4
   kind: app
-  title: { zh: 电子档案柜（Paperless-ngx）, en: Document Archive (Paperless-ngx) }
-  description: { zh: "像一个会自己归档的文件柜：扫描件和 PDF 丢进去，自动认出上面的字、分好类，以后搜一个词就能找到。适合把纸质发票、合同、说明书变成电子档案。", en: "A filing cabinet that files itself: drop in scans and PDFs and it reads the text and sorts them, so a single word finds them later. For turning paper bills, contracts and manuals into a searchable archive." }
+  title: { zh: "电子档案柜（Paperless-ngx）", en: "Document Archive (Paperless-ngx)", zh-Hant: "電子檔案櫃（Paperless-ngx）", ja: "電子書類棚（Paperless-ngx）" }
+  description:
+    zh: 像一个会自己归档的文件柜：扫描件和 PDF 丢进去，自动认出上面的字、分好类，以后搜一个词就能找到。适合把纸质发票、合同、说明书变成电子档案。
+    en: "A filing cabinet that files itself: drop in scans and PDFs and it reads the text and sorts them, so a single word finds them later. For turning paper bills, contracts and manuals into a searchable archive."
+    zh-Hant: 像一個會自己歸檔的檔案櫃：掃描件和 PDF 丟進去，自動認出上面的字、分好類，以後搜一個詞就能找到。適合把紙本發票、合約、說明書變成電子檔案。
+    ja: 自分で整理する書類棚のようなものです。スキャンや PDF を入れると文字を読み取って分類し、後で 1 語の検索で見つかります。紙の領収書・契約書・取扱説明書を電子化して保管するのに向いています。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/documents.png, screenshots/upload.png, screenshots/search.png]
@@ -210,24 +214,47 @@ x-wonton:
   tags:
     zh: [文档]
     en: [Documents]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；第一次启动要联网下载中文识别所需的语言包，稍等一会，之后就不用联网。
+    en: Opening the page signs you in with your Wonton account — no sign-up. The first start downloads the language packs for Chinese recognition; give it a moment, after that no internet is needed.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；第一次啟動要連網下載中文辨識所需的語言包，稍等一會，之後就不用連網。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。初回起動は中国語認識用の言語パックをダウンロードするので少し待ってください。その後はインターネット不要です。
   about:
     zh: |
-      扫描件、照片和 PDF 进来后自动识别文字并归档，之后按往来方、标签和保存路径找回来。中文、英文都认得。
-
-      第一次启动要联网下载中文语言包，之后离线可用。Office 文档不解析。
-
-      核心升级后，插件容器会按新的签发方自动重建，打开照常，不用重装。
+      扫描件、照片和 PDF 进来后自动识别文字并归档，之后按往来方、标签和保存路径找回来。中文、英文都认得。Office 文档不解析。
 
       应用发的信（找回密码、把文档发给家里人）会出现在收件人的 Wonton 私聊里；外部邮箱收不到，会发送失败。
-    en: |
-      Scans, photos and PDFs are recognized and filed automatically, and later found again by correspondent, tag or storage path. Chinese and English are both supported.
 
-      The first start downloads the Chinese language files; afterwards it works offline. Office documents are not read.
+      云吞更新后插件会自动重建，打开照常，不用重装。
+    en: |
+      Scans, photos and PDFs are recognized and filed automatically, and later found again by correspondent, tag or storage path. Chinese and English are both supported. Office documents are not read.
 
       Mail sent by the app (password resets, emailing a document to family) arrives in the recipient's Wonton chat; external addresses fail.
 
-      After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
-  release_notes: { zh: 插件包迁入官方插件合仓，并接上云吞的内部邮箱：找回密码和把文档发人会进 Wonton 私聊，外部邮箱发不出；已有账号的邮箱自动改成内部地址。, en: "Moved into the official Wonton plugin monorepo and connected app mail to Wonton's internal mailbox; password resets and emailed documents reach Wonton chat, external addresses fail, and existing account emails are updated." }
+      After a Wonton update the plugin is rebuilt automatically; pages open as before, with nothing to reinstall.
+    zh-Hant: |
+      掃描件、相片和 PDF 進來後自動辨識文字並歸檔，之後按往來方、標籤和保存路徑找回來。中文、英文都認得。Office 文件不解析。
+
+      應用寄的信（找回密碼、把文件寄給家裡人）會出現在收件人的 Wonton 私聊裡；外部信箱收不到，會發送失敗。
+
+      雲吞更新後外掛會自動重建，開啟照常，不用重裝。
+    ja: |
+      スキャン・写真・PDF は文字を読み取って自動で整理され、後で取引先・タグ・保存先から見つかります。中国語も英語も扱えます。Office 文書は解析されません。
+
+      アプリが送るメール（パスワード再設定、家族への文書送信）は受け取った人の Wonton チャットに届きます。外部アドレスには届かず、送信に失敗します。
+
+      Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，并接上云吞的内部邮箱：找回密码和把文档发人会进 Wonton 私聊，外部邮箱发不出；已有账号的邮箱自动改成内部地址。
+
+      商店介绍重写：登录和语言包下载移到「安装后要做的事」，容器、签发方等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo and connected app mail to Wonton's internal mailbox; password resets and emailed documents reach Wonton chat, external addresses fail, and existing account emails are updated.
+
+      Store copy rewritten: sign-in and language-pack download moved to the pre-install notice, with container/issuer wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，並接上雲吞的內部郵箱：找回密碼和把文件發人會進 Wonton 私聊，外部郵箱發不出；已有賬號的郵箱自動改成內部地址。\n\n商店介紹重寫：登入和語言包下載移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移し、Wonton の内部メールにつなぎました。パスワード再設定やドキュメントの送信は Wonton のダイレクトメッセージに届き、外部メールには送れません。既存アカウントのメールは内部アドレスへ自動で変わります。\n\nストア紹介を書き直し、サインインと言語パックのダウンロードを「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   # 上游没写最低内存；本机空闲实测约 802M，取 1G。镜像支持 amd64 和 arm64（docker manifest inspect）。
   requirements:
     arch: [amd64, arm64]

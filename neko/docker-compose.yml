@@ -25,12 +25,14 @@ services:
 x-wonton:
   spec: "0.14"
   id: app.neko.browser
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 云端浏览器（Neko）, en: Virtual Browser (Neko) }
+  title: { zh: "云端浏览器（Neko）", en: "Remote Browser (Neko)", zh-Hant: "雲端瀏覽器（Neko）", ja: "リモートブラウザ（Neko）" }
   description:
-    zh: 在家里的服务器上打开一个浏览器，手机上就能远程看和操作。
-    en: Open a browser on your home server and view and control it from your phone.
+    zh: 在家里的服务器上开一个浏览器，手机上就能远程看和操作。
+    en: Run a browser on your home server and view and control it from your phone.
+    zh-Hant: 在家裡的伺服器上開一個瀏覽器，手機上就能遠端看和操作。
+    ja: 家のサーバーでブラウザを開き、スマホから遠隔で見て操作できます。
   icon: icon.png
   notices: [NOTICE]
   author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
@@ -44,25 +46,43 @@ x-wonton:
     zh: |
       像把一台浏览器放在家里：网页在服务器上打开，手机只传回画面和操作，不把浏览记录留在手机浏览器里。
 
-      第一次打开：用插件详情页显示的普通用户密码登录 Neko；管理员密码只给需要管理房间的人。
+      适合临时查资料、打开只有家里网络才能访问的网页，或和家人一起看同一个页面。画面和声音是连续传过来的，操作比一张张截图顺畅。
 
-      适合临时查资料、打开家里网络才能访问的网页，或和家人一起看同一个页面。它用 WebRTC 传画面和声音，操作比逐张截图更顺滑。
-
-      映射到手机本机的端口只在插件页面可见时自动开启，离开页面就释放。
+      手机上的连接只在插件页面打开时建立，离开页面就断。
     en: |
       Put a browser at home: pages open on the server, while your phone receives the view and sends back controls instead of keeping the browsing session in its local browser.
 
-      First open: sign in to Neko with the regular-user password shown in the plugin details; the admin password is for room administration.
+      Use it to reach pages available only from home or to look at the same page together. Video and audio stream continuously, smoother than a sequence of screenshots.
 
-      Use it to reach pages available only from home or to look at the same page together. WebRTC carries the video and audio for smoother interaction than a sequence of screenshots.
+      The phone connection exists only while the plugin page is open and ends when you leave.
+    zh-Hant: |
+      像把一台瀏覽器放在家裡：網頁在伺服器上開啟，手機只傳回畫面和操作，不把瀏覽紀錄留在手機瀏覽器裡。
 
-      The device mapping is enabled while the plugin page is visible and released when you leave it.
+      適合臨時查資料、開啟只有家裡網路才能存取的網頁，或和家人一起看同一個頁面。畫面和聲音是連續傳過來的，操作比一張張截圖順暢。
+
+      手機上的連線只在頁面開啟時建立，離開頁面就斷。
+    ja: |
+      家にブラウザを 1 台置くようなものです。ページはサーバーで開き、スマホは画面を受け取って操作を送るだけで、閲覧履歴をスマホのブラウザに残しません。
+
+      家のネットワークからしか見られないページを急いで調べたり、家族と同じページを見たりするのに向いています。映像と音声を連続で送るので、スクリーンショットの連続より滑らかです。
+
+      スマホからの接続はプラグインのページを開いている間だけで、離れると切れます。
   release_notes:
-    zh: 介绍重写：首次登录提示单独成段放在最前。
-    en: "Rewritten store copy: the first-open sign-in note stands alone up front."
+    zh: |
+      介绍重写：首次登录提示单独成段放在最前。
+
+      商店介绍重写：两个密码的用法移到「安装后要做的事」，WebRTC、端口映射改成日常说法；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the first-open sign-in note stands alone up front.
+
+      Store copy rewritten: how the two passwords are used moved to the pre-install notice, with WebRTC/port-mapping wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：首次登入提示單獨成段放在最前。\n\n商店介紹重寫：兩個密碼的用法移到「安裝後要做的事」，WebRTC、連接埠對映改成日常說法；補繁體中文和日文。"
+    ja: "紹介を書き直し、初回ログインの注意を最初の段落に分けました。\n\nストア紹介を書き直し、2 つのパスワードの使い方を「インストール後の手順」に移し、WebRTC やポート割り当てなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 打开插件详情页查看普通用户密码，然后在 Neko 页面登录；需要管理房间时使用管理员密码。
-    en: Open the plugin details to view the regular-user password, then sign in on the Neko page; use the admin password to manage the room.
+    zh: 打开插件详情页查看「普通用户密码」，回登录页输入就能进；要管理房间（换画面、踢人）时用「管理员密码」。
+    en: Open the plugin details to view the regular-user password and enter it on the sign-in page; use the admin password to manage the room (change the view, remove people).
+    zh-Hant: 開啟外掛詳情頁查看「一般使用者密碼」，回登入頁輸入就能進；要管理房間（換畫面、踢人）時用「管理員密碼」。
+    ja: プラグイン詳細を開いて「一般ユーザーのパスワード」を確認し、サインインページで入力します。ルームの管理（画面の切り替え、退出させる）には管理者パスワードを使います。
   webui:
     service: neko
     port: 8080

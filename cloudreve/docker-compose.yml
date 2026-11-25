@@ -25,14 +25,16 @@ services:
       start_interval: 1s
 
 x-wonton:
-  spec: "0.6"
+  spec: "0.11"
   id: org.cloudreve.cloudreve
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 私人网盘（Cloudreve）, en: Personal Cloud Drive (Cloudreve) }
+  title: { zh: "私人网盘（Cloudreve）", en: "Personal Cloud Drive (Cloudreve)", zh-Hant: "私人網盤（Cloudreve）", ja: "個人クラウドドライブ（Cloudreve）" }
   description:
-    zh: 像把百度网盘整个搬回家：文件在线预览、一键生成分享链接，还能把下载链接交给它，它下好直接放进网盘。用 Cloudreve 自己的账号登录，适合常分享、常离线下载的人。
+    zh: 像把百度网盘整个搬回家：文件在线预览、一键分享，还能把下载链接交给它，它下好直接放进网盘。用 Cloudreve 自己的账号登录，适合常分享、常离线下载的人。
     en: "Like moving a whole cloud drive service home: preview files online, share with one tap, and hand it a download link to fetch straight into your drive. It has its own Cloudreve sign-in; good if you share a lot or queue up downloads."
+    zh-Hant: 像把百度網盤整個搬回家：檔案線上預覽、一鍵分享，還能把它下載連結交給它，它下好直接放進網盤。用 Cloudreve 自己的帳號登入，適合常分享、常離線下載的人。
+    ja: クラウドストレージサービスを丸ごと家に持ち込むようなものです。ファイルをオンラインで閲覧し、ワンタップで共有でき、ダウンロードリンクを渡せば直接ドライブに取り込みます。Cloudreve 独自のアカウントでサインインする、共有やまとめ取り込みの多い人向け。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/explorer.png, screenshots/media.png, screenshots/upload.png, screenshots/share.png, screenshots/login.png]
@@ -43,20 +45,39 @@ x-wonton:
   tags:
     zh: [文件, 下载]
     en: [Files, Downloads]
+  setup:
+    zh: 第一次打开自己注册一个账号：第一个注册的账号就是管理员，注册入口只有登录过云吞的你能看到。
+    en: "Register an account on first open: the first account registered is the admin, and only someone signed in to Wonton can reach the sign-up page."
+    zh-Hant: 第一次開啟自行註冊一個帳號：第一個註冊的帳號就是管理員，註冊入口只有登入過雲吞的你才看得到。
+    ja: 初回アクセスで自分でアカウントを登録します。最初に登録したアカウントが管理者になり、登録ページは Wonton にサインインしている人だけが開けます。
   about:
     zh: |
-      住在自己服务器上的网盘：手机里的照片视频随手备份，文档、压缩包在线预览，文件夹一键生成分享外链。
-
-      第一次打开：用自己注册的账号登录——第一个注册的账号就是管理员；注册入口只有登录过云吞的你能看到。
+      住在自己服务器上的网盘：手机里的照片视频随手备份，文档、压缩包在线预览，文件夹一键生成分享链接。
 
       把链接或种子交给离线下载，它自己把文件拉回来，回来就在你的网盘里。
     en: |
       A cloud drive that lives on your own server: back up photos and videos from your phone, preview documents and archives, and turn any folder into a share link.
 
-      First open: sign in with an account you register — the first account registered is the admin, and the sign-up page is only reachable through the Wonton gateway.
-
       Hand a link or a torrent to the offline downloader and Cloudreve fetches it for you; it lands straight in your drive.
-  release_notes: { zh: 介绍重写：注册管理员账号的提示单独成段放在最前。, en: "Rewritten store copy: the register-the-admin-account note stands alone up front." }
+    zh-Hant: |
+      住在自己伺服器上的網盤：手機裡的照片影片隨手備份，文件、壓縮檔線上預覽，資料夾一鍵產生分享連結。
+
+      把連結或種子交給離線下載，它自己把檔案拉回來，回來就在你的網盤裡。
+    ja: |
+      自分のサーバーに住むクラウドドライブです。スマホの写真や動画を気軽にバックアップし、文書や圧縮ファイルをオンラインで閲覧でき、フォルダからワンタップで共有リンクを作れます。
+
+      リンクやトレントをオフラインダウンロードに渡すと、ファイルを勝手に取り込んでドライブに入れます。
+  release_notes:
+    zh: |
+      介绍重写：注册管理员账号的提示单独成段放在最前。
+
+      商店介绍重写：首次注册步骤移到「安装后要做的事」，外链、离线下载等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the register-the-admin-account note stands alone up front.
+
+      Store copy rewritten: the first-run registration moved to the pre-install notice, with share-link and offline-download wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：註冊管理員賬號的提示單獨成段放在最前。\n\n商店介紹重寫：首次註冊步驟移到「安裝後要做的事」，外鏈、離線下載等說法換成日常用語；補繁體中文和日文。"
+    ja: "紹介を書き直し、管理者アカウント登録の注意を最初の段落に分けました。\n\nストア紹介を書き直し、初回登録の手順を「インストール後の手順」に移し、共有リンクやオフラインダウンロードの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: cloudreve
     port: 5212

@@ -77,12 +77,14 @@ configs:
 x-wonton:
   spec: "0.13"
   id: com.lidarr.lidarr
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 音乐雷达（Lidarr）, en: Lidarr }
+  title: { zh: "音乐下载（Lidarr）", en: "Music Downloads (Lidarr)", zh-Hant: "音樂下載（Lidarr）", ja: "音楽ダウンロード（Lidarr）" }
   description:
-    zh: 你关注的歌手出了新专辑，自动帮你下载到家里的曲库，用音乐播放应用直接听
-    en: "When artists you follow release new music, it is downloaded to your home library and ready to play"
+    zh: 你关注的歌手出了新专辑，自动帮你下载到家里的曲库，用音乐播放应用直接听。
+    en: When artists you follow release new music, it is downloaded to your home library and ready to play.
+    zh-Hant: 你關注的歌手出了新專輯，自動幫你下載到家裡的曲庫，用音樂播放應用直接聽。
+    ja: フォローしたアーティストが新作を出すと、家のライブラリへ自動でダウンロードされ、すぐ聴けます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -93,20 +95,55 @@ x-wonton:
   tags:
     zh: [音乐, 下载]
     en: [Music, Downloads]
+  setup:
+    zh: 第一次打开时自己定一个管理员账号和密码（之后在“设置 → 通用 → 安全”里改）。要能自动下载，先装 qBittorrent 插件；把喜欢的歌手加进名单即可开始。
+    en: On first open, set an admin username and password of your choice (change them later under Settings → General → Security). For automatic downloads, install the qBittorrent plugin first, then add the artists you like.
+    zh-Hant: 第一次開啟時自己定一個管理員帳號和密碼（之後在「設定 → 一般 → 安全」裡改）。要能自動下載，先裝 qBittorrent 外掛；把喜歡的歌手加進名單即可開始。
+    ja: 初回に管理者のユーザー名とパスワードを自分で決めます（後で「設定 → 一般 → セキュリティ」で変更できます）。自動ダウンロードには先に qBittorrent プラグインを入れてから、好きなアーティストを追加します。
   about:
     zh: |
       像帮你追专辑的助手：把你喜欢的歌手加进来，出新专辑、有新歌单时它自动搜索并下载，整理好文件名和封面，放进家里共享的音乐文件夹，手机上的音乐应用直接就能听到。
 
-      第一次打开：应用会请你设置管理员账号和密码（自己定，之后在应用的 设置 → 通用 → 安全 里改）；网页始终在云吞网关的登录后面。
+      网页从云吞进来，不用再登一次。歌手名单和已下载的音乐都保存在家里，重装不丢。
 
-      歌手名单和已下载的音乐都保存在家里，重装不丢。搜索和补全专辑资料需要能访问外网。配上 qBittorrent 插件后，下载自动进它的队列；下载完成和健康问题会出现在收件人的 Wonton 私聊里。
+      配了 qBittorrent 后下载直接进它的队列。下载完成和健康问题会出现在收件人的 Wonton 私聊里，收件人只能是家里人。
+
+      搜索和补全专辑资料要能上网。
     en: |
-      Like an assistant that follows albums for you: add the artists you like, and new releases are searched for and downloaded automatically, with names and covers tidied up into the shared music folder, ready in the music app on your phone.
+      Like an assistant that follows albums for you: add the artists you like, and new releases and track lists are searched for and downloaded automatically, with names and covers tidied up into the shared music folder, ready in the music app on your phone.
 
-      First open: the app asks you to set an admin username and password (your choice, change later under Settings → General → Security); the web stays behind the Wonton gateway login.
+      The web comes in through Wonton, with no second login. Your artist list and downloaded music live at home and survive reinstalls.
 
-      Your artist list and downloaded music live at home and survive reinstalls. Searching and album details need internet access. With the qBittorrent plugin installed, downloads go straight into its queue; completed imports and health issues land in the recipient's Wonton chat.
-  release_notes: { zh: 介绍重写：首次登录提示单独成段放在最前。, en: "Rewritten store copy: the first-open sign-in note stands alone up front." }
+      With qBittorrent configured, downloads go straight into its queue. Completed imports and health issues land in the recipient's Wonton chat, household members only.
+
+      Searching and album details need internet access.
+    zh-Hant: |
+      像幫你追專輯的助手：把你喜歡的歌手加進來，出新專輯、有新歌單時它自動搜尋並下載，整理好檔名和封面，放進家裡共享的音樂資料夾，手機上的音樂應用直接就能聽到。
+
+      網頁從雲吞進來，不用再登一次。歌手名單和已下載的音樂都保存在家裡，重裝不丟。
+
+      配了 qBittorrent 後下載直接進它的佇列。下載完成和健康問題會出現在收件人的 Wonton 私聊裡，收件人只能是家裡人。
+
+      搜尋和補全專輯資料要能上網。
+    ja: |
+      アルバムを追いかけるアシスタントのようなものです。好きなアーティストを追加すると、新作や曲順を自動で検索してダウンロードし、ファイル名とジャケットを整えて家の共有音楽フォルダに入れ、スマホの音楽アプリからすぐ聴けます。
+
+      Web は Wonton から来るので追加のログインは不要です。アーティスト一覧とダウンロード済みの音楽は家に残り、入れ直しても消えません。
+
+      qBittorrent を設定してあればダウンロードはその待ち行列に入ります。取り込み完了や不具合は受け取った人の Wonton チャットに届き、宛先は家族だけです。
+
+      検索とアルバム情報の取得にはインターネットが必要です。
+  release_notes:
+    zh: |
+      介绍重写：首次登录提示单独成段放在最前。
+
+      商店介绍重写：建管理员账号和装 qBittorrent 移到「安装后要做的事」，网关、补全资料等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the first-open sign-in note stands alone up front.
+
+      Store copy rewritten: admin account creation and installing qBittorrent moved to the pre-install notice, with gateway/album-details wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：首次登入提示單獨成段放在最前。\n\n商店介紹重寫：建管理員帳號和裝 qBittorrent 移到「安裝後要做的事」，閘道、補全資料等說法換成日常用語；補繁體中文和日文。"
+    ja: "紹介を書き直し、初回ログインの注意を最初の段落に分けました。\n\nストア紹介を書き直し、管理者アカウントの作成と qBittorrent の導入を「インストール後の手順」に移し、ゲートウェイやアルバム情報などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: lidarr
     port: 8686

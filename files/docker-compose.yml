@@ -36,31 +36,60 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: app.wonton.files
-  version: 0.2.4
+  version: 0.2.5
   kind: app
-  title: { zh: Bot 找文件, en: File Finder for Bots }
+  title: { zh: "文件查找（Files）", en: "File Search (Files)", zh-Hant: "檔案尋找（Files）", ja: "ファイル検索（Files）" }
   icon: icon.svg
   notices: [NOTICE]
   description:
-    zh: 让 Bot 帮你在共享文件夹里找文件：按名字或内容搜、读出文字内容，找到的直接发给你。没有单独的页面，装好后在聊天里跟 Bot 说就行。
-    en: "Lets your bots find files in your shared folders: search by name or content, read text files and send you what they find. There's no page to open — just ask a bot in chat."
+    zh: 让 Bot 帮你在共享文件夹里找文件：按名字或内容搜、读出文字内容，找到的直接发给你。只能看不能改，没有单独的页面，装好后在聊天里跟 Bot 说就行。
+    en: "Lets your bots find files in your shared folders: search by name or content, read text files and send you what they find. Read-only, with no page to open — just ask a bot in chat."
+    zh-Hant: 讓 Bot 幫你在共享資料夾裡找檔案：按名字或內容搜尋、讀出文字內容，找到的直接發給你。只能看不能改，沒有單獨的頁面，裝好後在聊天裡跟 Bot 說就行。
+    ja: ボットに共有フォルダのファイルを探させます。名前や中身で検索し、テキストを読み、見つけたものを送ってくれます。読み取り専用で開くページはなく、導入後はチャットでボットに頼むだけです。
   license: MIT
   author: { name: geraldpeng6 }
   tags:
     zh: [文件, AI]
     en: [Files, AI]
+  setup:
+    zh: |
+      装好就能用，不用设置：它能看的只有共享文件夹里的文档、照片、音乐、视频、下载和传输，全部只读。
+    en: |
+      It works right after install with nothing to set: it may only read the documents, photos, music, videos, downloads and transfers shared folders.
+    zh-Hant: |
+      裝好就能用，不用設定：它能看的只有共享資料夾裡的文檔、照片、音樂、影片、下載和傳輸，全部唯讀。
+    ja: |
+      導入すればすぐ設定なしで使えます。読めるのは共有フォルダのドキュメント・写真・音楽・動画・ダウンロード・転送だけで、すべて読み取り専用です。
   about:
     zh: |
       让 Bot 在你允许的共享文件夹里按名字和内容找文件、列出目录、读文字文件，找到的文件可以直接发给你。
 
-      共享文件夹只读，路径不跟随软链接，只看得到你放行的文件夹。
+      共享文件夹只读；文件夹里指到别处的快捷方式（软链接）不会跟过去，只看得到你放行的文件夹本身。
     en: |
       Lets your bot find files by name and content, list directories and read text files in the shared folders you allow; it can send what it finds to you.
 
-      The folders are read-only, symlinks are not followed, and nothing outside them is visible.
-  release_notes: { zh: 迁入官方插件合仓，镜像改由官方仓库构建发布。, en: Moved to the official plugin monorepo and official image publishing. }
+      The folders are read-only; shortcuts that point elsewhere (symlinks) are not followed, so only the folders you allow are visible.
+    zh-Hant: |
+      讓 Bot 在你允許的共享資料夾裡按名字和內容找檔案、列出目錄、讀文字檔案，找到的檔案可以直接發給你。
+
+      共享資料夾唯讀；資料夾裡指到別處的捷徑（軟連結）不會跟過去，只看得到你放行的資料夾本身。
+    ja: |
+      許可した共有フォルダ内で、名前と中身からファイルを探し、ディレクトリを一覧し、テキストを読み、見つけたものを送ります。
+
+      フォルダは読み取り専用で、別の場所を指すショートカット（シンボリックリンク）は追いません。許可したフォルダそのものだけが見えます。
+  release_notes:
+    zh: |
+      迁入官方插件合仓，镜像改由官方仓库构建发布。
+
+      商店介绍重写：只读和软链接的说法补进介绍，链接改成快捷方式；补繁体中文和日文。
+    en: |
+      Moved to the official plugin monorepo and official image publishing.
+
+      Store copy rewritten: read-only and symlink behaviour now in the copy, with symlinks called shortcuts; Traditional Chinese and Japanese added.
+    zh-Hant: "遷入官方外掛合倉，映象改由官方倉庫構建釋出。\n\n商店介紹重寫：唯讀和軟連結的說法補進介紹，連結改成捷徑；補繁體中文和日文。"
+    ja: "公式プラグインリポジトリへ移動しました。イメージは公式リポジトリでのビルド・配布に変わりました。\n\nストア紹介を書き直し、読み取り専用とシンボリックリンクの挙動を紹介に加え、リンクをショートカットと呼ぶようにしました。繁体字中国語と日本語を追加。"
   mcp:
     service: mcp
     port: 8080

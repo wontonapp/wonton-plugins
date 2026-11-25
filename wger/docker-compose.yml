@@ -325,12 +325,14 @@ volumes:
 x-wonton:
   spec: "0.11"
   id: de.wger.workout
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 健身助手（wger）, en: Workout & Nutrition (wger) }
+  title: { zh: "健身助手（wger）", en: "Workout & Nutrition (wger)", zh-Hant: "健身助手（wger）", ja: "筋トレと食事の記録（wger）" }
   description:
     zh: 像手机里的健身 App，把训练计划排到每天，练完记一笔，吃了什么和体重变化也记得清清楚楚。
     en: "Like a fitness app on your phone: plan workouts for each day, log them as you go, and keep track of what you eat and how your weight changes."
+    zh-Hant: 像手機裡的健身 App，把訓練計畫排到每天，練完記一筆，吃了什麼和體重變化也記得清清楚楚。
+    ja: スマホのフィットネスアプリのようなものです。日ごとにトレーニングを計画し、終えたら記録し、食べたものや体重の変化も残せます。
   icon: icon.png
   notices: [NOTICE]
   author: { name: geraldpeng6 }
@@ -340,24 +342,47 @@ x-wonton:
   tags:
     zh: [健身, 健康]
     en: [Fitness, Health]
+  setup:
+    zh: 打开就用云吞账号登录，家里各人各记各的。第一次启动后，动作库和食物库会在后台慢慢同步下来，要几个小时，不影响先用。
+    en: Opening it signs you in with your Wonton account, and each person keeps their own records. After the first start, the exercise and food databases sync in the background; it takes hours and does not block using the app.
+    zh-Hant: 開啟就用雲吞帳號登入，家裡各人各記各的。第一次啟動後，動作庫和食物庫會在背景慢慢同步下來，要幾個小時，不影響先用。
+    ja: 開けば Wonton アカウントでサインインし、家族は各自の記録を持ちます。初回起動後、種目と食品のデータベースがバックグラウンドでゆっくり同期されます。数時間かかりますが、使い始められます。
   about:
     zh: |
-      像手机里的健身 App，把训练计划排到每天，练完记一笔，吃了什么和体重变化也记得清清楚楚。
-
       每天该练哪些动作、几组几次，照着做就行；练完打勾，重量和次数都有记录。吃饭记一笔，扫条码就能认出包装食品的热量。体重、围度记下来，曲线一眼看到变化。
 
-      家里每个人打开就是自己的账号，训练和饮食互不干扰。第一次启动后，动作库和食物库会从 wger.de 后台慢慢同步下来，要联网，量大、需要几个小时，不影响先用起来。
-
       数据都在自己家里，不上传到任何别的服务器。
-    en: |
-      Like a fitness app on your phone: plan workouts for each day, log them as you go, and keep track of what you eat and how your weight changes.
 
+      动作库和食物库要联网从 wger.de 同步；不联网也能自己加动作和食物。
+    en: |
       Each day shows the exercises, sets and reps to do; tick them off and the weights are recorded. Meals are one entry each, and scanning a bar code looks up packaged foods. Body weight and measurements show up as curves over time.
 
-      Everyone in the family gets their own account when they open it, with separate workouts and diaries. After the first start, the exercise and food databases sync from wger.de in the background; it needs internet, takes hours because of the size, and the app is usable meanwhile.
-
       All data stays on your own server.
-  release_notes: { zh: 插件包迁入官方插件合仓，保留旧仓库默认分支的健身、营养和代登录配置。, en: "Moved the plugin package into the official Wonton plugin monorepo; retains workout, nutrition and proxy-authentication configuration from the source default branch." }
+
+      The exercise and food databases sync from wger.de and need internet; you can also add your own exercises and foods offline.
+    zh-Hant: |
+      每天該練哪些動作、幾組幾次，照著做就行；練完打勾，重量和次數都有記錄。吃飯記一筆，掃條碼就能認出包裝食品的熱量。體重、圍度記下來，曲線一眼看到變化。
+
+      資料都在自己家裡，不上傳到任何別的伺服器。
+
+      動作庫和食物庫要連網從 wger.de 同步；不連網也能自己加動作和食物。
+    ja: |
+      その日にやる種目とセット・回数が出るので、その通りに行い、終えたらチェックして重量を記録します。食事は 1 件ずつ記録し、バーコードを読めばパッケージ食品のカロリーが分かります。体重やサイズは記録するとグラフで変化が見えます。
+
+      データはすべて自宅にあり、他のサーバーへは上がりません。
+
+      種目と食品のデータベースは wger.de から同期するためインターネットが必要です。オフラインでも自分で種目や食品を追加できます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，保留旧仓库默认分支的健身、营养和代登录配置。
+
+      商店介绍重写：首次同步和账号说明移到「安装后要做的事」，动作库、条码等说法简化，并去掉和描述重复的一段；补繁体中文和日文。
+    en: |
+      Moved the plugin package into the official Wonton plugin monorepo; retains workout, nutrition and proxy-authentication configuration from the source default branch.
+
+      Store copy rewritten: first-sync and account notes moved to the pre-install notice, exercise-database/barcode wording simplified, and the sentence repeated from the description dropped; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，保留舊倉庫預設分支的健身、營養和代登入配置。\n\n商店介紹重寫：首次同步和帳號說明移到「安裝後要做的事」，動作庫、條碼等說法簡化，並去掉和描述重複的一段；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移しました。旧リポジトリ既定ブランチの健身、栄養、代理ログイン設定は維持しています。\n\nストア紹介を書き直し、初回同期とアカウントの説明を「インストール後の手順」に移し、種目データベースやバーコードなどの言い方を簡略化して、説明と重複した一文も削りました。繁体字中国語と日本語を追加。"
   # 打开即用：代登录头认人，第一次打开自动建号，没有要用户做的一步。
   # 入口指向登录页并带 next：代登录中间件登录后优先跳 next（同源才接受）。
   # 不能直接写 path /user/login：登录后它按"当时激活的语言"反向解析（LocaleMiddleware

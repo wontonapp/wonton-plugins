@@ -102,10 +102,12 @@ x-wonton:
   id: com.usememos.memos
   version: 0.1.6
   kind: app
-  title: { zh: 速记本（Memos）, en: Quick Notes (Memos) }
+  title: { zh: "速记本（Memos）", en: "Quick Notes (Memos)", zh-Hant: "速記本（Memos）", ja: "クイックメモ（Memos）" }
   description:
     zh: 像给自己发朋友圈：想到什么随手记一条，笔记、日记、待办都行，打个标签，以后一搜就到。最轻巧，不用想放哪个文件夹。
     en: "Like posting to a private feed: jot down a thought, diary entry or to-do in seconds, tag it, and search finds it later. The lightest note app — no folders to think about."
+    zh-Hant: 像給自己發朋友圈：想到什麼隨手記一條，筆記、日記、待辦都行，打個標籤，以後一搜就到。最輕巧，不用想放哪個資料夾。
+    ja: 自分だけのタイムラインへの投稿のようなものです。思いついたことをメモ・日記・ToDo としてすぐ書き、タグを付ければ後で検索で見つかります。フォルダを考えなくていい、最も軽いメモアプリです。
   icon: icon.png
   notices: [NOTICE]
   screenshots:
@@ -119,30 +121,67 @@ x-wonton:
   tags:
     zh: [笔记]
     en: [Notes]
+  setup:
+    zh: 打开就用云吞账号登录，不用注册；默认只有你看得到。
+    en: Opening the page signs you in with your Wonton account — no sign-up. Only you can see your notes by default.
+    zh-Hant: 開啟就用雲吞帳號登入，不用註冊；預設只有你看得到。
+    ja: 開けば Wonton アカウントでサインインでき、登録は不要です。既定では自分だけが見られます。
   about:
     zh: |
       随手记笔记、写日记、列待办，打上标签，之后全文搜索。默认只有你看得到，也可以逐条公开或按链接分享。
 
-      Bot 也能搜、能新建和追加笔记，看到的就是你自己看得到的。
+      助手也能搜、能新建和追加笔记，看到的就是你自己看得到的。
 
-      需要访问外网：Webhook 推送、链接预览和 AI 语音转写都得出网才能用，笔记本身不受影响。
+      网站自动通知、链接预览和语音转文字要连外网才能用，笔记本身不受影响。
 
-      核心升级后，插件容器会按新的签发方自动重建，打开照常，不用重装。
+      有人评论、提到你时，通知信会出现在你的 Wonton 私聊里；信只能发给家里的人。
 
-      有人评论、提及你时，Memos 的通知信会出现在你的 Wonton 私聊里；信只能发给家里的人。
+      云吞更新后插件会自动重建，打开照常，不用重装。
     en: |
       Jot down notes, keep a journal, list todos, tag them and search everything later. Notes stay private by default; you can make one public or share it by link.
 
-      The bot can search, create and append notes, and sees exactly what you see.
+      The assistant can search, create and append notes, and sees exactly what you see.
 
-      Needs internet access: webhooks, link previews and AI speech-to-text all reach the network; notes work offline.
-
-      After a core upgrade the plugin's containers are rebuilt with the new issuer automatically; pages open as before, with nothing to reinstall.
+      Site notifications, link previews and speech-to-text need the internet; notes work offline.
 
       Notification emails for comments and mentions arrive in your Wonton chat; mail only reaches people in your household.
+
+      After a Wonton update the plugin is rebuilt automatically; pages open as before, with nothing to reinstall.
+    zh-Hant: |
+      隨手記筆記、寫日記、列待辦，打上標籤，之後全文搜尋。預設只有你看得到，也可以逐條公開或按連結分享。
+
+      助手也能搜、能新建和追加筆記，看到的就是你自己看得到的。
+
+      網站自動通知、連結預覽和語音轉文字要連外網才能用，筆記本身不受影響。
+
+      有人留言、提到你時，通知信會出現在你的 Wonton 私聊裡；信只能發給家裡的人。
+
+      雲吞更新後外掛會自動重建，開啟照常，不用重裝。
+    ja: |
+      メモ・日記・ToDo をすぐ書き、タグを付け、後で全文検索できます。既定では自分のみが見られ、個別に公開したりリンクで共有したりできます。
+
+      アシスタントも検索・作成・追記ができ、自分に見えるものだけを見ます。
+
+      サイトの通知・リンクプレビュー・音声入力にはインターネットが必要ですが、メモ自体は使えます。
+
+      コメントやメンションの通知メールは Wonton チャットに届き、メールは家族にしか届きません。
+
+      Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
   release_notes:
-    zh: 在插件详情页的「谁能打开这个应用」里勾上「家人」后，家人第一次打开会自动建各自的账号；需要管理笔记时，主人可在应用里把家人设为管理员。
-    en: After you tick “Family” under “Who can open this app” in the plugin detail page, members get their own account the first time they open Memos; the owner can promote them to administrator in the app when needed.
+    zh: |
+      在插件详情页的「谁能打开这个应用」里勾上「家人」后，家人第一次打开会自动建各自的账号；需要管理笔记时，主人可在应用里把家人设为管理员。
+
+      修复自动重新登录：会话过期后打开速记本，现在能自己登录回来，不再停在报错页。
+
+      商店介绍重写：登录说明移到「安装后要做的事」，Webhook、容器等说法换成日常用语；补繁体中文和日文。
+    en: |
+      After you tick “Family” under “Who can open this app” in the plugin detail page, members get their own account the first time they open Memos; the owner can promote them to administrator in the app when needed.
+
+      Fixed automatic re-login: when a session expires, Memos signs you back in by itself instead of stopping at an error page.
+
+      Store copy rewritten: the sign-in note moved to the pre-install notice, with webhook/container wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "在外掛詳情頁的「誰能開啟這個應用」裡勾上「家人」後，家人第一次開啟會自動建立各自的帳號；需要管理筆記時，主人可在應用裡把家人設為管理員。\n\n修復自動重新登入：會話過期後開啟速記本，現在能自己登入回來，不再停在報錯頁。\n\n商店介紹重寫：登入說明移到「安裝後要做的事」，Webhook、容器等說法換成日常用語；補繁體中文和日文。"
+    ja: "プラグイン詳細ページの「このアプリを開ける人」で「家族」にチェックすると、家族が初めて開いたときに各自のアカウントが自動で作られます。メモの管理が必要なときは、オーナーがアプリ内で家族を管理者にできます。\n\n自動再ログインを修正しました。セッションが切れた後にメモを開いても、エラー画面で止まらず自分でログインし直せます。\n\nストア紹介を書き直し、サインインの説明を「インストール後の手順」に移し、Webhook やコンテナなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: memos
     port: 5230

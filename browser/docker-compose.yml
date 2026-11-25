@@ -75,14 +75,16 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: app.wonton.browser
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: Bot 的浏览器, en: Bot Browser }
+  title: { zh: "让 Bot 上网（浏览器）", en: "Bot on the Web (Browser)", zh-Hant: "讓 Bot 上網（瀏覽器）", ja: "Bot に Web を使わせる（ブラウザ）" }
   description:
     zh: 让 Bot 替你上网办事：它开网页、点按、填表时你在旁边实时看着，需要时随时接手；你登录过的网站它也能直接用。
     en: "Lets your bot get things done on the web: watch live as it opens pages, clicks and fills in forms, and take over whenever you need to. It shares your sign-ins, so sites you're logged into work for it too."
+    zh-Hant: 讓 Bot 替你上網辦事：它開網頁、點按、填表時你在旁邊即時看著，需要時隨時接手；你登入過的網站它也能直接用。
+    ja: Bot に Web での用事を任せます。ページを開き、クリックし、フォームを埋める様子を横で見守り、必要ならいつでも代わります。あなたがサインイン済みのサイトもそのまま使えます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/live-view.png, screenshots/browsing.png]
@@ -95,16 +97,47 @@ x-wonton:
   tags:
     zh: [AI, 工具]
     en: [AI, Tools]
+  setup:
+    zh: Bot 要用浏览器时会自己打开网页，你在这里实时看着它的画面。需要你的时候，直接在画面上打字、点按，做完再交回去。
+    en: The bot opens pages here when it needs a browser, and you watch the screen live. When it needs you, type and click right on the view, then hand the page back.
+    zh-Hant: Bot 要用瀏覽器時會自己開啟網頁，你在這裡即時看著它的畫面。需要你的時候，直接在畫面上打字、點按，做完再交回去。
+    ja: Bot がブラウザを必要とすると、ここで自分からページを開き、あなたはその画面をリアルタイムで見ます。必要なときは画面のまま入力・クリックし、終わったら返します。
   about:
     zh: |
-      Bot 用这台浏览器开网页、点按、填表，你实时看着它的画面。需要你的时候，直接在画面上打字、点按，做完再交回去。
+      Bot 用这台浏览器开网页、点按、填表，你实时看着它的画面。
 
-      它和你共用一套登录状态：你登录过的网站，Bot 也能用。
+      它和你共用一套登录状态：你登录过的网站，Bot 也能用；Bot 登录的网站，你打开也在。
+
+      浏览器和登录状态都留在这台服务器上，别的设备打开看到的是同一套。
     en: |
-      The bot opens pages, clicks and fills forms in this browser while you watch the screen live. When it needs you, take over with your own typing and clicks, then hand the page back.
+      The bot uses this browser to open pages, click and fill forms while you watch the screen live.
 
-      It shares one login state with you: sites you signed into work for the bot too.
-  release_notes: { zh: 插件迁入官方合仓，自建镜像改由官方仓库发布。, en: "Moved the plugin into the official monorepo, with custom images published from the official repository." }
+      It shares one login state with you: sites you signed into work for the bot too, and sites the bot signs into are signed in for you.
+
+      The browser and its sign-ins stay on this server; other devices see the same state.
+    zh-Hant: |
+      Bot 用這台瀏覽器開網頁、點按、填表，你即時看著它的畫面。
+
+      它和你共用一套登入狀態：你登入過的網站，Bot 也能用；Bot 登入的網站，你開啟也在。
+
+      瀏覽器和登入狀態都留在這台伺服器上，別的裝置開啟看到的是同一套。
+    ja: |
+      Bot はこのブラウザでページを開き、クリックし、フォームを埋め、あなたはその画面をリアルタイムで見ます。
+
+      サインイン状態をあなたと共有します。あなたがサインインしたサイトは Bot も使え、Bot がサインインしたサイトはあなたにも入った状態になります。
+
+      ブラウザとサインイン状態はこのサーバーに残り、別の端末からも同じ状態が見えます。
+  release_notes:
+    zh: |
+      插件迁入官方合仓，自建镜像改由官方仓库发布。
+
+      商店介绍重写：接手和交回的操作移到「安装后要做的事」，并加了产品类别说明；补繁体中文和日文。
+    en: |
+      Moved the plugin into the official monorepo, with custom images published from the official repository.
+
+      Store copy rewritten: taking over and handing back moved to the pre-install notice, with the product kind named in the title; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛遷入官方合倉，自建映象改由官方倉庫釋出。\n\n商店介紹重寫：接手和交回的操作移到「安裝後要做的事」，並加了產品類別說明；補繁體中文和日文。"
+    ja: "プラグインを公式リポジトリへ移動しました。自前ビルドのイメージは公式リポジトリからの配布に変わりました。\n\nストア紹介を書き直し、交代と返却の操作を「インストール後の手順」に移し、タイトルに製品の種類を入れました。繁体字中国語と日本語を追加。"
   webui:
     service: browser
     port: 6080

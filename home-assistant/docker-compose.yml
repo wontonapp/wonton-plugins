@@ -88,12 +88,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: io.home-assistant.home-assistant
-  version: 0.2.2
+  version: 0.2.3
   kind: app
-  title: { zh: 智能家居中控（Home Assistant）, en: Smart Home Hub (Home Assistant) }
+  title: { zh: "智能家居（Home Assistant）", en: "Smart Home (Home Assistant)", zh-Hant: "智慧家庭（Home Assistant）", ja: "スマートホーム（Home Assistant）" }
   description:
     zh: 像米家 App，但不挑牌子：把家里各品牌的智能设备放进一个界面控制，开灯、调空调，还能设“到家自动开灯”这样的联动。
-    en: 'One app for every smart device, whatever the brand: control lights and air conditioning in one place and set routines like "lights on when I get home".'
+    en: "One app for every smart device, whatever the brand: control lights and air conditioning in one place and set routines like \"lights on when I get home\"."
+    zh-Hant: 像米家 App，但不挑牌子：把家裡各品牌的智慧裝置放進一個介面控制，開燈、調空調，還能設「到家自動開燈」這樣的聯動。
+    ja: ブランドを選ばないスマート家電アプリのようなもの。家の各社製スマート家電を 1 つの画面から操作し、照明やエアコンを動かし、「帰宅したら照明をつける」といった連動も組めます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png]
@@ -103,24 +105,55 @@ x-wonton:
   tags:
     zh: [智能家居, 自动化]
     en: [Smart Home, Automation]
+  setup:
+    zh: 打开网页直接用，不用输密码；主人是管理员，家人在应用里各自建号。界面默认中文，用的统计默认关闭，都可以在设置里改。
+    en: Open the page and use it directly — no password. The owner is the admin; family members create their own accounts in the app. Chinese is the default language and usage statistics are off, both changeable in the settings.
+    zh-Hant: 開網頁直接用，不用輸密碼；主人是管理員，家人在應用裡各自建號。介面預設中文，用量統計預設關閉，都可以在設定裡改。
+    ja: Web ページを開けばパスワードなしでそのまま使えます。オーナーが管理者で、家族はアプリ内で各自アカウントを作ります。画面は中国語が既定、利用統計は既定でオフで、どちらも設定で変更できます。
   about:
     zh: |
       把家里不同牌子的智能设备放进一个界面：开灯、调空调、看摄像头，设备之间的联动（比如“到家自动开灯”）都在这里设。
 
-      第一次打开：主人的账号装好时就建好了，打开网页直接用，不用输密码。界面默认中文，应用的数据统计默认关闭，你做的配置和集成都保存在插件自己的数据目录里。
+      它要直接待在局域网里才能发现设备，所以拿到的是能直接访问本机和局域网的权限。网页只经云吞进来，但本机上的程序和别的联网程序也能绕过网页走这个免密码入口——不要在别人也用的共用主机上打开。
 
-      它要直接待在局域网里才能发现设备，所以用的是能直接访问本机和局域网的最高级别网络权限。网页只经云吞的通道进来，但本机上的程序和直接联网的其他容器也能绕过网页、用这个免密码入口——不要在不信任的共用主机上启用。
+      新设备能自己被发现，要用到收发底层网络包的权限（已申请）；蓝牙的完整接入还要等底座支持，所以没有申请蓝牙权限。
 
-      自动发现新设备需要收发底层网络包的权限（已声明）；蓝牙的完整接入还需要底座暂不支持的能力，所以没有申请蓝牙权限。
+      云吞更新后插件会跟着自动重建，配置和接入的设备都还在。
     en: |
       One place for the smart devices of every brand: control lights, air conditioning and cameras, and set routines between devices like "lights on when I get home".
 
-      First open: the owner's account is set up at install — open the web page and use it, no password asked. Chinese is the default language, analytics are disabled, and your configuration and integrations persist in the plugin's own data.
+      Finding devices needs to live directly on the LAN, so it gets permission to reach the host machine and the local network. The web page comes in through Wonton only, but programs on the host and other networked programs can also use this passwordless entry — do not open it on a shared machine others use.
 
-      Finding devices on the network needs the highest-level network permission: the plugin can reach the host machine and the LAN directly. The web page is only reached through Wonton's channel, but host processes and other host-network containers can also skip the page and use this passwordless entry — do not enable it on an untrusted shared host.
+      New devices are discovered automatically, which needs permission to send and receive low-level network packets (declared); full Bluetooth support waits on a platform feature, so no Bluetooth permission is declared.
 
-      Automatic device discovery needs permission to send and receive low-level network packets (declared); full Bluetooth support needs a capability the plugin spec does not allow, so no Bluetooth permission is declared.
-  release_notes: { zh: 介绍重写：账号免密码登录的说明单独成段放在最前，网络权限和蓝牙限制改成日常说法。, en: "Rewritten store copy: the passwordless sign-in note stands alone up front, and network permissions and the Bluetooth limitation are explained in everyday words." }
+      After a Wonton update the plugin is rebuilt automatically and both settings and paired devices are kept.
+    zh-Hant: |
+      把家裡不同牌子的智慧裝置放進一個介面：開燈、調空調、看攝影機，裝置之間的聯動（例如「到家自動開燈」）都在這裡設。
+
+      它要直接待在區域網路裡才能發現裝置，所以拿到的是能直接存取本機和區域網路的權限。網頁只經雲吞進來，但本機上的程式和別的連網程式也能繞過網頁走這個免密碼入口——不要在別人也在用的共用主機上開啟。
+
+      新裝置能自己被發現，要用到收發底層網路封包的權限（已申請）；藍牙的完整接入還要等底座支援，所以沒有申請藍牙權限。
+
+      雲吞更新後外掛會跟著自動重建，設定和接入的裝置都還在。
+    ja: |
+      各ブランドのスマート家電を 1 つの画面に集めます。照明・エアコン・カメラを操作し、「帰宅したら照明をつける」などの連動もここで組みます。
+
+      機器を見つけるには LAN に直接いる必要があるため、本機とローカルネットワークに直接届く権限を持ちます。Web ページは Wonton 経由でしか来ませんが、本機のプログラムや他のネットワークプログラムもページを介さずこのパスワードなしの入口を使えます。他人も使う共有マシンでは開かないでください。
+
+      新しい機器は自動で見つかり、そのために低レイヤのネットワークパケットを送受信する権限を使います（宣言済み）。Bluetooth の完全対応は基盤側の対応待ちのため、Bluetooth 権限は宣言していません。
+
+      Wonton の更新後はプラグインが自動で作り直され、設定も接続済みの機器も残ります。
+  release_notes:
+    zh: |
+      介绍重写：账号免密码登录的说明单独成段放在最前，网络权限和蓝牙限制改成日常说法。
+
+      商店介绍重写：首次登录、语言和统计的默认值移到「安装后要做的事」，宿主网络容器、底座等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the passwordless sign-in note stands alone up front, and network permissions and the Bluetooth limitation are explained in everyday words.
+
+      Store copy rewritten: first sign-in and the language/statistics defaults moved to the pre-install notice, with host-network-container and platform wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：賬號免密碼登入的說明單獨成段放在最前，網路許可權和藍牙限制改成日常說法。\n\n商店介紹重寫：首次登入、語言和統計的預設值移到「安裝後要做的事」，宿主網路容器、底座等說法換成日常用語；補繁體中文和日文。"
+    ja: "紹介を書き直し、パスワード不要のログインの説明を最初の段落に分け、ネットワーク権限と Bluetooth の制限を日常的な言い方に変えました。\n\nストア紹介を書き直し、初回サインインと言語・統計の既定値を「インストール後の手順」に移し、ホストネットワークコンテナや基盤などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: web
     port: 18123

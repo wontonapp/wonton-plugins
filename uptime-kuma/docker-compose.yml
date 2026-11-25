@@ -54,12 +54,16 @@ configs:
     file: setup-admin.mjs
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: fyi.kuma.uptime-kuma
-  version: 0.2.1
+  version: 0.2.2
   kind: app
-  title: { en: Uptime Kuma }
-  description: { zh: 盯着你的网站和服务，掉线时提醒你, en: Watch your sites and services and get alerted when they go down }
+  title: { zh: "网站监控（Uptime Kuma）", en: "Site Monitoring (Uptime Kuma)", zh-Hant: "網站監控（Uptime Kuma）", ja: "サイト監視（Uptime Kuma）" }
+  description:
+    zh: 盯着你的网站和服务，掉线时提醒你。
+    en: Watch your sites and services and get alerted when they go down.
+    zh-Hant: 盯著你的網站和服務，掉線時提醒你。
+    ja: 自分のサイトやサービスを見張り、落ちたら知らせます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/monitors.png, screenshots/add-monitor.png, screenshots/monitor-detail.png, screenshots/notifications.png]
@@ -69,18 +73,47 @@ x-wonton:
   tags:
     zh: [监控]
     en: [Monitoring]
+  setup:
+    zh: 打开就能用，不用登录：云吞已经替你认了身份，应用自己的登录是关的。添加要盯的网址或服务，再配一个提醒渠道（私聊、Telegram 等）。
+    en: "Open and use it — no login: Wonton already authenticates you and the app's own login is off. Add the site or service to watch, then set up an alert channel (chat, Telegram and more)."
+    zh-Hant: 開啟就能用，不用登入：雲吞已經替你認了身分，應用自己的登入是關的。新增要盯的網址或服務，再配一個提醒頻道（私聊、Telegram 等）。
+    ja: 開けば使え、ログインは不要です。Wonton がすでに本人確認をしており、アプリ側のログインは切ってあります。監視するサイトやサービスを追加し、通知先（チャット、Telegram など）を設定します。
   about:
     zh: |
-      盯着你的网站和服务，支持网址、端口、ping 和 DNS，掉线时通过邮件、Telegram、Webhook 等渠道提醒你。
+      盯着你的网站和服务，支持网址、端口、ping 和 DNS，掉线时提醒你。
 
-      打开直接可用，不用登录应用本身：管理员账号已预建，应用自己的登录已关——网页只经云吞网关进来，网关已经认了你。外部心跳推送会被拦下，状态页只给登录了云吞的你看。
+      状态页只给登录了云吞的你看；外面的服务主动来报平安（心跳）会被拦下。
+
+      要盯家里的服务时，地址照常填；远程监控要云吞这台机器能上网。
     en: |
-      Watch your sites and services over HTTP(s), ports, ping and DNS, and get alerted by email, Telegram, webhook and more when they go down.
+      Watch your sites and services over HTTP(s), ports, ping and DNS, and get alerted when they go down.
 
-      Open and use it straight away — no app sign-in: an administrator account is pre-created and the app's own login is off, because the page is only reachable through the Wonton gateway, which already authenticates you. External push heartbeats are blocked, and status pages are only visible to you through the gateway.
+      Status pages are visible only to you while signed in; outside push heartbeats are blocked.
+
+      For services at home, enter their address as usual; monitoring from outside needs the Wonton machine to reach the internet.
+    zh-Hant: |
+      盯著你的網站和服務，支援網址、埠、ping 和 DNS，掉線時提醒你。
+
+      狀態頁只給登入了雲吞的你看；外面的服務主動來報平安（心跳）會被攔下。
+
+      要盯家裡的服務時，位址照常填；遠端監控要雲吞這台機器能上網。
+    ja: |
+      自分のサイトやサービスを HTTP(s)・ポート・ping・DNS で監視し、落ちたら知らせます。
+
+      ステータスページはサインインした本人だけが見られます。外部サービスからのプッシュ（ハートビート）は遮断されます。
+
+      家のサービスを見る時もアドレスはそのまま入力します。外部の監視には Wonton のマシンがインターネットに届く必要があります。
   release_notes:
-    zh: 插件包迁入官方插件合仓，内容与上一版相同。
-    en: "Package moved into the official Wonton plugin monorepo; same content as the previous release."
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：免登录和配提醒移到「安装后要做的事」，网关、心跳、状态页等说法换成日常用语，并加了中文标题；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: the no-login and alert-setup notes moved to the pre-install notice, with gateway/heartbeat/status-page wording in everyday words and a Chinese title added; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：免登入和配提醒移到「安裝後要做的事」，閘道、心跳、狀態頁等說法換成日常用語，並加了中文標題；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、ログイン不要と通知設定を「インストール後の手順」に移し、ゲートウェイやハートビート、ステータスページなどの言い方を日常的な言葉にして中国語タイトルも付けました。繁体字中国語と日本語を追加。"
   webui:
     service: kuma
     port: 3001

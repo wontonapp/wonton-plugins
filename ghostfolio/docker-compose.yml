@@ -78,12 +78,14 @@ services:
 x-wonton:
   spec: "0.11"
   id: io.ghostfolio.ghostfolio
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 投资记账（Ghostfolio）, en: Ghostfolio }
+  title: { zh: "投资记账（Ghostfolio）", en: "Portfolio Tracker (Ghostfolio)", zh-Hant: "投資記帳（Ghostfolio）", ja: "資産管理（Ghostfolio）" }
   description:
     zh: 像证券 App 的收益页，把股票、基金和加密货币的买卖记进来，随时看总资产和涨跌盈亏
-    en: A portfolio tracker for stocks, funds and crypto, with total value and gains at a glance
+    en: "A portfolio tracker for stocks, funds and crypto: total value, daily moves and gains at a glance"
+    zh-Hant: 像證券 App 的收益頁，把股票、基金和加密貨幣的買賣記進來，隨時看總資產和漲跌盈虧
+    ja: 証券アプリの損益画面のようなもの。株・投信・暗号資産の売買を記録し、総資産と値動き、損益をいつでも見られます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/holdings.png]
@@ -93,16 +95,39 @@ x-wonton:
   tags:
     zh: [记账, 投资]
     en: [Finance, Investing]
+  setup:
+    zh: 打开就用云吞账号登录，进去就是自己的账，不用注册。
+    en: Opening the page signs you in with your Wonton account, straight into your own portfolio — no sign-up.
+    zh-Hant: 開啟就用雲吞帳號登入，進去就是自己的帳，不用註冊。
+    ja: 開けば Wonton アカウントでサインインし、自分の資産画面が開きます。登録は不要です。
   about:
     zh: |
-      记下股票、基金和加密货币的买卖，Ghostfolio 帮你盯着：总资产、每天的涨跌、各持仓的盈亏和占比，一眼看清。
+      记下股票、基金和加密货币的买卖，Ghostfolio 帮你盯着：总资产、每天的涨跌、每一项的盈亏和占比，一眼看清。
 
-      登录用云吞的账号，打开就是自己的持仓，不用再注册。行情价自动更新（要访问外网），也支持手动记账。
+      行情价自动更新，家里要能上外网；不联网时手动记的买卖照常能记。
     en: |
-      Record your stocks, funds and crypto, and Ghostfolio keeps watch: total assets, daily moves, and the gains, losses and weightings of every holding at a glance.
+      Record your stock, fund and crypto trades and Ghostfolio keeps watch: total assets, daily moves, and the gains, losses and weight of every holding at a glance.
 
-      Sign-in uses your Wonton account; the app opens straight into your portfolio. Market prices update on their own (needs internet access); manual entries are supported too.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      Market prices update on their own, so the plugin needs internet access; trades you enter by hand can be recorded offline.
+    zh-Hant: |
+      記下股票、基金和加密貨幣的買賣，Ghostfolio 幫你盯著：總資產、每天的漲跌、每一項的盈虧和佔比，一眼看清。
+
+      行情價自動更新，家裡要能連上外網；不連網時手動記的買賣照常能記。
+    ja: |
+      株・投信・暗号資産の売買を記録すると、Ghostfolio が総資産・日々の値動き・各保有分の損益と比率を一目で示します。
+
+      相場価格は自動で更新されるため、インターネットが必要です。手入力の売買はオフラインでも記録できます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：登录说明移到「安装后要做的事」，去掉重复的记账说法；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: the sign-in note moved to the pre-install notice and a duplicated phrase dropped; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：登入說明移到「安裝後要做的事」，去掉重複的記帳說法；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、サインインの説明を「インストール後の手順」に移し、重複した表現を削りました。繁体字中国語と日本語を追加。"
   webui:
     service: ghostfolio
     port: 3333

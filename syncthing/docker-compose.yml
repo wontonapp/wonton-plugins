@@ -83,12 +83,16 @@ configs:
     content: '{"addresses":"${WONTON_LAN_ADDRESSES}"}'
 
 x-wonton:
-  spec: "0.4"
+  spec: "0.11"
   id: net.syncthing.syncthing
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 多设备同步（Syncthing）, en: Device Sync (Syncthing) }
-  description: { zh: "像几台设备共用一个文件夹：电脑、手机和家里的服务器之间自动同步，这边一改、那边跟着变，不经过别人的网盘。适合要在几台设备上保持同一份文件的人。", en: "Like one folder shared by all your devices: computers, phones and your home server stay in sync automatically — change it here and it changes there, without going through anyone else's cloud. For keeping the same files on several devices." }
+  title: { zh: "多设备同步（Syncthing）", en: "Device Sync (Syncthing)", zh-Hant: "多裝置同步（Syncthing）", ja: "端末間同期（Syncthing）" }
+  description:
+    zh: 像几台设备共用一个文件夹：电脑、手机和家里的服务器之间自动同步，这边一改、那边跟着变，不经过别人的网盘。适合要在几台设备上保持同一份文件的人。
+    en: "Like one folder shared by all your devices: computers, phones and your home server stay in sync automatically — change it here and it changes there, without going through anyone else's cloud. For keeping the same files on several devices."
+    zh-Hant: 像幾台裝置共用一個資料夾：電腦、手機和家裡的伺服器之間自動同步，這邊一改、那邊跟著變，不經過別人的網盤。適合要在幾台裝置上保持同一份檔案的人。
+    ja: 複数の端末で 1 つのフォルダを共有するようなものです。パソコン、スマホ、家のサーバーの間で自動的に同期し、こちらを変えればあちらも変わります。他人のクラウドは経由しません。同じファイルを複数の端末で保つ人向けです。
   icon: icon.png
   notices: [NOTICE]
   screenshots:
@@ -101,16 +105,47 @@ x-wonton:
   tags:
     zh: [同步, 文件]
     en: [Sync, Files]
+  setup:
+    zh: 在网页上添加对方的设备编号，互相确认后，再把要同步的文件夹共享给对方。同步的文件放在共享文件夹 sync 里，其他应用也能用。
+    en: Add the other device's ID in the web page, accept each other, then share the folder you want synced. Synced files live in the sync shared folder, available to other apps too.
+    zh-Hant: 在網頁上新增對方的裝置編號，互相確認後，再把要同步的資料夾分享給對方。同步的檔案放在共享資料夾 sync 裡，其他應用也能用。
+    ja: Web ページで相手の端末 ID を追加し、互いに承認してから、同期するフォルダを共有します。同期したファイルは共有フォルダ sync に置かれ、他のアプリからも使えます。
   about:
     zh: |
-      在电脑、手机和家里的主机之间同步文件。在网页上添加设备和文件夹，一处改动，其他设备跟着变。
+      在电脑、手机和家里的服务器之间同步文件：一处改动，其他设备跟着变。
 
-      同步的文件放在共享文件夹 sync 里，其他应用也能用。
+      不需要账号，靠设备编号互相配对；数据传输是加密的，不存到任何云盘。
+
+      同步只在设备之间进行，不走云吞的网页入口：手机、电脑上要装 Syncthing 客户端，并和这台服务器能互相连上。
     en: |
-      Sync files between your computers, phones and the server at home. Add devices and folders in the web page; a change in one place arrives everywhere.
+      Sync files between your computers, phones and the server at home: a change in one place arrives everywhere.
 
-      Synced files live in the sync shared folder, available to other apps too.
-  release_notes: { zh: 名字和说明更新。, en: Product name and description update. }
+      No accounts — devices pair through their IDs, and transfers are encrypted with nothing stored on any cloud.
+
+      Sync happens directly between devices, not through the Wonton web entry: install a Syncthing client on your phone or computer and make sure it can reach this server.
+    zh-Hant: |
+      在電腦、手機和家裡的伺服器之間同步檔案：一處改動，其他裝置跟著變。
+
+      不需要帳號，靠裝置編號互相配對；傳輸是加密的，不存到任何網盤。
+
+      同步只在裝置之間進行，不走雲吞的網頁入口：手機、電腦上要裝 Syncthing 用戶端，並和這台伺服器能互相連上。
+    ja: |
+      パソコン、スマホ、家のサーバーの間でファイルを同期します。1 か所の変更がどこにでも届きます。
+
+      アカウントは不要で、端末 ID で互いにペアリングします。転送は暗号化され、どのクラウドにも保存しません。
+
+      同期は端末同士で直接行われ、Wonton の Web 入口は経由しません。スマホやパソコンに Syncthing クライアントを入れ、このサーバーに届くようにしてください。
+  release_notes:
+    zh: |
+      名字和说明更新。
+
+      商店介绍重写：配对和共享步骤移到「安装后要做的事」，设备、共享文件夹等说法换成日常用语；补繁体中文和日文。
+    en: |
+      Product name and description update.
+
+      Store copy rewritten: pairing and sharing steps moved to the pre-install notice, with device/shared-folder wording in everyday words; Traditional Chinese and Japanese added.
+    zh-Hant: "名字和說明更新。\n\n商店介紹重寫：配對和分享步驟移到「安裝後要做的事」，裝置、共享資料夾等說法換成日常用語；補繁體中文和日文。"
+    ja: "名称と説明を更新しました。\n\nストア紹介を書き直し、ペアリングと共有の手順を「インストール後の手順」に移し、端末や共有フォルダなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: syncthing
     port: 8384

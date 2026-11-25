@@ -56,12 +56,14 @@ configs:
 x-wonton:
   spec: "0.12"
   id: media.bazarr.bazarr
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 字幕助手（Bazarr）, en: Subtitles (Bazarr) }
+  title: { zh: "字幕助手（Bazarr）", en: "Subtitles (Bazarr)", zh-Hant: "字幕助手（Bazarr）", ja: "字幕ヘルパー（Bazarr）" }
   description:
     zh: 给下载好的电影和剧集自动配字幕，字幕就放在视频旁边
     en: Automatically finds subtitles for downloaded movies and shows, right next to the video
+    zh-Hant: 給下載好的電影和劇集自動配字幕，字幕就放在影片旁邊
+    ja: 落とした映画やドラマに自動で字幕を付け、字幕は動画の隣に置きます。
   icon: icon.png
   notices: [NOTICE]
   screenshots: [screenshots/series.png, screenshots/languages.png]
@@ -73,26 +75,46 @@ x-wonton:
     zh: [字幕, 视频, 影视]
     en: [Subtitles, Video, Movies]
   setup:
-    zh: 第一次打开后，到 设置 → Languages 选要找的字幕语言（比如简体中文），之后新下载的视频就会自动配上字幕。
+    zh: 第一次打开后，到 设置 → Languages 选要找的字幕语言（比如简体中文），新下载的视频就会自动配上字幕。
     en: After opening for the first time, pick your subtitle languages under Settings → Languages (e.g. Simplified Chinese); new downloads then get subtitles automatically.
+    zh-Hant: 第一次開啟後，到 設定 → Languages 選要尋找的字幕語言（例如簡體中文），新下載的影片就會自動配上字幕。
+    ja: 初回起動後、設定 → Languages で探す字幕の言語（例：簡体字中国語）を選ぶと、以後のダウンロードに自動で字幕が付きます。
   about:
     zh: |
-      给家里下载好的电影和剧集自动配上字幕：连接 Sonarr 或 Radarr 之后，新片一下载完，Bazarr 就按你选的语言去找字幕，下载后放在视频旁边，Jellyfin 里播放时直接可选。
+      给家里下载好的电影和剧集自动配上字幕：连接 Sonarr 或 Radarr 之后，新片一下载完，Bazarr 就按你选的语言去找字幕，下载后放在视频旁边，Jellyfin 里播放时直接可选。装了对应的插件时，连接地址和连接密钥由云吞自动填好。
 
-      第一次打开就是 Bazarr 自己的界面。先到 设置 → Languages 选语言，再到 设置 → Sonarr / Radarr 看连接：装了对应插件时，连接地址由云吞自动填好；API 密钥可以手动填，在对应插件的设置页里能看到。
-
-      字幕来自 Bazarr 内置的字幕站（如 OpenSubtitles.com），所以需要能访问外网；字幕站自己的账号（比如 OpenSubtitles 的 VIP）在 Bazarr 设置里自己填，插件不代管。
+      字幕来自 Bazarr 内置的字幕站（如 OpenSubtitles.com），所以家里要能上外网；字幕站自己的账号（比如 OpenSubtitles 的 VIP）在 Bazarr 设置里自己填，插件不代管。
 
       Bazarr 的片库完全来自 Sonarr/Radarr：两个都没装时列表是空的，这是正常的。
     en: |
-      Adds subtitles to the movies and shows on your server: once connected to Sonarr or Radarr, Bazarr looks up subtitles in the languages you picked as soon as a download finishes and saves them next to the video, ready to select in Jellyfin.
-
-      The first opening shows Bazarr's own interface. Pick languages under Settings → Languages, then check Settings → Sonarr / Radarr: with the matching plugin installed, Wonton fills in the address; the API key can be entered by hand — it is shown on that plugin's own settings page.
+      Adds subtitles to the movies and shows on your server: once connected to Sonarr or Radarr, Bazarr looks up subtitles in the languages you picked as soon as a download finishes and saves them next to the video, ready to select in Jellyfin. With the matching plugin installed, the address and connection key are filled in automatically.
 
       Subtitles come from the providers built into Bazarr (such as OpenSubtitles.com), so internet access is required; provider accounts of your own (like an OpenSubtitles VIP) are entered in Bazarr's settings, the plugin does not manage them.
 
       Bazarr's library comes entirely from Sonarr/Radarr: with neither installed the lists stay empty.
-  release_notes: { zh: 插件包迁入官方插件合仓，保留 Bazarr 1.6.2、Sonarr/Radarr 连接和字幕写入 media 共享文件夹。, en: "Moved into the official Wonton plugin monorepo; keeps Bazarr 1.6.2, Sonarr/Radarr connections and subtitle writes to the media share." }
+    zh-Hant: |
+      給家裡下載好的電影和劇集自動配上字幕：連接 Sonarr 或 Radarr 之後，新片一下載完，Bazarr 就按你選的語言去尋找字幕，下載後放在影片旁邊，Jellyfin 裡播放時直接可選。裝了對應的外掛時，連接位址和連接金鑰由雲吞自動填好。
+
+      字幕來自 Bazarr 內建的字幕站（如 OpenSubtitles.com），所以家裡要能連上外網；字幕站自己的帳號（例如 OpenSubtitles 的 VIP）在 Bazarr 設定裡自己填，外掛不代管。
+
+      Bazarr 的片庫完全來自 Sonarr/Radarr：兩個都沒裝時清單是空的，這是正常的。
+    ja: |
+      家で落とした映画やドラマに自動で字幕を付けます。Sonarr や Radarr と接続すると、ダウンロードが終わり次第選んだ言語の字幕を探し、動画の隣に保存するので Jellyfin でそのまま選べます。対応するプラグインを入れている場合は、接続先と接続キーが自動で入ります。
+
+      字幕は Bazarr 内蔵の字幕サイト（OpenSubtitles.com など）から取るので、インターネットに出られる必要があります。字幕サイトの自分のアカウント（OpenSubtitles の VIP など）は Bazarr の設定で自分で入力してください。プラグインは管理しません。
+
+      Bazarr のライブラリは Sonarr/Radarr からしか作られません。どちらも入れていない場合、一覧は空のままで正常です。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，保留 Bazarr 1.6.2、Sonarr/Radarr 连接和字幕写入 media 共享文件夹。
+
+      商店介绍重写：首次打开步骤集中到「安装后要做的事」，API 密钥改成连接密钥；补繁体中文和日文。
+    en: |
+      Moved into the official Wonton plugin monorepo; keeps Bazarr 1.6.2, Sonarr/Radarr connections and subtitle writes to the media share.
+
+      Store copy rewritten: the first-open step now lives only in the pre-install notice, and the API key is called a connection key; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，保留 Bazarr 1.6.2、Sonarr/Radarr 連線和字幕寫入 media 共享資料夾。\n\n商店介紹重寫：首次開啟步驟集中到「安裝後要做的事」，API 金鑰改成連接金鑰；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。Bazarr 1.6.2、Sonarr/Radarr 接続、字幕を media 共有フォルダへ書き込む動きは維持しています。\n\nストア紹介を書き直し、初回の手順を「インストール後の手順」にまとめ、API キーを接続キーと呼ぶようにしました。繁体字中国語と日本語を追加。"
   webui:
     service: bazarr
     port: 6767

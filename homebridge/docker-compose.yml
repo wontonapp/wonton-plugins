@@ -48,12 +48,14 @@ x-wonton:
   spec: "0.12"
   # 反向域名：上游官网 homebridge.io。
   id: io.homebridge.homebridge
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 家庭桥接器（Homebridge）, en: Homebridge }
+  title: { zh: "苹果家庭桥接（Homebridge）", en: "Apple Home Bridge (Homebridge)", zh-Hant: "蘋果家庭橋接（Homebridge）", ja: "Apple Home ブリッジ（Homebridge）" }
   description:
-    zh: 把米家、涂鸦这些不直接支持苹果"家庭"App 的智能设备接进"家庭"App，像请了个翻译把各家设备的话翻给 iPhone 听。装好后在插件网页里装对应设备的接入插件，再用手机扫码配对。
-    en: Connect smart-home devices that don't support Apple Home (Mi Home, Tuya, …) to the Apple Home app and Siri — like a translator between your gadgets and your iPhone. Install a device plugin in the web UI, then pair from the Home app.
+    zh: 把米家、涂鸦这些本来不支持苹果“家庭”App 的智能设备接进去，像请了个翻译把各家设备的话翻给 iPhone 听。
+    en: Bring smart devices that Apple Home does not support (Mi Home, Tuya, …) into the Home app and Siri — like a translator between your gadgets and your iPhone.
+    zh-Hant: 把米家、塗鴉這些本來不支援蘋果「家庭」App 的智慧裝置接進去，像請了翻譯把各家裝置的話翻給 iPhone 聽。
+    ja: Apple の「ホーム」アプリに対応しないスマート家電（Mi Home、Tuya など）をホームアプリと Siri につなぎます。家電と iPhone の間の翻訳者のようなものです。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/wizard.png, screenshots/wizard-account.png]
@@ -66,32 +68,37 @@ x-wonton:
     en: [Home, Siri]
   about:
     zh: |
-      在家里跑一个 Homebridge 桥：不支持 HomeKit 的设备（米家、涂鸦等）装上对应的接入插件后，
-      会出现在苹果"家庭"App 里，能用 Siri 和自动化控制，和原生支持 HomeKit 的设备放在同一个家里。
+      在家里架一座桥：不支持苹果“家庭”的设备（米家、涂鸦等）装上对应的接入插件后，会出现在“家庭”App 里，能用 Siri 和自动化控制，和原生支持苹果的设备放在同一个家里。
 
-      第一次打开：打开插件网页，按首次设置向导创建管理员账号。
-
-      然后在网页的"插件"页里搜索安装设备插件（比如 homebridge-mi-hygrothermograph、homebridge-tuya 之类），配好后在"家庭"App 里用网页上显示的配对码添加桥。
-
-      网页只监听本机回环，经云吞网关访问，局域网绕不过登录；HomeKit 桥端口和设备发现走宿主网络，
-      同一局域网里的 iPhone 才能配对和控制，这是 HomeKit 的工作方式（mDNS 广播）。
+      网页只从云吞进来，局域网绕不过登录；但 iPhone 要能直接发现并控制它，所以它在局域网里是开着的，桥接和发现都走局域网——这是苹果家庭的工作方式。
     en: |
-      Runs a Homebridge bridge at home: devices without HomeKit support (Mi Home, Tuya, …) show up
-      in the Apple Home app once you install their plugins, so you can control them with Siri and
-      automations alongside native HomeKit accessories.
+      Run a bridge at home: devices without Apple Home support (Mi Home, Tuya, …) show up in the Home app once their device plugins are installed, so Siri and automations control them next to natively supported accessories.
 
-      First open: open the plugin's web page and create the admin account in the first-run wizard.
+      The web page is reached through Wonton only, so the LAN cannot bypass its login; but iPhones must be able to find and control it directly, so it stays open on the LAN — that is how Apple Home works.
+    zh-Hant: |
+      在家裡架一座橋：不支援蘋果「家庭」的裝置（米家、塗鴉等）裝上對應的接入外掛後，會出現在「家庭」App 裡，能用 Siri 和自動化控制，和原生支援蘋果的裝置放在同一個家裡。
 
-      Then search and install device plugins in the Plugins tab (homebridge-mi-hygrothermograph,
-      homebridge-tuya, …), and add the bridge in the Home app with the pairing code shown in the UI.
+      網頁只從雲吞進來，區域網路繞不過登入；但 iPhone 要能直接發現並控制它，所以它在區域網路裡是開著的，橋接和發現都走區域網路——這是蘋果家庭的工作方式。
+    ja: |
+      家にブリッジを立てます。Apple ホーム非対応の機器（Mi Home、Tuya など）も対応プラグインを入れれば「ホーム」アプリに現れ、Siri やオートメーションで、もともと対応している機器と同じ家の中で操作できます。
 
-      The web UI listens on loopback only and is reached through the Wonton gateway, so the LAN cannot
-      bypass its login. The HomeKit bridge port and device discovery use host networking so iPhones on
-      the same LAN can pair and control — that is how HomeKit works (mDNS).
-  release_notes: { zh: 介绍重写：首次打开建管理员账号的提示单独成段放在最前。, en: "Rewritten store copy: the create-the-admin-account note stands alone up front." }
+      Web ページは Wonton 経由でしか来ないため、LAN からログインを迂回することはできません。ただし iPhone が直接見つけて操作できる必要があるので、LAN には開いたままです。これが Apple ホームの仕組みです。
+  release_notes:
+    zh: |
+      介绍重写：首次打开建管理员账号的提示单独成段放在最前。
+
+      商店介绍重写：建账号和装接入插件的步骤移到「安装后要做的事」；补繁体中文和日文。
+    en: |
+      Rewritten store copy: the create-the-admin-account note stands alone up front.
+
+      Store copy rewritten: account and device-plugin steps moved to the pre-install notice; Traditional Chinese and Japanese added.
+    zh-Hant: "介紹重寫：首次開啟建管理員賬號的提示單獨成段放在最前。\n\n商店介紹重寫：建帳號和裝接入外掛的步驟移到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "紹介を書き直し、初回起動時の管理者アカウント作成の注意を最初の段落に分けました。\n\nストア紹介を書き直し、アカウント作成と機器プラグインの手順を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 装好后打开插件网页，按首次设置向导创建管理员账号，再在网页里安装你设备对应的接入插件。
-    en: Open the plugin's web page after install, create the admin account in the first-run wizard, then install a plugin for your devices in the web UI.
+    zh: 打开网页，按向导建管理员账号；再到网页的「插件」页装上你设备对应的接入插件。配好后在 iPhone 的“家庭”App 里扫网页上显示的配对码，把它添加进来。
+    en: Open the web page and create the admin account in the wizard; then install the matching device plugin from the web page's Plugins tab. Once configured, scan the pairing code shown there from the Home app on your iPhone to add it.
+    zh-Hant: 開啟網頁，照精靈建立管理員帳號；再到網頁的「外掛」頁裝上你裝置對應的接入外掛。配好後在 iPhone 的「家庭」App 裡掃網頁上顯示的配對碼，把它加進來。
+    ja: Web ページを開き、ウィザードで管理者アカウントを作ります。次に Web ページの「プラグイン」タブでお使いの機器に対応するプラグインを入れます。設定できたら、iPhone の「ホーム」アプリでページに表示されるペアリングコードを読み取り、追加します。
   webui:
     service: homebridge
     port: 8581

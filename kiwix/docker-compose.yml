@@ -140,12 +140,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: org.kiwix.kiwix-serve
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: 离线百科（Kiwix）, en: Offline Wikipedia (Kiwix) }
+  title: { zh: "离线百科（Kiwix）", en: "Offline Encyclopedia (Kiwix)", zh-Hant: "離線百科（Kiwix）", ja: "オフライン百科事典（Kiwix）" }
   description:
-    zh: 像把一整套维基百科下载回家，断网也能查。把下载的 .zim 文件放进共享文件夹，网页上就能查词、读文章、全文搜索。
-    en: Like keeping a whole Wikipedia at home that works without internet. Drop downloaded .zim files into a shared folder and read and search them on a web page.
+    zh: 像把一整套维基百科下载回家，断网也能查。
+    en: Like keeping a whole Wikipedia at home that works without internet.
+    zh-Hant: 像把一整套維基百科下載回家，斷網也能查。
+    ja: ウィキペディア一式を家に置いておくようなもので、ネットが切れていても調べられます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/empty.png]
@@ -160,23 +162,51 @@ x-wonton:
     zh: |
       把维基百科、维基词典、可汗学院这类内容整个下载到家里，断网也能查，孩子查资料不用上网。
 
-      内容文件（.zim）从 library.kiwix.org 下载，放进共享文件夹「文档」的「离线百科」文件夹就自动上架，文件只读、不会被改动。下载好的内容家里所有人都能看，不需要再登录。
+      内容文件从 library.kiwix.org 挑，文件只读、不会被改动；放进去家里所有人都能看，不需要再登录。
 
       想要哪个百科就放哪个：整部中文维基的精简版约 4.8 GB，单个学科的迷你版只要十几 MB，适合先试小再加大。
 
-      家里的 AI 助手也能帮你查这套离线百科：问它一个问题，它会去查词条、做全文搜索，再把找到的内容讲给你。
+      家里的助手也能帮你查这套离线百科：问它一个问题，它会去查词条、做全文搜索，再把找到的内容讲给你。
     en: |
       Keep a whole Wikipedia, dictionary or Khan Academy at home and look things up with no internet — kids can research offline.
 
-      Content files (.zim) come from library.kiwix.org; drop them into the Offline Wikipedia folder in the Documents shared folder and they appear on their own. Files are read-only and never modified. Everyone at home can read them, no extra sign-in.
+      Pick content files from library.kiwix.org; they are read-only and never modified. Everyone at home can read what you add, no extra sign-in.
 
       Pick only what you need: a trimmed-down Chinese Wikipedia is about 4.8 GB, while a single-subject mini edition is a dozen or so MB — start small, grow later.
 
-      The home AI assistant can search this offline encyclopedia too: ask it a question and it looks up entries, runs the full-text search and tells you what it found.
-  release_notes: { zh: 插件包迁入官方插件合仓；MCP 适配器镜像改由官方合仓发布。, en: "Package moved into the official Wonton plugin monorepo; the MCP adapter image is now published by the official monorepo." }
+      The home assistant can search this offline encyclopedia too: ask it a question and it looks up entries, runs the full-text search and tells you what it found.
+    zh-Hant: |
+      把維基百科、維基詞典、可汗學院這類內容整個下載到家裡，斷網也能查，孩子查資料不用上網。
+
+      內容檔從 library.kiwix.org 挑，檔案唯讀、不會被改動；放進去家裡所有人都能看，不需要再登入。
+
+      想要哪個百科就放哪個：整部中文維基的精簡版約 4.8 GB，單一學科的迷你版只要十幾 MB，適合先試小的再增加。
+
+      家裡的助手也能幫你查這套離線百科：問它一個問題，它會去查詞條、做全文搜尋，再把找到的內容講給你。
+    ja: |
+      ウィキペディアや辞書、Khan Academy などを家に丸ごと置き、ネットなしで調べられます。子どももオフラインで調べ物ができます。
+
+      コンテンツファイルは library.kiwix.org から選びます。ファイルは読み取り専用で書き換わりません。入れたものは家族全員が読め、追加のサインインは要りません。
+
+      必要なものだけ入れます。中国語ウィキペディアの簡略版は約 4.8 GB、単一分野のミニ版は数十 MB なので、小さく始めて後で増やせます。
+
+      家のアシスタントもこのオフライン百科を検索できます。質問すると項目を引き、全文検索して見つけた内容を教えます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓；MCP 适配器镜像改由官方合仓发布。
+
+      商店介绍重写：下载和放文件的步骤合并到「安装后要做的事」；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; the MCP adapter image is now published by the official monorepo.
+
+      Store copy rewritten: the download and folder step merged into the pre-install notice; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉；MCP 介面卡映象改由官方合倉釋出。\n\n商店介紹重寫：下載和放檔案的步驟合併到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。MCP アダプターイメージは公式合倉からの配布に変わりました。\n\nストア紹介を書き直し、ダウンロードと配置の手順を「インストール後の手順」にまとめました。繁体字中国語と日本語を追加。"
   setup:
-    zh: 从 library.kiwix.org 下载一个 .zim 文件（例如“Wikipedia 中文·化学 迷你版”，约 15 MB），放进共享文件夹「文档」的「离线百科」文件夹。
-    en: Download a .zim file from library.kiwix.org (for example the Wikipedia Chinese Chemistry mini edition, about 15 MB) and put it into the Offline Wikipedia folder in the Documents shared folder.
+    zh: 到 library.kiwix.org 下载内容文件（.zim），放进共享文件夹「文档」里的「离线百科」文件夹，就会自己上架。先拿个十几 MB 的小条目试。
+    en: Download a content file (.zim) from library.kiwix.org and drop it into the Offline Wikipedia folder inside the Documents shared folder; it appears on its own. Start with a small one of a few dozen MB.
+    zh-Hant: 到 library.kiwix.org 下載內容檔（.zim），放進共享資料夾「文件」裡的「離線百科」資料夾，就會自己上架。先拿個十幾 MB 的小條目試。
+    ja: library.kiwix.org からコンテンツファイル（.zim）をダウンロードし、共有フォルダ「ドキュメント」内の「オフライン百科事典」フォルダに入れると、自動で並びます。まずは数十 MB の小さな項目で試してください。
   webui:
     service: web
     port: 80

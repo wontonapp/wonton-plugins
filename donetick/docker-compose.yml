@@ -80,12 +80,14 @@ configs:
 x-wonton:
   spec: "0.11"
   id: com.donetick.donetick
-  version: 0.1.1
+  version: 0.1.2
   kind: app
-  title: { zh: 家务打卡（Donetick）, en: Chores (Donetick) }
+  title: { zh: "家务打卡（Donetick）", en: "Chore Chart (Donetick)", zh-Hant: "家事打卡（Donetick）", ja: "家事チェック（Donetick）" }
   description:
     zh: 像一张全家的值日表：家务轮着做、做完打卡，逾期会提醒，攒积分能换奖励
     en: "A shared chore chart for the family: rotate tasks, check them off, earn points for rewards"
+    zh-Hant: 像一張全家的值日表：家事輪著做、做完打卡，逾期會提醒，攢積分能換獎勵
+    ja: 家族の当番表のようなもの。家事を交代でこなし、終わったらチェック。期限切れは知らせ、たまったポイントはご褒美に替えられます。
   icon: icon.svg
   notices: [NOTICE]
   screenshots: [screenshots/home.png, screenshots/tasks.png]
@@ -95,25 +97,39 @@ x-wonton:
   tags:
     zh: [家务, 家庭, 提醒]
     en: [Chores, Family, Reminders]
+  setup:
+    zh: 打开就用云吞账号登录，进去就是自己的任务；家人登录后进的是同一个家，看到同一张表。
+    en: Opening the page signs you in with your Wonton account, straight into your tasks; family members land in the same household and see the same chart.
+    zh-Hant: 開啟就用雲吞帳號登入，進去就是自己的任務；家人登入後進的是同一個家，看到同一張表。
+    ja: 開けば Wonton アカウントでサインインし、自分のタスクが表示されます。家族がサインインしても同じ世帯に入り、同じ表を見ます。
   about:
     zh: |
-      把家里要做的活变成一张全家的打卡表：扫地、倒垃圾、遛狗这些家务设好频次，自动轮着分给每个人，
-      到期了在任务列表里点一下就算完成，逾期没做的会标出来。
+      把家里要做的活变成一张全家的打卡表：扫地、倒垃圾、遛狗这些家务设好多久做一次，自动轮着分给每个人，到期了在列表里点一下就算完成，逾期没做的会标出来。
 
-      做家务攒积分，攒够了按家里定的奖励换；谁做了什么、做得勤不勤，积分页一眼看到。也可以设一次性的事，
-      比如交水电费、换滤芯。
-
-      登录用云吞的账号，打开就是自己的任务；家人打开时进的是同一个家庭圈，看到同一张表。
+      做家务攒积分，攒够了按家里定的奖励换；谁做了什么、做得勤不勤，积分页一眼看到。也可以设只做一次的事，比如交水电费、换滤芯。
     en: |
-      Turns household chores into a family check-in chart: set up recurring chores like sweeping, trash or
-      walking the dog, and Donetick rotates them between family members. Tasks due today are one tap to
-      complete, and overdue ones are flagged.
+      Turns household chores into a family check-in chart: set how often sweeping, trash or dog walks recur, and Donetick rotates them between family members. Tasks due today are one tap to complete, and overdue ones are flagged.
 
-      Finished chores earn points; trade them for rewards your family defines. The points page shows who
-      did what at a glance. One-off errands like paying bills work too.
+      Finished chores earn points; trade them for rewards your family defines. The points page shows who did what at a glance. One-off jobs like paying bills or changing a filter work too.
+    zh-Hant: |
+      把家裡要做的活變成一張全家的打卡表：掃地、倒垃圾、遛狗這些家事設好多久做一次，自動輪著分給每個人，到期了在清單裡點一下就算完成，逾期沒做的會標出來。
 
-      Sign-in uses your Wonton account. Family members share the same household chart.
-  release_notes: { zh: 插件包迁入官方插件合仓，内容与上一版相同。, en: "Package moved into the official Wonton plugin monorepo; same content as the previous release." }
+      做家事攢積分，攢夠了按家裡定的獎勵換；誰做了什麼、做得勤不勤，積分頁一眼看到。也可以設只做一次的事，例如繳水電費、換濾芯。
+    ja: |
+      家の用事を家族のチェック表にします。掃除・ゴミ出し・犬の散歩などの頻度を決めると、家族の間で自動的に交代します。期限が来たタスクは一タップで完了でき、期限切れは印が付きます。
+
+      家事をこなすとポイントがたまり、家族で決めたご褒美に替えられます。誰が何をしたか、よくやっているかはポイント画面で一目でわかります。水道代の支払いやフィルター交換のような一度きりの用事も作れます。
+  release_notes:
+    zh: |
+      插件包迁入官方插件合仓，内容与上一版相同。
+
+      商店介绍重写：登录和家庭圈的说明移到「安装后要做的事」；补繁体中文和日文。
+    en: |
+      Package moved into the official Wonton plugin monorepo; same content as the previous release.
+
+      Store copy rewritten: the sign-in and household notes moved to the pre-install notice; Traditional Chinese and Japanese added.
+    zh-Hant: "外掛包遷入官方外掛合倉，內容與上一版相同。\n\n商店介紹重寫：登入和家庭的說明移到「安裝後要做的事」；補繁體中文和日文。"
+    ja: "プラグインを公式プラグインリポジトリへ移動しました。内容は前版と同じです。\n\nストア紹介を書き直し、サインインと世帯の説明を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
   webui:
     service: donetick
     port: 2021
