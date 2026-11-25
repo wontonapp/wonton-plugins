@@ -34,7 +34,7 @@ services:
   # 一次性服务：等 CouchDB 健康后建库、建客户端账号、设库权限，并核验 CORS 与账号真的可用；失败即停。
   # 每次创建容器都会重跑，全部动作幂等；标记文件最后写入，供 clients.http.auth.app 判断初始化完成。
   init:
-    image: curlimages/curl:8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+    image: curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
     user: "0:0"
     entrypoint: ["/bin/sh", "/init.sh"]
     environment:
