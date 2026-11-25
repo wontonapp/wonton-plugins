@@ -3,7 +3,7 @@
 # 登录走云吞的身份提供方（官方 user_oidc 应用），打开就是自己的管理员账号。
 services:
   db:
-    image: mariadb:11.8.9@sha256:d36f18d65a0459510b8b0f643b226a6d299e3206486e2b64ff20754a6d291707
+    image: mariadb:11.8.9@sha256:e1d5495f445654134f226f55a41ce0da227116f6f27f283101f405c794d841fc
     # Nextcloud 官方 compose 示例要求的隔离级别（READ-COMMITTED，binlog 下避免 key 冲突误报）。
     command: --transaction-isolation=READ-COMMITTED
     environment:
