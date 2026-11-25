@@ -49,10 +49,11 @@ services:
         set -e
         if [ "$$WONTON_GPU_VENDOR" = amd ]; then
           # 标记只在 pip 成功后写。有标记、import 成功还不够：数据目录里没有 torch 时 import 会落到镜像自带的
-          # 2.10.0a0 照样 import 得通，所以还要 2.14.1 且装在数据目录下；被打断的半装同样重装。
+          # 2.10.0a0 照样 import 得通，所以还要 2.14.1 且装在数据目录下。--target 遇到已存在的文件只警告
+          # already exists、不覆盖，被打断的半装会一直是坏的，所以加 --upgrade 让它重写。
           if [ ! -f /data/python/.wonton-torch-2.14.1 ] ||
             ! PYTHONPATH=/data/python python3 -c 'import torch; assert torch.__file__.startswith("/data/python/"), torch.__file__; assert torch.__version__.startswith("2.14.1"), torch.__version__' 2>/dev/null; then
-            pip install --no-cache-dir --target /data/python \
+            pip install --upgrade --no-cache-dir --target /data/python \
               torch==2.14.1+rocm7.2 torchvision==0.29.1+rocm7.2 \
               --index-url https://download.pytorch.org/whl/rocm7.2
             PYTHONPATH=/data/python python3 -c 'import torch; assert torch.__file__.startswith("/data/python/"), torch.__file__; assert torch.__version__.startswith("2.14.1"), torch.__version__'
