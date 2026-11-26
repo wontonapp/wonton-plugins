@@ -7,7 +7,7 @@
 # 每次创建容器（安装、升级、重建）都会重跑，OIDC 的客户端密钥换了就更新，不是"已存在就跳过"。
 services:
   audiobookshelf:
-    image: advplyr/audiobookshelf:2.37.2@sha256:b897c33f05972fb1bf484f7487bc878fa91ec8691335c1db6e2929c3a7658efa
+    image: advplyr/audiobookshelf:2.38.0@sha256:60064c23f32fd9099fd39e82c5132c51701d1221135bbca04cd099b589e1edc3
     # 镜像不依赖 root：以用户身份运行，配置和数据目录由核心按 user 交给 PUID:PGID。
     user: "${PUID}:${PGID}"
     environment:
@@ -28,7 +28,7 @@ services:
 
   # 一次性服务：等主服务健康后配 OIDC（见文件头注释）。脚本只用镜像里自带的 node。
   provision:
-    image: advplyr/audiobookshelf:2.37.2@sha256:b897c33f05972fb1bf484f7487bc878fa91ec8691335c1db6e2929c3a7658efa
+    image: advplyr/audiobookshelf:2.38.0@sha256:60064c23f32fd9099fd39e82c5132c51701d1221135bbca04cd099b589e1edc3
     user: "${PUID}:${PGID}"
     entrypoint: ["node", "/app/provision.cjs"]
     # 变量只用于 compose 插值，容器里要显式写上。

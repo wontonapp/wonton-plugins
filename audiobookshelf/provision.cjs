@@ -5,8 +5,9 @@
  * 只能由管理员经 API 修改（认证是 MiscController.updateAuthSettings，发信是 EmailController.updateSettings）。所以：
  *   1. 空库时经 POST /init 建以注入用户名命名的 root 账号（密码是插件密钥 WONTON_SECRET_ADMIN_PASSWORD）；
  *   2. 本地登录拿 access token，PATCH /api/auth-settings 写入 OIDC 设置；
- *   3. PATCH /api/emails/settings 把发信服务器配成核心的 SMTP。只在应用还没配过时写：注入的地址和端口不会变，
- *      而主人可能在应用里改发信设置（比如给「发送到阅读器」配自己的服务器投到外部邮箱），每次覆盖会抹掉这些改动；
+ *   3. PATCH /api/emails/settings 把发信服务器配成核心的 SMTP（核心在 STARTTLS 上用自签名证书，带 rejectUnauthorized=false）。
+ *      只在应用还没配过时写地址：注入的地址和端口不会变，而主人可能在应用里改发信设置（比如给「发送到阅读器」配自己的
+ *      服务器投到外部邮箱），每次覆盖会抹掉这些改动；如果 host:port 还是我们配的，只补上 rejectUnauthorized=false；
  *   4. 每次容器创建（安装、升级、重建）都会重跑：OIDC 客户端的密钥核心会换，这里每次覆盖写最新的，
  *      不是"已存在就跳过"。
  * 登录方式：OIDC 的"按用户名匹配已有用户"把 root 账号和核心用户连起来，主人打开网页就是管理员。
@@ -157,8 +158,15 @@ async function discoverIssuer() {
 async function configureEmailSettings(token) {
   const headers = { Authorization: `Bearer ${token}` }
   const { settings } = await getJson(`${APP_URL}/api/emails/settings`, headers)
+  // 核心的内部 SMTP 在 STARTTLS 上给自签名证书，应用默认 rejectUnauthorized=true 会让 verify 失败（HTTP 400）。
+  // 还是我们配的 host:port 生效时补这个开关（升级前配过的也要）；主人换了自己的发信服务器就不动。
   if (settings.host) {
-    log(`应用里已有发信配置（host=${settings.host}:${settings.port}），不覆盖`)
+    if (settings.host === SMTP.host && settings.port === SMTP.port && settings.rejectUnauthorized !== false) {
+      await request('PATCH', `${APP_URL}/api/emails/settings`, { headers, body: { rejectUnauthorized: false } })
+      log(`发信服务器仍是核心内部 SMTP（${settings.host}:${settings.port}），已补上 rejectUnauthorized=false（自签名证书）`)
+    } else {
+      log(`应用里已有发信配置（host=${settings.host}:${settings.port}），不覆盖`)
+    }
     return
   }
   const response = await request('PATCH', `${APP_URL}/api/emails/settings`, {
@@ -170,15 +178,16 @@ async function configureEmailSettings(token) {
       // 不填用户名密码（核心的 SMTP 不需要认证）；显式置空，免得旧数据里的凭据留在设置里
       user: null,
       pass: null,
+      rejectUnauthorized: false,
       fromAddress: SMTP.fromAddress,
       testAddress: SMTP.testAddress
     }
   })
   const written = (await response.json()).settings
-  if (written.host !== SMTP.host || written.port !== SMTP.port || written.fromAddress !== SMTP.fromAddress) {
-    throw new Error(`发信设置写入后对不上：host=${written.host}:${written.port}，from=${written.fromAddress}`)
+  if (written.host !== SMTP.host || written.port !== SMTP.port || written.fromAddress !== SMTP.fromAddress || written.rejectUnauthorized !== false) {
+    throw new Error(`发信设置写入后对不上：host=${written.host}:${written.port}，from=${written.fromAddress}，rejectUnauthorized=${written.rejectUnauthorized}`)
   }
-  log(`发信服务器已配成 ${written.host}:${written.port}（发件地址 ${written.fromAddress}），测试信寄到 ${written.testAddress}`)
+  log(`发信服务器已配成 ${written.host}:${written.port}（发件地址 ${written.fromAddress}，自签名证书不校验），测试信寄到 ${written.testAddress}`)
 }
 
 async function main() {
