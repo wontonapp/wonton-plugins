@@ -148,22 +148,39 @@ extra_check() { # 内部邮箱端到端：一次性初始化设好的全局邮�
   [[ -n "$appc" ]] || { echo "找不到 changedetection 应用容器"; return 1; }
   mailinit="$(docker ps -a --format '{{.Names}}' | grep -E -- "-changedetection--mail-init$|changedetection-mail-init-1$" | head -1)"
   [[ -n "$mailinit" ]] || { echo "找不到 mail-init 一次性容器"; return 1; }
-  # 一次性初始化的结论在它自己的日志里（标记文件在应用的数据卷里）
-  docker logs "$mailinit" 2>&1 | grep -q "全局邮件通知已设为 mailto://" ||
-    { echo "mail-init 日志里没有设好的通知 URL：$(docker logs "$mailinit" 2>&1 | tail -2)"; return 1; }
+  # mail-init 每次容器创建都跑：第一次写配置，之后只打"已配置过，不改动"并退出 0（标记在保留的数据里）。
+  # 认退出码和标记，不认某一版日志的措辞——升级腿跑在最前面，到这里时标记已经在，只按日志断言会一直红。
+  rc="$(docker inspect -f '{{.State.ExitCode}}' "$mailinit")"
+  [[ "$rc" == 0 ]] || { echo "mail-init 退出码 $rc：$(docker logs "$mailinit" 2>&1 | tail -2)"; return 1; }
   docker exec "$appc" sh -c 'test -f /datastore/.wonton-mail-configured' ||
     { echo "datastore 里没有 .wonton-mail-configured 标记"; return 1; }
-  echo "mail-init 已把全局邮件通知设到核心内部邮箱"
-
   to="$(_owner_email)" || { echo "$to"; return 1; }
+  local mailurl reply stored
+  mailurl="$(docker exec "$appc" cat /datastore/.wonton-mail-configured)" ||
+    { echo "读不到 mail-init 设的通知 URL（标记文件）"; return 1; }
+  # 存下来的必须是核心内部 SMTP 的地址，收件人是这次套件的主人（每次套件的主人邮箱都不同，旧值不算）
+  [[ "$mailurl" =~ ^mailto://[A-Za-z0-9.]+:[0-9]+/\?from=[^\&@]+@[^\&]+\&to= ]] ||
+    { echo "标记里的通知 URL 不是内部邮箱（mailto://主机:端口/?from=…&to=…）：$mailurl"; return 1; }
+  grep -qF "&to=$to" <<<"$mailurl" ||
+    { echo "通知 URL 的收件人不是主人 $to：$mailurl"; return 1; }
+  # 应用真把它存进了全局通知配置：send-test 只读表单里的值，不证明应用存了
+  # 应用随时回写 datastore JSON，偶尔读到写了一半的：重试几次再判
+  local i ok=0
+  for i in 1 2 3; do
+    stored="$(docker exec "$appc" cat /datastore/changedetection.json)" ||
+      { echo "读不到应用的 datastore JSON"; return 1; }
+    jq -e --arg u "$mailurl" '.settings.application.notification_urls | index($u)' <<<"$stored" >/dev/null &&
+      { ok=1; break; }
+    (( i < 3 )) && sleep 1
+  done
+  (( ok )) ||
+    { echo "应用存的全局通知 URL 里没有 $mailurl（现在：$(jq -c '.settings.application.notification_urls' <<<"$stored" 2>/dev/null)）"; return 1; }
+  echo "mail-init 已把全局邮件通知设到核心内部邮箱（$to）"
   page="$(web_get /)" || { echo "拿不到总览页：$(head -c 200 <<<"$page")"; return 1; }
   tok="$(sed -n 's/.*name="csrf_token" value="\([^"]*\)".*/\1/p' <<<"$page" | head -1)"
   [[ -n "$tok" ]] || { echo "总览页里没有 csrf_token"; return 1; }
   # send-test 要求至少有一个 watch（没有就先建一个）；global-settings 模式下通知 URL 要放在表单里
   #（端点不读存储的全局列表），mail-init 的标记文件里存的就是设好的 mailto:// URL
-  local mailurl reply
-  mailurl="$(docker exec "$appc" cat /datastore/.wonton-mail-configured)" ||
-    { echo "读不到 mail-init 设的通知 URL（标记文件）"; return 1; }
   marker="wonton-mail-$(date +%s)"
   web_get /form/add/quickwatch --data-urlencode "csrf_token=$tok" \
     --data-urlencode "url=https://example.com/?$marker" -L -o /dev/null ||

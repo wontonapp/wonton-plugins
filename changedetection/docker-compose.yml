@@ -2,7 +2,7 @@
 services:
   changedetection:
     # 上游官方镜像，按清单列表摘要固定（amd64/arm64/arm），标签只给人看。
-    image: dgtlmoon/changedetection.io:0.70.3@sha256:47b1e9cc3eff820e6022b655e3fcc948625f60c1770ae8b9c30aa3bf104dc255
+    image: dgtlmoon/changedetection.io:0.70.4@sha256:b6aae2572a0bf1a671b1b202365ddcfe16a31fa8a60be89df606705731b55f8b
     # 镜像不挑 uid：实测以 ${PUID} 启动可写数据目录，数据归主人的用户。
     user: "${PUID}:${PGID}"
     environment:
@@ -45,7 +45,7 @@ services:
   # 一次性初始化：把全局邮件通知指到主人的内部邮箱，监控到变化就发信进 Wonton 私聊。等应用健康后调它
   # 自己的 REST API（见 config/configure-mail.py），datastore 里留标记，之后不再动用户改过的配置。
   mail-init:
-    image: dgtlmoon/changedetection.io:0.70.3@sha256:47b1e9cc3eff820e6022b655e3fcc948625f60c1770ae8b9c30aa3bf104dc255
+    image: dgtlmoon/changedetection.io:0.70.4@sha256:b6aae2572a0bf1a671b1b202365ddcfe16a31fa8a60be89df606705731b55f8b
     # 只读写 datastore（读 API 密钥、写标记），和应用同一属主。
     user: "${PUID}:${PGID}"
     command: ["python3", "/init/configure-mail.py"]
