@@ -34,17 +34,21 @@ smoke_core_login() { # <jar> <插件地址>：先拿核心会话 Cookie，再走
 }
 
 _oidc_login() { # <jar> <网页地址>：走完 OIDC 链；最终落点 URL 里带 ABS 发的 accessToken
-  local jar="$1" base="$2" start final
+  local jar="$1" base="$2" start final out code body
   smoke_core_login "$jar" "$base" || { echo "核心会话登录不了（$base）"; return 1; }
-  # provision 是一次性服务，核心在应用健康后就返回"装好了"，OIDC 可能还差最后几秒；等到跳起来为止
+  # provision 是一次性服务，核心在应用健康后就返回"装好了"，OIDC 可能还差最后几秒；等到跳起来为止。
+  # 没跳时应用会回 200/400 带一段 JSON（回调地址不合法、OIDC 没开），把状态和正文带出来，不然只看得到"没跳"。
   for _ in $(seq 1 15); do
-    start="$(curl -sS --noproxy '*' -o /dev/null -b "$jar" -c "$jar" \
-      -w '%{redirect_url}' --max-time 30 "$base$BASE_PATH/auth/openid?callback=$BASE_PATH/")" ||
+    out="$(curl -sS --noproxy '*' -b "$jar" -c "$jar" \
+      -w $'\n%{http_code} %{redirect_url}' --max-time 30 "$base$BASE_PATH/auth/openid?callback=$BASE_PATH/")" ||
       { echo "进不了 /auth/openid"; return 1; }
+    code="${out##*$'\n'}"; body="${out%$'\n'*}"
+    start="${code#* }"; code="${code%% *}"
     [[ -n "$start" ]] && break
     sleep 2
   done
-  [[ -n "$start" ]] || { echo "/auth/openid 没有跳到身份提供方（等了 30 秒）"; return 1; }
+  [[ -n "$start" ]] ||
+    { echo "/auth/openid 没有跳到身份提供方（等了 30 秒；最后一次 HTTP $code：$(head -c 300 <<<"$body" | tr '\n' ' '))"; return 1; }
   final="$(curl -sS --noproxy '*' -o /dev/null -L -b "$jar" -c "$jar" -H 'Accept: text/html' \
     -w '%{url_effective}' --max-time 60 "$start")" || { echo "authorize 链失败：$start"; return 1; }
   [[ "$final" == "$base"* ]] || { echo "OIDC 链没有落回插件网页：$final"; return 1; }
