@@ -16,6 +16,11 @@
 web_assert() { grep -qi '<title>audiobookshelf</title>'; } # 标准输入：SPA 首页 HTML
 
 BASE_PATH="/audiobookshelf" # 上游镜像的网页在 /audiobookshelf 子路径下（构建期定死在客户端 bundle 里）
+_app_origin() { # <网页地址>：应用的主机源（scheme://主机:端口）。套件的网页地址是登录页（…/audiobookshelf/login），
+  # 接口和 OIDC 要接在源和 BASE_PATH 后面，直接拼网页地址会变成 …/audiobookshelf/login/audiobookshelf/…
+  local rest="${1#*://}"
+  printf '%s' "${1%%://*}://${rest%%/*}"
+}
 
 _qparam() { # <url> <名字>：取查询参数
   python3 -c 'import sys,urllib.parse;print((urllib.parse.parse_qs(urllib.parse.urlparse(sys.argv[1]).query).get(sys.argv[2]) or [""])[0])' "$1" "$2"
@@ -34,8 +39,9 @@ smoke_core_login() { # <jar> <插件地址>：先拿核心会话 Cookie，再走
 }
 
 _oidc_login() { # <jar> <网页地址>：走完 OIDC 链；最终落点 URL 里带 ABS 发的 accessToken
-  local jar="$1" base="$2" start final out code body
-  smoke_core_login "$jar" "$base" || { echo "核心会话登录不了（$base）"; return 1; }
+  local jar="$1" base start final out code body
+  base="$(_app_origin "$2")"
+  smoke_core_login "$jar" "$2" || { echo "核心会话登录不了（$2）"; return 1; }
   # provision 是一次性服务，核心在应用健康后就返回"装好了"，OIDC 可能还差最后几秒；等到跳起来为止。
   # 没跳时应用会回 200/400 带一段 JSON（回调地址不合法、OIDC 没开），把状态和正文带出来，不然只看得到"没跳"。
   for _ in $(seq 1 15); do
@@ -64,33 +70,36 @@ _oidc_token() { # 走完 OIDC 链，输出 accessToken；走不通时把原因�
 }
 
 identity_check() { # OIDC 链落回后用 ABS 的当前用户接口核对：主人、管理员
-  local at me
+  local at me origin
   [[ -n "${SMOKE_JAR:-}" && -n "${SMOKE_WEB_URL:-}" ]] || { echo "SMOKE_JAR/SMOKE_WEB_URL 没有就绪"; return 1; }
+  origin="$(_app_origin "$SMOKE_WEB_URL")"
   at="$(_oidc_token)" || return 1
-  me="$(curl -sS --noproxy '*' --fail-with-body -b "$SMOKE_JAR" -H "Authorization: Bearer $at" "$SMOKE_WEB_URL$BASE_PATH/api/me")" ||
+  me="$(curl -sS --noproxy '*' --fail-with-body -b "$SMOKE_JAR" -H "Authorization: Bearer $at" "$origin$BASE_PATH/api/me")" ||
     { echo "/api/me 失败"; return 1; }
   jq -e --arg u "${SMOKE_OWNER:-owner}" '.username == $u and (.type == "root" or .type == "admin")' <<<"$me" >/dev/null ||
     { echo "当前用户不是 $SMOKE_OWNER 管理员：$me"; return 1; }
 }
 
 data_write() { # 用随机名字建一个有声书库（触发一次扫描），名字写进标记文件 SMOKE_STATE
-  local marker name at out
+  local marker name at out origin
   marker="$(head -c12 /dev/urandom | od -An -tx1 | tr -d ' \n')"
   name="wonton-smoke-$marker"
+  origin="$(_app_origin "${SMOKE_WEB_URL:-}")"
   at="$(_oidc_token)" || return 1
   out="$(curl -sS --noproxy '*' --fail-with-body -b "$SMOKE_JAR" -H "Authorization: Bearer $at" \
     -H 'Content-Type: application/json' \
     -d "{\"name\":\"$name\",\"folders\":[{\"fullPath\":\"/audiobooks\"}],\"mediaType\":\"book\"}" \
-    "$SMOKE_WEB_URL$BASE_PATH/api/libraries")" || { echo "建书库失败：$out"; return 1; }
+    "$origin$BASE_PATH/api/libraries")" || { echo "建书库失败：$out"; return 1; }
   printf '%s' "$name" >"$SMOKE_STATE" || { echo "写标记文件失败（$SMOKE_STATE）"; return 1; }
 }
 
 data_check() { # 升级/重装后重新走 OIDC，核对书库还在
-  local name at out
+  local name at out origin
   name="$(cat "${SMOKE_STATE:-}" 2>/dev/null)" || true
   [[ -n "$name" ]] || { echo "没有 data_write 留下的标记（SMOKE_STATE=${SMOKE_STATE:-未设置}）"; return 1; }
+  origin="$(_app_origin "${SMOKE_WEB_URL:-}")"
   at="$(_oidc_token)" || return 1
-  out="$(curl -sS --noproxy '*' --fail-with-body -b "$SMOKE_JAR" -H "Authorization: Bearer $at" "$SMOKE_WEB_URL$BASE_PATH/api/libraries")" ||
+  out="$(curl -sS --noproxy '*' --fail-with-body -b "$SMOKE_JAR" -H "Authorization: Bearer $at" "$origin$BASE_PATH/api/libraries")" ||
     { echo "读书库列表失败：$out"; return 1; }
   jq -e --arg n "$name" 'any(.libraries[]; .name == $n)' <<<"$out" >/dev/null ||
     { echo "书库 $name 不见了：$(head -c 200 <<<"$out")"; return 1; }
@@ -179,13 +188,14 @@ _owner_email() { # 主人资料里的内部邮箱（收件人用它，不猜域�
 }
 
 extra_check() { # 内部邮箱端到端：真实测试信进 Mailpit、核心投进主人私聊后删掉、外部地址 550 拒收
-  local to at rc
+  local to at rc origin
+  origin="$(_app_origin "${SMOKE_WEB_URL:-}")"
   to="$(_owner_email)" || { echo "$to"; return 1; }
   at="$(_oidc_token)" || return 1
 
   # 1) 真实测试信：收件人是 provision 配好的主人内部邮箱；应用报成功、信进 Mailpit
   rc="$(curl -sS --noproxy '*' -o /dev/null -w '%{http_code}' -b "$SMOKE_JAR" \
-    -H "Authorization: Bearer $at" -X POST "$SMOKE_WEB_URL$BASE_PATH/api/emails/test")" ||
+    -H "Authorization: Bearer $at" -X POST "$origin$BASE_PATH/api/emails/test")" ||
     { echo "测试信接口请求失败"; return 1; }
   [[ "$rc" == 200 ]] || { echo "测试信没发出去（HTTP $rc）"; return 1; }
   # shellcheck disable=SC2016  # jq 程序，不能让 bash 展开
@@ -200,11 +210,11 @@ extra_check() { # 内部邮箱端到端：真实测试信进 Mailpit、核心投
   local out
   out="$(curl -sS --noproxy '*' -o /dev/null -w '%{http_code}' -b "$SMOKE_JAR" \
     -H "Authorization: Bearer $at" -H 'Content-Type: application/json' \
-    -X PATCH -d '{"testAddress":"nobody-smoke@example.com"}' "$SMOKE_WEB_URL$BASE_PATH/api/emails/settings")" ||
+    -X PATCH -d '{"testAddress":"nobody-smoke@example.com"}' "$origin$BASE_PATH/api/emails/settings")" ||
     { echo "改测试信地址失败"; return 1; }
   [[ "$out" == 200 ]] || { echo "改测试信地址没成功（HTTP $out）"; return 1; }
   rc="$(curl -sS --noproxy '*' -o /dev/null -w '%{http_code}' -b "$SMOKE_JAR" \
-    -H "Authorization: Bearer $at" -X POST "$SMOKE_WEB_URL$BASE_PATH/api/emails/test")" || rc=0
+    -H "Authorization: Bearer $at" -X POST "$origin$BASE_PATH/api/emails/test")" || rc=0
   [[ "$rc" != 200 ]] || { echo "外部地址 $to 的测试信竟然发送成功（HTTP 200），550 拒收没生效"; return 1; }
   sleep 10
   # shellcheck disable=SC2016  # jq 程序，不能让 bash 展开
@@ -214,6 +224,6 @@ extra_check() { # 内部邮箱端到端：真实测试信进 Mailpit、核心投
   echo "外部地址 nobody-smoke@example.com 被拒收（应用 HTTP $rc，Mailpit 里没有这封信）"
   curl -sS --noproxy '*' -o /dev/null -b "$SMOKE_JAR" -H "Authorization: Bearer $at" \
     -H 'Content-Type: application/json' -X PATCH -d "{\"testAddress\":\"$to\"}" \
-    "$SMOKE_WEB_URL$BASE_PATH/api/emails/settings" ||
+    "$origin$BASE_PATH/api/emails/settings" ||
     { echo "测试信地址没改回主人邮箱，后续检查用的应用设置已污染"; return 1; }
 }
