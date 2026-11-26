@@ -323,58 +323,58 @@ x-wonton:
     zh: |
       照片和视频从手机备份到家里的主机，时间线、相册和人脸、内容搜索都在网页里。
 
-      原图存进共享文件夹 photos，别的应用也读得到；缩略图和转码后的视频另存，不占共享文件夹。别人放进 photos 的照片和视频（让助手存的、在电脑上拖进去的）也会出现在你的时间线里。
+      原图存进共享文件夹 photos，别的应用也读得到；缩略图和转码后的视频另存，不占共享文件夹。别人放进 photos 的照片和视频（让助手存的、在电脑上拖进去的）也会出现在主人账号的时间线里；家人各自的时间线只有自己上传的。
 
       助手也能帮你找照片：问它“找海滩上的日落”这类画面描述，它按内容在照片库里搜，拿到文件名、日期和缩略图。
 
-      应用发的信（新用户欢迎、共享相册的邀请和更新）会出现在收件人的 Wonton 私聊里；收件人只能是家里人，给外部邮箱建用户发欢迎信会失败。
+      应用发的信（只有后台手工建的号才发欢迎信、共享相册的邀请和更新）会出现在收件人的 Wonton 私聊里；收件人只能是家里人，给外部邮箱建用户发欢迎信会失败。
 
       云吞更新后插件会自动重建，打开照常，不用重装。
     en: |
       Photos and videos are backed up from your phone to your server; browse the timeline, albums and search by face or content in the web page.
 
-      Originals go into the photos shared folder, where other apps can read them; thumbnails and transcoded videos are kept elsewhere. Photos and videos put into photos some other way (saved by an assistant, dragged in from a computer) also show up in your timeline.
+      Originals go into the photos shared folder, where other apps can read them; thumbnails and transcoded videos are kept elsewhere. Photos and videos put into photos some other way (saved by an assistant, dragged in from a computer) also show up in the owner's timeline; each family member's timeline has only their own uploads.
 
       Assistants can also find photos for you: describe the scene ("a sunset at the beach") and the search runs by content, returning file names, dates and thumbnails.
 
-      Emails the app sends (welcome mail for new users, shared-album invites and updates) arrive in the recipient's Wonton chat; only household members can receive them — creating a user with an outside address fails to send its welcome mail.
+      Emails the app sends (welcome mail only for accounts created in the admin page, shared-album invites and updates) arrive in the recipient's Wonton chat; only household members can receive them — creating a user with an outside address fails to send its welcome mail.
 
       After a Wonton update the plugin is rebuilt automatically; pages open as before, with nothing to reinstall.
     zh-Hant: |
       照片和影片從手機備份到家裡的主機，時間軸、相簿和人臉、內容搜尋都在網頁裡。
 
-      原圖存進共享資料夾 photos，別的應用也讀得到；縮圖和轉檔後的影片另存，不佔共享資料夾。別人放進 photos 的照片和影片（讓助手存的、在電腦上拖進去的）也會出現在你的時間軸裡。
+      原圖存進共享資料夾 photos，別的應用也讀得到；縮圖和轉檔後的影片另存，不佔共享資料夾。別人放進 photos 的照片和影片（讓助手存的、在電腦上拖進去的）也會出現在主人帳號的時間軸裡；家人各自的時間軸只有自己上傳的。
 
       助手也能幫你找照片：問它「找海灘上的日落」這類畫面描述，它按內容在照片庫裡搜，拿到檔案名、日期和縮圖。
 
-      應用寄的信（新使用者歡迎、共享相簿的邀請和更新）會出現在收件人的 Wonton 私聊裡；收件人只能是家裡人，給外部信箱建使用者發歡迎信會失敗。
+      應用寄的信（只有後台手動建的號才寄歡迎信、共享相簿的邀請和更新）會出現在收件人的 Wonton 私聊裡；收件人只能是家裡人，給外部信箱建使用者發歡迎信會失敗。
 
       雲吞更新後外掛會自動重建，開啟照常，不用重裝。
     ja: |
       写真と動画をスマホから家のサーバにバックアップし、タイムライン・アルバム・顔や内容での検索を Web ページで使えます。
 
-      元の画像は共有フォルダ photos に入り、他のアプリからも読めます。サムネイルと変換した動画は別に保存され、共有フォルダを圧迫しません。アシスタントに保存させたものやパソコンからドラッグした写真もタイムラインに現れます。
+      元の画像は共有フォルダ photos に入り、他のアプリからも読めます。サムネイルと変換した動画は別に保存され、共有フォルダを圧迫しません。アシスタントに保存させたものやパソコンからドラッグした写真は所有者のタイムラインに現れます。家族それぞれのタイムラインには自分がアップロードしたものだけが並びます。
 
       アシスタントに「ビーチの夕日」のような場面を伝えれば、内容で検索し、ファイル名・日付・サムネイルを返します。
 
-      アプリが送るメール（新規ユーザーの歓迎、共有アルバムの招待と更新）は受け取った人の Wonton チャットに届きます。受け取れるのは家族だけで、外部アドレスでユーザーを作ると歓迎メールの送信に失敗します。
+      アプリが送るメール（管理画面で作ったアカウントにだけ送る歓迎メール、共有アルバムの招待と更新）は受け取った人の Wonton チャットに届きます。受け取れるのは家族だけで、外部アドレスでユーザーを作ると歓迎メールの送信に失敗します。
 
       Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
   release_notes:
     zh: |
-      家人第一次打开相册就自动建好自己的账号（默认普通用户，不开放公共注册）。角色的应用清单里要勾上本应用，没勾时登录被拒，账号建不出来。勾了在本应用当管理员的人建成管理员，每次登录按当前角色同步，后台手工改的角色下次登录会被覆盖。升级前先把以前手工建过的账号邮箱改成内部地址，否则第一次登录会另建一个账号。
+      家人第一次打开相册就自动建好自己的账号（默认普通用户，不开放公共注册）。角色的应用清单里要勾上本应用，没勾时登录被拒，账号建不出来。勾了在本应用当管理员的人建成管理员，每次登录按当前角色同步，后台手工改的角色下次登录会被覆盖。升级前先把以前手工建过的账号邮箱改成内部地址（`<用户名>@wonton.internal`），否则第一次登录会另建一个账号。
 
       插件迁入官方合仓，自建镜像改由官方仓库发布；本版包含源 main 的 Immich v3.4.1 更新。
 
       商店介绍重写：登录和建号移到「安装后要做的事」，容器、签发方等说法换成日常用语；补繁体中文和日文。
     en: |
-      Family members get their own account the first time they open Photos (a regular user by default; public registration stays closed). The app must be ticked in the person's role; without the tick the login is rejected and no account is created. Those ticked as this app's admin become admins, synced to their current role on each login and overriding manual admin toggles on the next login. Before upgrading, change the email of any manually created account to its internal address, or the first login creates a second account.
+      Family members get their own account the first time they open Photos (a regular user by default; public registration stays closed). The app must be ticked in the person's role; without the tick the login is rejected and no account is created. Those ticked as this app's admin become admins, synced to their current role on each login and overriding manual admin toggles on the next login. Before upgrading, change the email of any manually created account to its internal address (`<username>@wonton.internal`), or the first login creates a second account.
 
       Moved the plugin into the official monorepo, with custom images published from the official repository. Includes the Immich v3.4.1 update from the source main branch.
 
       Store copy rewritten: sign-in and account creation moved to the pre-install notice, with container/issuer wording in everyday words; Traditional Chinese and Japanese added.
-    zh-Hant: "家人第一次開啟相簿就自動建好自己的帳號（預設一般使用者，不開放公開註冊）。角色的應用清單裡要勾上本應用，沒勾時登入被拒，帳號建不出來。勾了在本應用當管理員的人建成管理員，每次登入按目前角色同步，後台手動改的角色下次登入會被覆蓋。升級前先把以前手動建過的帳號信箱改成內部位址，否則第一次登入會另建一個帳號。\n\n外掛遷入官方合倉，自建映象改由官方倉庫釋出；本版包含源 main 的 Immich v3.4.1 更新。\n\n商店介紹重寫：登入和建號移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
-    ja: "家族が初めて写真を開くと、自分のアカウントが自動で作られます（既定では一般ユーザー、一般からの登録は受け付けません）。その人のロールのアプリ一覧で本アプリにチェックが要り、無いとログインが拒否されアカウントは作られません。本アプリの管理者にチェックした人は管理者として作られ、ログインのたびに現在のロールへ同期され、管理画面で手動変更したロールは次のログインで上書きされます。更新前に、以前手動で作ったアカウントのメールアドレスを内部アドレスへ変えてください。そうしないと最初のログインで別のアカウントが作られます。\n\nプラグインを公式リポジトリへ移動し、自前ビルドのイメージは公式リポジトリからの配布に変わりました。本版には source main の Immich v3.4.1 更新が入っています。\n\nストア紹介を書き直し、サインインとアカウント作成を「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
+    zh-Hant: "家人第一次開啟相簿就自動建好自己的帳號（預設一般使用者，不開放公開註冊）。角色的應用清單裡要勾上本應用，沒勾時登入被拒，帳號建不出來。勾了在本應用當管理員的人建成管理員，每次登入按目前角色同步，後台手動改的角色下次登入會被覆蓋。升級前先把以前手動建過的帳號信箱改成內部位址（`<使用者名稱>@wonton.internal`），否則第一次登入會另建一個帳號。\n\n外掛遷入官方合倉，自建映象改由官方倉庫釋出；本版包含源 main 的 Immich v3.4.1 更新。\n\n商店介紹重寫：登入和建號移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
+    ja: "家族が初めて写真を開くと、自分のアカウントが自動で作られます（既定では一般ユーザー、一般からの登録は受け付けません）。その人のロールのアプリ一覧で本アプリにチェックが要り、無いとログインが拒否されアカウントは作られません。本アプリの管理者にチェックした人は管理者として作られ、ログインのたびに現在のロールへ同期され、管理画面で手動変更したロールは次のログインで上書きされます。更新前に、以前手動で作ったアカウントのメールアドレスを内部アドレス（`<ユーザー名>@wonton.internal`）へ変えてください。そうしないと最初のログインで別のアカウントが作られます。\n\nプラグインを公式リポジトリへ移動し、自前ビルドのイメージは公式リポジトリからの配布に変わりました。本版には source main の Immich v3.4.1 更新が入っています。\n\nストア紹介を書き直し、サインインとアカウント作成を「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
   webui:
     service: server
     port: 2283
