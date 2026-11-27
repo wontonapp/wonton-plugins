@@ -34,14 +34,43 @@ services:
       start_period: 30s
       start_interval: 2s
 
+  # 媒体源适配器（本仓库 images/media-source/，由仓库根 scripts/publish.sh 构建发布）：把核心的媒体源契约
+  # （插件规范“媒体源：路径”）翻成 Jellyfin 的接口，App 的原生影视页、离线下载和 Agent 的找片、续播都经它。
+  # 只做字段映射和按人注入凭据，不存播放状态。每个家里人对应一个同名 Jellyfin 用户（没有就建，口令随机不保存），
+  # 本人令牌由管理员 key 批 Quick Connect 换来，存在插件数据目录；进度和已看记在本人名下。
+  # 管理员 key 由主人在 Jellyfin 里新建、填进插件详情页（secrets.jellyfin_api_key）：Jellyfin 12.4 没有不经网页
+  # 向导就拿到管理员凭据的办法，向导又要主人自己建管理员。
+  media:
+    image: ghcr.io/wontonapp/wonton-plugins/jellyfin/media-source:0.3.0
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    read_only: true
+    environment:
+      JELLYFIN_URL: http://jellyfin:8096
+      JELLYFIN_API_KEY: ${WONTON_SECRET_JELLYFIN_API_KEY}
+      DATA_DIR: /data
+    volumes:
+      - ${WONTON_APP_DATA}/media-source:/data
+    depends_on:
+      jellyfin:
+        condition: service_healthy
+    healthcheck:
+      # 查的是真能用：Jellyfin 在、管理员 key 有效；key 填错时适配器不健康，日志写明原因。
+      test: ["CMD", "/wonton-jellyfin-media", "healthcheck"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+      start_interval: 2s
+
 configs:
   system_config:
     file: config/system.xml
 
 x-wonton:
-  spec: "0.15"
+  spec: "0.16"
   id: org.jellyfin.media
-  version: 0.2.0
+  version: 0.3.0
   kind: app
   title: { zh: 家庭影院（Jellyfin）, en: Home Theater (Jellyfin) }
   description:
@@ -74,14 +103,30 @@ x-wonton:
       Everyone in the house gets their own account and keeps their own progress. The first opening creates the administrator; when a family member first signs in, their login page shows a pairing code that the administrator approves — no password to type.
 
       The plugin preselects Chinese artwork metadata; the web UI language follows the browser.
-  release_notes: { zh: 插件迁入官方合仓，说明改成日常说法，补上架信息和首次登录说明。, en: "Moved into the official Wonton plugin monorepo, with plain-language copy, store information and first-login notes." }
+  release_notes: { zh: 云吞 App 能直接浏览和播放家里的片子：填上 Jellyfin 的 API 密钥后，App 和 Agent 按各人的账号找片、续播、下载。, en: "The Wonton app can browse and play your library directly: once the Jellyfin API key is filled in, the app and agents find, resume and download videos with each person's own account." }
   setup:
     zh: 第一次打开要建管理员：完成后到 控制台 → 服务器 → 常规 确认「在此服务器上启用快速连接」是开着的（默认开），家人第一次登录时就能用配对码自动配对。
     en: The first opening creates the administrator; afterwards check that "Enable Quick Connect on this server" is on under Dashboard → Server → General (it is on by default), so family members can pair with a code from the login page.
+  secrets:
+    jellyfin_api_key:
+      input:
+        title: { zh: Jellyfin API 密钥, en: Jellyfin API key }
+        description:
+          zh: 建好管理员后，在 Jellyfin 的 控制台 → API 密钥 里新建一把，App 才能直接浏览和播放。
+          en: After creating the administrator, add one under Dashboard → API Keys in Jellyfin so the app can browse and play directly.
   webui:
     service: jellyfin
     port: 8096
     sso: none
+  provides:
+    media_source:
+      service: media
+      port: 8090
+      operations: [list, playback, download]
+      kinds: [video]
+      credentials:
+        issue: [/wonton-jellyfin-media, credentials, issue, "{name}"]
+        revoke: [/wonton-jellyfin-media, credentials, revoke, "{name}"]
   permissions:
     - storage.share.media:read
     - network.egress
