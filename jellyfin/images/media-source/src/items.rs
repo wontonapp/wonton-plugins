@@ -106,7 +106,7 @@ pub fn item_ref(item: &JfItem) -> MediaItemRef {
     }
 }
 
-fn offset(cursor: Option<&str>) -> Reply<usize> {
+pub fn offset(cursor: Option<&str>) -> Reply<usize> {
     match cursor {
         None | Some("") => Ok(0),
         Some(c) => c
