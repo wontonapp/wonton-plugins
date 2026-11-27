@@ -2,7 +2,7 @@
 services:
   copyparty:
     # 上游官方镜像（MIT），按多架构清单摘要固定，标签只给人看。
-    image: copyparty/ac:1.20.26@sha256:b2054d65e05daa8982ca17c26b12b74315c0ce586a03ff9018a59c80731b9e19
+    image: copyparty/ac:1.20.27@sha256:a49363016be176a6eaaa78c6bb6af04ca22a4dd43806da8f9421c9336b92c8f4
     # 镜像能以任意 uid 运行（上游 docker 文档推荐 -u 1000）；以用户身份跑，文件属主就是 PUID:PGID。
     user: "${PUID}:${PGID}"
     environment:
