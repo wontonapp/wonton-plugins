@@ -14,6 +14,7 @@ path = "src/lib.rs"
 name = "wonton-navidrome-media"
 path = "src/main.rs"
 
+# 依赖的许可证列在 navidrome/README.md 的“媒体源适配器的依赖”一节。
 [dependencies]
 axum = "0.8"
 percent-encoding = "2"

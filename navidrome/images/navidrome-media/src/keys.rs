@@ -16,7 +16,11 @@ impl KeyStore {
         Self { dir: dir.into() }
     }
 
-    /// 已有同名凭据时不改动它，退出码照样成功；核心发现对不上会先 `revoke` 再 `issue`。
+    /// 存下核心签的值；同名的已有就覆盖。核心签发时总是用它自己存着的那一把，覆盖写让两边一致。
+    ///
+    /// # Errors
+    ///
+    /// 名字或值为空、值不止一行，或者写不了凭据目录。
     pub fn issue(&self, name: &str, value: &str) -> io::Result<()> {
         let value = value.trim_end_matches(['\r', '\n']);
         if name.is_empty() || value.is_empty() || value.contains(['\r', '\n']) {
@@ -27,14 +31,16 @@ impl KeyStore {
         }
         std::fs::create_dir_all(&self.dir)?;
         let path = self.path(name);
-        if path.exists() {
-            return Ok(());
-        }
         let staging = self.dir.join(format!(".{}.tmp", file_name(name)));
         write_private(&staging, value)?;
         std::fs::rename(&staging, &path)
     }
 
+    /// 删掉这把凭据；本来就没有也算成功。
+    ///
+    /// # Errors
+    ///
+    /// 删不掉凭据文件（没有的除外）。
     pub fn revoke(&self, name: &str) -> io::Result<()> {
         match std::fs::remove_file(self.path(name)) {
             Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
@@ -97,7 +103,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn issued_keys_are_accepted_until_revoked_and_reissue_keeps_the_first_value() {
+    fn issued_keys_are_accepted_until_revoked_and_reissue_replaces_the_value() {
         let dir = tempfile::tempdir().unwrap();
         let keys = KeyStore::new(dir.path().join("keys"));
         assert!(!keys.accepts("k1"));
@@ -105,14 +111,14 @@ mod tests {
         keys.issue("wonton-core.media.alice", "k1\n").unwrap();
         keys.issue("wonton-core.media.alice", "k2").unwrap();
         keys.issue("wonton-core.media.bob/x", "k3").unwrap();
-        assert!(keys.accepts("k1"));
-        assert!(!keys.accepts("k2"));
+        assert!(!keys.accepts("k1"));
+        assert!(keys.accepts("k2"));
         assert!(keys.accepts("k3"));
         assert!(!keys.accepts(""));
 
         keys.revoke("wonton-core.media.alice").unwrap();
         keys.revoke("wonton-core.media.alice").unwrap();
-        assert!(!keys.accepts("k1"));
+        assert!(!keys.accepts("k2"));
         assert!(keys.accepts("k3"));
     }
 

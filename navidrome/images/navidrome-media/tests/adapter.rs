@@ -111,7 +111,21 @@ async fn rest(
         .unwrap_or_default();
     match method.as_str() {
         "search3" => ok(&json!({"searchResult3": {"song": [song("s1"), song("s2")]}})),
+        "getSong" if id == "locked" => failed(50, "User is not authorized"),
+        "getSong" if id == "boom" => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         "getSong" if song(&id).is_null() => failed(70, "Song not found"),
+        "getCoverArt" => ([(header::CONTENT_TYPE, "image/png")], "png").into_response(),
+        "download" => (
+            [
+                (header::CONTENT_TYPE, "audio/flac"),
+                (
+                    header::CONTENT_DISPOSITION,
+                    "attachment; filename=\"Harbor Lights.flac\"",
+                ),
+            ],
+            "flac",
+        )
+            .into_response(),
         "getSong" => ok(&json!({"song": song(&id)})),
         "scrobble" | "savePlayQueue" => ok(&json!({})),
         "stream" => {
@@ -423,4 +437,83 @@ async fn plays_count_once_listened_long_enough_and_the_queue_is_saved_upstream()
     assert_eq!(saved.param("id"), ["s1", "s2"]);
     assert_eq!(saved.param("current"), ["s2"]);
     assert_eq!(saved.param("position"), ["42000"]);
+}
+
+#[tokio::test]
+async fn failures_keep_their_category_and_each_person_is_named_upstream() {
+    let h = Harness::start().await;
+    h.navidrome.accounts.lock().unwrap().insert("alice".into());
+    let anonymous = h
+        .http
+        .get(format!("{}/items", h.base))
+        .bearer_auth(KEY)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(anonymous.status(), 400);
+    let body: Value = anonymous.json().await.unwrap();
+    assert_eq!(body["code"], "protocol");
+
+    let mut seen = vec![];
+    for id in ["locked", "boom"] {
+        let (status, failure) = h
+            .json(
+                reqwest::Method::POST,
+                "/playback",
+                Some(playback(id, &profile(&[], 0))),
+            )
+            .await;
+        seen.push((status, failure["code"].as_str().unwrap_or("").to_owned()));
+    }
+    let expected = [(403, "permission_denied"), (502, "upstream_error")];
+    assert_eq!(seen, expected.map(|(s, c)| (s, c.to_owned())));
+
+    let bob = h
+        .http
+        .get(format!("{}/items?q=low", h.base))
+        .bearer_auth(KEY)
+        .header("X-Wonton-User", "bob")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(bob.status(), 200);
+    let searches = h.navidrome.calls("search3");
+    assert_eq!(searches.last().unwrap().user, "bob");
+}
+
+#[tokio::test]
+async fn artwork_takes_the_width_and_downloads_keep_their_file_name() {
+    let h = Harness::start().await;
+    h.navidrome.accounts.lock().unwrap().insert("alice".into());
+    let cover = h
+        .request(
+            reqwest::Method::GET,
+            "/items/s1/artwork?type=primary&width=300",
+        )
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(cover.headers()["content-type"], "image/png");
+    let fetched = &h.navidrome.calls("getCoverArt")[0];
+    assert_eq!(
+        (fetched.param("id"), fetched.param("size")),
+        (vec!["mf-s1"], vec!["300"])
+    );
+
+    let missing = h
+        .request(reqwest::Method::GET, "/items/s2/artwork")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(missing.status(), 404);
+
+    let file = h
+        .request(reqwest::Method::GET, "/items/s1/download")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(
+        file.headers()["content-disposition"],
+        "attachment; filename=\"Harbor Lights.flac\""
+    );
 }

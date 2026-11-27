@@ -10,8 +10,9 @@ use crate::playback::song;
 use crate::upstream::{Params, Upstream};
 
 const FORWARD_REQUEST: [header::HeaderName; 2] = [header::RANGE, header::IF_RANGE];
-const FORWARD_RESPONSE: [header::HeaderName; 7] = [
+const FORWARD_RESPONSE: [header::HeaderName; 8] = [
     header::CONTENT_TYPE,
+    header::CONTENT_DISPOSITION,
     header::CONTENT_LENGTH,
     header::CONTENT_RANGE,
     header::ACCEPT_RANGES,
@@ -60,20 +61,20 @@ pub(crate) async fn download(
     .await
 }
 
-/// 封面按歌的 `coverArt` 取；没有封面回 404，不当失败。
+/// 封面按歌的 `coverArt` 取，`width` 是要的像素宽（Subsonic 的 `size`）；没有封面回 404，不当失败。
 pub(crate) async fn artwork(
     upstream: &Upstream,
     person: &str,
     id: &str,
-    size: Option<u32>,
+    width: Option<u32>,
 ) -> Reply<Response> {
     let song = song(upstream, person, id).await?;
     let Some(cover) = song.get("coverArt").and_then(Value::as_str) else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
     let mut params: Params = vec![("id", cover.to_owned())];
-    if let Some(size) = size {
-        params.push(("size", size.to_string()));
+    if let Some(width) = width {
+        params.push(("size", width.to_string()));
     }
     relay(upstream, person, "getCoverArt", &params, &HeaderMap::new()).await
 }

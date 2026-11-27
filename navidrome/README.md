@@ -46,6 +46,17 @@ scripts/dev.sh install
 | `AGENTS.md` | 给人和 AI 编程代理的规则 |
 | `LICENSE`、`NOTICE` | 插件许可证、上游 GPL-3.0 许可证和商标声明 |
 
+## 媒体源适配器的依赖
+
+`images/navidrome-media/` 的直接依赖；传递依赖也须遵守各自的许可证，没有必须按 GPL/AGPL 授权的依赖。
+
+| 依赖 | 许可证 |
+| --- | --- |
+| `axum`、`tokio` | MIT |
+| `reqwest`、`percent-encoding`、`serde`、`serde_json` | MIT OR Apache-2.0 |
+| `subtle` | BSD-3-Clause |
+| `tempfile`（仅测试） | MIT OR Apache-2.0 |
+
 ## 图标来源与授权
 
 `icon.png` 使用 Navidrome 官方 1024×1024 PNG 标志，未用图片模型生成；来源、版权、处理方式、上游 GPL-3.0 全文和商标说明见 [NOTICE](NOTICE)。

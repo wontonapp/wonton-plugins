@@ -142,9 +142,10 @@ async fn download(
     bytes::download(&state.upstream, &person, &id, &headers).await
 }
 
+/// 核心还会带 `type`（封面、海报…）；Navidrome 的歌只有封面，不读它。
 #[derive(Deserialize)]
 struct ArtworkQuery {
-    size: Option<u32>,
+    width: Option<u32>,
 }
 
 async fn artwork(
@@ -153,7 +154,7 @@ async fn artwork(
     Path(id): Path<String>,
     Query(query): Query<ArtworkQuery>,
 ) -> Reply<Response> {
-    bytes::artwork(&state.upstream, &person, &id, query.size).await
+    bytes::artwork(&state.upstream, &person, &id, query.width).await
 }
 
 async fn plan(

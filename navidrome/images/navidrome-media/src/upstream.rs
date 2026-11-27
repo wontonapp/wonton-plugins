@@ -31,6 +31,10 @@ enum Attempt<T> {
 
 impl Upstream {
     /// `base` 是 Navidrome 的根地址，如 `http://127.0.0.1:4533`。
+    ///
+    /// # Panics
+    ///
+    /// 不会：没有 TLS、不读代理设置的客户端总能建出来。
     #[must_use]
     pub fn new(base: &str) -> Self {
         let http = reqwest::Client::builder()
@@ -44,6 +48,10 @@ impl Upstream {
     }
 
     /// 调一个回 JSON 的方法，回 `subsonic-response` 那一层。
+    ///
+    /// # Errors
+    ///
+    /// 连不上、上游回 HTTP 错误或 Subsonic 失败信封时，回归一后的 [`MediaFailure`]。
     pub async fn call(&self, person: &str, method: &str, params: &Params) -> Reply<Value> {
         if let Attempt::Done(value) = self.call_once(person, method, params).await? {
             return Ok(value);
@@ -57,6 +65,10 @@ impl Upstream {
 
     /// 调一个回字节的方法（`stream`、`download`、`getCoverArt`），`forward` 里的请求头原样带上（`Range` 这类）。
     /// 上游回的是 JSON 时按失败信封读。
+    ///
+    /// # Errors
+    ///
+    /// 同 [`Upstream::call`]；该回字节却回了成功的 JSON 时是 `protocol`。
     pub async fn fetch(
         &self,
         person: &str,
