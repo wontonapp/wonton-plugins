@@ -791,6 +791,27 @@ async fn create_album(
     (StatusCode::CREATED, Json(album_json(&album))).into_response()
 }
 
+async fn add_album_users(
+    State(w): State<Shared>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+    Json(body): Json<Value>,
+) -> Response {
+    let mut world = w.lock().unwrap();
+    let me = who!(world, headers);
+    let Some(album) = world.albums.iter_mut().find(|a| a.0 == id && a.2[0] == me) else {
+        return not_allowed("albumUser.create");
+    };
+    for user in body["albumUsers"].as_array().unwrap() {
+        let user = user["userId"].as_str().unwrap().to_owned();
+        if !album.2.contains(&user) {
+            album.2.push(user);
+        }
+    }
+    let album = album.clone();
+    Json(album_json(&album)).into_response()
+}
+
 async fn favorite(
     State(w): State<Shared>,
     headers: HeaderMap,
@@ -856,6 +877,7 @@ pub async fn start(world: Shared) -> String {
         .route("/api/timeline/bucket", get(bucket))
         .route("/api/albums", get(albums).post(create_album))
         .route("/api/albums/{id}", get(album_detail))
+        .route("/api/albums/{id}/users", put(add_album_users))
         .route("/api/search/smart", post(search))
         .route("/api/search/metadata", post(search))
         .route("/api/people", get(people))

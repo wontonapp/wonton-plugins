@@ -51,6 +51,9 @@ pub struct Owner {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Account {
     pub user: String,
+    /// 这次请求的人所在的 Matrix 服务器名（`X-Wonton-User` 的服务器部分），拿来把家人写成 Matrix ID；不落盘
+    #[serde(skip)]
+    pub server: String,
     pub user_id: String,
     pub email: String,
     pub api_key: String,
@@ -64,17 +67,26 @@ pub struct Accounts {
     opening: Mutex<()>,
 }
 
-/// `X-Wonton-User` 是 Matrix ID（`@alice:example.org`），本机用户名是它的 localpart。
-pub fn username(header: Option<&str>) -> Result<String> {
+/// 替谁办：`X-Wonton-User` 拆开的本机用户名和服务器名。
+#[derive(Debug, PartialEq)]
+pub struct Caller {
+    pub user: String,
+    pub server: String,
+}
+
+/// `X-Wonton-User` 是 Matrix ID（`@alice:example.org`），本机用户名是它的 localpart。服务器名也要：
+/// 回包里的家人（条目主人、相册成员）写成同一台服务器上的 Matrix ID。
+pub fn caller(header: Option<&str>) -> Result<Caller> {
     let raw = header
         .map(str::trim)
         .filter(|raw| !raw.is_empty())
         .ok_or_else(|| Failure::protocol("缺少 X-Wonton-User"))?;
-    let local = match raw.strip_prefix('@') {
-        Some(rest) => rest.split_once(':').map(|(local, _)| local).unwrap_or(rest),
-        None => raw,
-    };
+    let (local, server) = raw
+        .strip_prefix('@')
+        .and_then(|rest| rest.split_once(':'))
+        .ok_or_else(|| Failure::protocol(format!("X-Wonton-User 不是 Matrix ID：{raw}")))?;
     let valid = !local.is_empty()
+        && !server.is_empty()
         && local
             .bytes()
             .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b"._=-".contains(&b));
@@ -83,7 +95,15 @@ pub fn username(header: Option<&str>) -> Result<String> {
             "X-Wonton-User 不是本机用户：{raw}"
         )));
     }
-    Ok(local.to_owned())
+    Ok(Caller {
+        user: local.to_owned(),
+        server: server.to_owned(),
+    })
+}
+
+/// 本机用户名在这台服务器上的 Matrix ID。
+pub fn matrix_id(user: &str, server: &str) -> String {
+    format!("@{user}:{server}")
 }
 
 impl Accounts {
@@ -175,6 +195,7 @@ impl Accounts {
         let (user_id, api_key) = result?;
         Ok(Account {
             user: user.to_owned(),
+            server: String::new(),
             user_id,
             email,
             api_key,
@@ -263,11 +284,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn usernames_come_from_matrix_localparts() {
-        assert_eq!(username(Some("@alice:example.org")).unwrap(), "alice");
-        assert_eq!(username(Some("bob")).unwrap(), "bob");
-        for bad in [None, Some(""), Some("@:x"), Some("@Al ice:x"), Some("../x")] {
-            assert_eq!(username(bad).unwrap_err().code, Code::Protocol, "{bad:?}");
+    fn callers_are_matrix_ids_split_into_localpart_and_server() {
+        assert_eq!(
+            caller(Some("@alice:example.org:8448")).unwrap(),
+            Caller {
+                user: "alice".into(),
+                server: "example.org:8448".into()
+            }
+        );
+        let bad = [
+            None,
+            Some(""),
+            Some("bob"),
+            Some("@bob"),
+            Some("@:x"),
+            Some("@a:"),
+        ];
+        for bad in bad.into_iter().chain([Some("@Al ice:x"), Some("../x")]) {
+            assert_eq!(caller(bad).unwrap_err().code, Code::Protocol, "{bad:?}");
         }
     }
 }

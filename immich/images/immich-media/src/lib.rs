@@ -44,8 +44,10 @@ impl App {
     pub async fn person(&self, headers: &HeaderMap) -> Result<Account> {
         let header = |name: &str| headers.get(name).and_then(|value| value.to_str().ok());
         auth::check(&self.state, header("authorization"))?;
-        let user = accounts::username(header(USER_HEADER))?;
-        self.accounts.get(&user).await
+        let caller = accounts::caller(header(USER_HEADER))?;
+        let mut account = self.accounts.get(&caller.user).await?;
+        account.server = caller.server;
+        Ok(account)
     }
 
     /// Immich 不认这个人的 key 了（他在 Immich 里删了它）：丢掉记录，下一次请求重新开户。

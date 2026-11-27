@@ -5,7 +5,7 @@ mod fake_immich;
 
 use serde_json::{Value, json};
 
-use common::{ALICE, UNKNOWN, rig};
+use common::{ALICE, OWNER, UNKNOWN, rig};
 use fake_immich::World;
 
 fn rename(world: &mut World, id: &str, name: &str) {
@@ -177,7 +177,7 @@ async fn search_shows_partner_work_with_its_owner_and_pages_with_cursors() {
     assert_eq!(page["assets"][0]["id"], json!(shared));
     assert_eq!(
         page["assets"][0]["owner"],
-        json!("dad"),
+        json!(OWNER),
         "partner 给我的那张带库主"
     );
     assert_eq!(page["cursor"], Value::Null);
@@ -230,7 +230,7 @@ async fn album_page_carries_the_album_its_items_and_the_next_page() {
         page["album"],
         json!({
             "id": album, "title": "家庭", "count": 2, "owner": "household",
-            "shared": true, "cover": mine, "members": ["alice", "dad"],
+            "shared": true, "cover": mine, "members": [ALICE, OWNER],
             "updated_at": 1_795_161_600_000u64,
         })
     );
@@ -240,7 +240,7 @@ async fn album_page_carries_the_album_its_items_and_the_next_page() {
         vec![json!(theirs), json!(mine)],
         "相册里新的在前"
     );
-    assert_eq!(items[0]["owner"], json!("dad"));
+    assert_eq!(items[0]["owner"], json!(OWNER));
     assert_eq!(items[1]["owner"], Value::Null);
     let searches = rig.world.lock().unwrap().searches.clone();
     assert_eq!(
@@ -452,7 +452,7 @@ async fn item_detail_maps_exif_place_people_owner_and_falls_back_without_exif() 
     let path = format!("/library/items/{shared}");
     let (status, partner) = rig.json(rig.req(reqwest::Method::GET, &path, ALICE)).await;
     assert_eq!(status, 200, "{partner}");
-    assert_eq!(partner["asset"]["owner"], json!("dad"));
+    assert_eq!(partner["asset"]["owner"], json!(OWNER));
     assert_eq!(
         partner["camera"],
         json!("Apple iPhone 15"),

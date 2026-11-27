@@ -52,24 +52,41 @@ fn ids(list: &[String]) -> Result<Vec<&str>> {
     list.iter().map(|id| uuid(id)).collect()
 }
 
-/// 家人的本机用户名 → Immich 用户 id。对不上的人直接报错，不悄悄少共享一个。
-async fn user_ids(app: &App, account: &Account, people: &[String]) -> Result<Vec<String>> {
+/// 要共享给的人（Matrix ID）→ Immich 用户 id。对不上的人逐条进 `failed`：不悄悄少共享一个，
+/// 也不连累对得上的那几个。
+async fn user_ids(
+    app: &App,
+    account: &Account,
+    people: &[String],
+) -> Result<(Vec<String>, Vec<(String, Failure)>)> {
     let users = app.users(account).await?;
-    people
-        .iter()
-        .map(|name| {
-            users
-                .iter()
-                .find(|(_, user)| *user == name)
-                .map(|(id, _)| id.clone())
-                .ok_or_else(|| {
-                    Failure::new(
-                        Code::PermissionDenied,
-                        format!("{name} 还没在相册里开过户，先让他打开一次相册"),
-                    )
-                })
-        })
-        .collect()
+    let mut found = Vec::new();
+    let mut refused = Vec::new();
+    for person in people {
+        match users.immich_id(person) {
+            Some(id) => found.push(id.to_owned()),
+            None => refused.push((
+                person.clone(),
+                Failure::new(
+                    Code::PermissionDenied,
+                    format!("{person} 在相册里还没有账号，先让他打开一次相册"),
+                ),
+            )),
+        }
+    }
+    Ok((found, refused))
+}
+
+/// 结果带上没共享成的人，一个都没有就不写 `failed`。
+fn with_refused(mut out: Value, refused: Vec<(String, Failure)>) -> Value {
+    if !refused.is_empty() {
+        let failed: Vec<Value> = refused
+            .into_iter()
+            .map(|(id, failure)| json!({"id": id, "failure": failure}))
+            .collect();
+        out["failed"] = failed.into();
+    }
+    out
 }
 
 /// Immich 的 `BulkIdResponseDto[]` → 成了几条、没成的逐条原因。
@@ -99,7 +116,7 @@ fn bulk(reply: &Value) -> Result<(usize, Vec<Value>)> {
 
 async fn album_value(app: &App, account: &Account, reply: &Value) -> Result<Value> {
     let users = app.users(account).await?;
-    library_map::album(reply, &account.user_id, &users, app.household.as_deref())
+    library_map::album(reply, &account.user_id, &users)
 }
 
 pub async fn run(app: &App, account: &Account, action: LibraryAction) -> Result<Value> {
@@ -128,7 +145,7 @@ pub async fn run(app: &App, account: &Account, action: LibraryAction) -> Result<
                 return Err(Failure::protocol("相册要有名字"));
             }
             let assets: Vec<&str> = list.iter().map(|id| uuid(id)).collect::<Result<_>>()?;
-            let members = user_ids(app, account, &share_with).await?;
+            let (members, refused) = user_ids(app, account, &share_with).await?;
             let album_users: Vec<Value> = members
                 .iter()
                 .map(|id| json!({"userId": id, "role": "editor"}))
@@ -138,7 +155,8 @@ pub async fn run(app: &App, account: &Account, action: LibraryAction) -> Result<
                 .call(account, Method::POST, "/albums", Some(&body))
                 .await?;
             let album = album_value(app, account, &reply).await?;
-            Ok(json!({"changed": assets.len(), "album": album}))
+            let out = json!({"changed": assets.len(), "album": album});
+            Ok(with_refused(out, refused))
         }
         LibraryAction::AddToAlbum { album, ids: list } => {
             album_assets(app, account, &album, &list, Method::PUT).await
@@ -148,7 +166,14 @@ pub async fn run(app: &App, account: &Account, action: LibraryAction) -> Result<
         }
         LibraryAction::ShareAlbum { album, people } => {
             let album = uuid(&album)?;
-            let members = user_ids(app, account, &people).await?;
+            let (members, mut refused) = user_ids(app, account, &people).await?;
+            // 一个都共享不了才整个失败，和其他批量动作一样。
+            if members.is_empty() {
+                return Err(match refused.pop() {
+                    Some((_, failure)) => failure,
+                    None => Failure::protocol("至少要共享给一个人"),
+                });
+            }
             let album_users: Vec<Value> = members
                 .iter()
                 .map(|id| json!({"userId": id, "role": "editor"}))
@@ -157,7 +182,8 @@ pub async fn run(app: &App, account: &Account, action: LibraryAction) -> Result<
             let path = format!("/albums/{album}/users");
             let reply: Value = app.call(account, Method::PUT, &path, Some(&body)).await?;
             let album = album_value(app, account, &reply).await?;
-            Ok(json!({"changed": members.len(), "album": album}))
+            let out = json!({"changed": members.len(), "album": album});
+            Ok(with_refused(out, refused))
         }
         LibraryAction::Trash { ids: list } => {
             let list = ids(&list)?;

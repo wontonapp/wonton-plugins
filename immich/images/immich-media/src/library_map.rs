@@ -8,8 +8,29 @@ use serde_json::{Value, json};
 
 use crate::failure::{Failure, Result};
 
-/// Immich 用户 id → 本机用户名；对不上的（Immich 后台手工建的号）用它在 Immich 里的邮箱。
-pub type Users = HashMap<String, String>;
+/// 这个人能看到的 Immich 用户，翻成家人的 Matrix ID（同一台服务器上）。
+#[derive(Debug, Default)]
+pub struct Users {
+    /// Immich 用户 id → Matrix ID。对不上家人的（Immich 后台手工建的号）没有 Matrix ID，写它在 Immich 里的
+    /// 邮箱：仍然标得出“不是我的”，也共享不到它
+    pub ids: HashMap<String, String>,
+    /// 家庭相册库主的 Matrix ID；没设就不单列家庭相册
+    pub household: Option<String>,
+}
+
+impl Users {
+    fn name<'a>(&'a self, immich_id: &'a str) -> &'a str {
+        self.ids.get(immich_id).map_or(immich_id, String::as_str)
+    }
+
+    /// 反查：这个 Matrix ID 在 Immich 里的用户 id。
+    pub fn immich_id(&self, matrix_id: &str) -> Option<&str> {
+        self.ids
+            .iter()
+            .find(|(_, name)| *name == matrix_id)
+            .map(|(id, _)| id.as_str())
+    }
+}
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct PhotoAsset {
@@ -36,7 +57,7 @@ pub fn millis(text: &str) -> Result<u64> {
 
 fn owner(owner_id: Option<&str>, me: &str, users: &Users) -> Option<String> {
     let id = owner_id?;
-    (id != me).then(|| users.get(id).cloned().unwrap_or_else(|| id.to_owned()))
+    (id != me).then(|| users.name(id).to_owned())
 }
 
 fn column<'a>(bucket: &'a Value, name: &str, len: usize) -> Result<&'a [Value]> {
@@ -180,7 +201,7 @@ pub fn detail(value: &Value, me: &str, users: &Users) -> Result<Value> {
 }
 
 /// 一个相册：`albumUsers` 第一项总是库主（Immich OpenAPI 的说明）。
-pub fn album(value: &Value, me: &str, users: &Users, household: Option<&str>) -> Result<Value> {
+pub fn album(value: &Value, me: &str, users: &Users) -> Result<Value> {
     let id = value["id"]
         .as_str()
         .ok_or_else(|| Failure::protocol("Immich 的相册没有 id"))?;
@@ -198,8 +219,8 @@ pub fn album(value: &Value, me: &str, users: &Users, household: Option<&str>) ->
     let owner = if owner_id == me {
         "me".to_owned()
     } else {
-        let name = users.get(owner_id).map(String::as_str).unwrap_or(owner_id);
-        if Some(name) == household {
+        let name = users.name(owner_id);
+        if Some(name) == users.household.as_deref() {
             "household".to_owned()
         } else {
             format!("person:{name}")
@@ -207,7 +228,7 @@ pub fn album(value: &Value, me: &str, users: &Users, household: Option<&str>) ->
     };
     let names: Vec<String> = members[1..]
         .iter()
-        .map(|id| users.get(*id).cloned().unwrap_or_else(|| (*id).to_owned()))
+        .map(|id| users.name(id).to_owned())
         .collect();
     let mut out = json!({
         "id": id,

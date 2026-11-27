@@ -10,7 +10,7 @@ use reqwest::Method;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use crate::accounts::Account;
+use crate::accounts::{Account, matrix_id};
 use crate::failure::{Failure, JsonBody, Result};
 use crate::immich::Auth;
 use crate::library_map::{self, Users};
@@ -32,24 +32,30 @@ const PASS_RESPONSE: &[&str] = &[
 ];
 
 impl App {
+    /// 这个人在 Immich 里能看到的用户，翻成 Matrix ID。
     pub async fn users(&self, account: &Account) -> Result<Users> {
         let list: Vec<Value> = self
             .immich
             .json(Method::GET, "/users", Auth::Key(&account.api_key), None)
             .await
             .map_err(|err| self.on_immich_error(&account.user, err))?;
-        Ok(list
+        let ids = list
             .iter()
             .filter_map(|u| {
                 let id = u["id"].as_str()?.to_owned();
                 let email = u["email"].as_str()?;
-                let name = self
-                    .accounts
-                    .user_of_email(email)
-                    .unwrap_or(email.to_owned());
+                let name = match self.accounts.user_of_email(email) {
+                    Some(user) => matrix_id(&user, &account.server),
+                    None => email.to_owned(),
+                };
                 Some((id, name))
             })
-            .collect())
+            .collect();
+        let household = self
+            .household
+            .as_deref()
+            .map(|user| matrix_id(user, &account.server));
+        Ok(Users { ids, household })
     }
 
     pub async fn call<T: serde::de::DeserializeOwned>(
@@ -145,7 +151,7 @@ pub async fn albums(State(app): State<App>, headers: HeaderMap) -> Result<Json<V
     let users = app.users(&account).await?;
     let albums: Vec<Value> = list
         .iter()
-        .map(|a| library_map::album(a, &account.user_id, &users, app.household.as_deref()))
+        .map(|a| library_map::album(a, &account.user_id, &users))
         .collect::<Result<_>>()?;
     Ok(Json(json!({"albums": albums})))
 }
@@ -200,7 +206,7 @@ pub async fn album(
         .call(&account, Method::POST, "/search/metadata", Some(&body))
         .await?;
     let users = app.users(&account).await?;
-    let album = library_map::album(&detail, &account.user_id, &users, app.household.as_deref())?;
+    let album = library_map::album(&detail, &account.user_id, &users)?;
     let mut out = search_page(&reply, &account, &users)?;
     out["album"] = album;
     Ok(Json(out))

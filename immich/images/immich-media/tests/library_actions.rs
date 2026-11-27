@@ -1,11 +1,12 @@
-//! 从回收站恢复：Immich 这条是全有或全无、只认主人，适配器先整批、被拒再逐条，做不了的进 `failed`。
+//! 写操作的逐条结果。从回收站恢复：Immich 这条是全有或全无、只认主人，适配器先整批、被拒再逐条，做不了的进
+//! `failed`。共享给的人按 Matrix ID 认，Immich 里没有账号的人逐个进 `failed`。
 
 mod common;
 mod fake_immich;
 
 use serde_json::json;
 
-use common::{ALICE, UNKNOWN, rig};
+use common::{ALICE, OWNER, UNKNOWN, rig};
 
 fn restore_body(ids: &[String]) -> serde_json::Value {
     json!({"kind": "restore", "ids": ids})
@@ -101,4 +102,67 @@ async fn restore_in_a_batch_brings_back_the_owners_photo_and_lists_the_refused_o
     assert!(!world.assets[0].trashed, "自己的那张恢复了");
     assert!(world.assets[1].trashed, "别人的那张还在回收站");
     assert_eq!(world.restores.len(), 4, "先整批，再逐条：整批 + 三条");
+}
+
+#[tokio::test]
+async fn sharing_with_someone_without_an_account_shares_with_the_rest_and_lists_them() {
+    let rig = rig().await;
+    rig.alice().await;
+    rig.json(rig.req(reqwest::Method::GET, "/library/timeline", OWNER))
+        .await;
+    let other_server = "@dad:elsewhere.example";
+    let nobody = "@grandma:example.org";
+
+    let create = json!({"kind": "create_album", "title": "晚饭", "share_with": [nobody, OWNER]});
+    let (status, created) = rig
+        .json(
+            rig.req(reqwest::Method::POST, "/library/actions", ALICE)
+                .json(&create),
+        )
+        .await;
+    assert_eq!(status, 200, "{created}");
+    assert_eq!(created["album"]["members"], json!([OWNER]));
+    let failed = &created["failed"];
+    assert_eq!(failed[0]["id"], json!(nobody), "{created}");
+    assert_eq!(failed[0]["failure"]["code"], json!("permission_denied"));
+    assert_eq!(failed.as_array().unwrap().len(), 1);
+
+    let album = created["album"]["id"].clone();
+    let share = json!({"kind": "share_album", "album": album, "people": [other_server, OWNER]});
+    let (status, shared) = rig
+        .json(
+            rig.req(reqwest::Method::POST, "/library/actions", ALICE)
+                .json(&share),
+        )
+        .await;
+    assert_eq!(status, 200, "{shared}");
+    assert_eq!(shared["changed"], json!(1));
+    assert_eq!(
+        shared["failed"][0]["id"],
+        json!(other_server),
+        "同名不同服务器不是同一个人"
+    );
+    assert_eq!(shared["album"]["members"], json!([OWNER]));
+
+    // 一个都对不上：整个失败，不回空的成功。
+    let share = json!({"kind": "share_album", "album": album, "people": [nobody]});
+    let (status, refused) = rig
+        .json(
+            rig.req(reqwest::Method::POST, "/library/actions", ALICE)
+                .json(&share),
+        )
+        .await;
+    assert_eq!(
+        (status, refused["code"].clone()),
+        (403, json!("permission_denied"))
+    );
+}
+
+#[tokio::test]
+async fn a_caller_that_is_not_a_matrix_id_is_refused() {
+    let rig = rig().await;
+    let (status, refused) = rig
+        .json(rig.req(reqwest::Method::GET, "/library/albums", "alice"))
+        .await;
+    assert_eq!((status, refused["code"].clone()), (400, json!("protocol")));
 }

@@ -240,7 +240,7 @@ async fn timeline_shows_partner_photos_with_their_owner_and_albums_mark_the_hous
         .map(|a| a["owner"].clone())
         .collect();
     assert!(
-        owners.contains(&json!("dad")) && owners.contains(&Value::Null),
+        owners.contains(&json!(OWNER)) && owners.contains(&Value::Null),
         "{month}"
     );
     assert_eq!(month["assets"][0]["aspect"], 1.5);
@@ -257,7 +257,7 @@ async fn timeline_shows_partner_photos_with_their_owner_and_albums_mark_the_hous
         (album["owner"].clone(), album["shared"].clone()),
         (json!("household"), json!(true))
     );
-    assert_eq!(album["members"], json!(["alice", "dad"]));
+    assert_eq!(album["members"], json!([ALICE, OWNER]));
     let _ = alice_id;
 }
 
@@ -341,7 +341,7 @@ async fn native_actions_run_as_the_person_and_create_shared_albums() {
     );
 
     let create =
-        json!({"kind": "create_album", "title": "晚饭", "ids": [id], "share_with": ["dad"]});
+        json!({"kind": "create_album", "title": "晚饭", "ids": [id], "share_with": [OWNER]});
     let (status, result) = rig
         .json(
             rig.req(reqwest::Method::POST, "/library/actions", ALICE)
@@ -354,11 +354,10 @@ async fn native_actions_run_as_the_person_and_create_shared_albums() {
             result["album"]["owner"].clone(),
             result["album"]["members"].clone()
         ),
-        (json!("me"), json!(["dad"]))
+        (json!("me"), json!([OWNER]))
     );
 
-    let stranger =
-        json!({"kind": "share_album", "album": result["album"]["id"], "people": ["grandma"]});
+    let stranger = json!({"kind": "share_album", "album": result["album"]["id"], "people": ["@grandma:example.org"]});
     let (status, refused) = rig
         .json(
             rig.req(reqwest::Method::POST, "/library/actions", ALICE)
