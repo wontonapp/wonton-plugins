@@ -14,7 +14,11 @@
 - 不申请 `network.egress`，外部服务（Deezer、Last.fm、ListenBrainz、insights）显式关掉；分享链接指向插件子域名、
   收件人没有云吞会话，也关掉。
 - 代登录只信任核心的地址（`ND_REVERSEPROXYWHITELIST`，Navidrome 的白名单只认 CIDR，要带 `/32`）。
-- 镜像用上游官方镜像 `deluan/navidrome`，按清单列表（index）的摘要固定。
+- 媒体源（`provides.media_source`）：`media` 服务（`images/navidrome-media/`，Rust 静态二进制）把核心的播放、下载、
+  列歌请求翻成 OpenSubsonic 的 `getSong`、`stream`、`download`、`search3`、`scrobble`、`savePlayQueue`。它和 `navidrome`
+  共用网络命名空间，从 `127.0.0.1` 带 `Remote-User` 调上游，所以白名单里加了 `127.0.0.1/32`；不存任何人的上游口令，
+  只存核心签来的凭据。`browse: opensubsonic` 让 App 点开插件进原生音乐界面，网页版留在“更多”里。
+- 主服务的镜像用上游官方镜像 `deluan/navidrome`，按清单列表（index）的摘要固定。
 
 ## 先跑起来
 
@@ -32,6 +36,7 @@ scripts/dev.sh install
 | --- | --- |
 | `docker-compose.yml` | 插件本身：compose 加上 `x-wonton` 清单 |
 | `provision.sh` | 一次性 `provision` 服务的脚本：建用户账号、删内置 admin |
+| `images/navidrome-media/` | 媒体源适配器的源码和 Dockerfile，`cargo test` 跑它的行为测试 |
 | `icon.png` | 插件图标 |
 | `screenshots/` | 商店详情页里的截图 |
 | `scripts/check.sh` | 检查插件包，规则和安装时一样 |
@@ -40,6 +45,17 @@ scripts/dev.sh install
 | `scripts/smoke-probes.sh` | `scripts/dev.sh smoke` 的网页、Subsonic 身份探测 |
 | `AGENTS.md` | 给人和 AI 编程代理的规则 |
 | `LICENSE`、`NOTICE` | 插件许可证、上游 GPL-3.0 许可证和商标声明 |
+
+## 媒体源适配器的依赖
+
+`images/navidrome-media/` 的直接依赖；传递依赖也须遵守各自的许可证，没有必须按 GPL/AGPL 授权的依赖。
+
+| 依赖 | 许可证 |
+| --- | --- |
+| `axum`、`tokio` | MIT |
+| `reqwest`、`percent-encoding`、`serde`、`serde_json` | MIT OR Apache-2.0 |
+| `subtle` | BSD-3-Clause |
+| `tempfile`（仅测试） | MIT OR Apache-2.0 |
 
 ## 图标来源与授权
 

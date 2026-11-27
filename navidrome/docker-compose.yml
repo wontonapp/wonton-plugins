@@ -1,5 +1,6 @@
 # Navidrome 音乐库：用户的音乐放在共享文件夹 music 里，网页经核心网关登录（Remote-User 请求头代登录），
-# 第三方 Subsonic 客户端连局域网端口，详情页的开关打开后显示地址和账号。上游 GPL-3.0-only，镜像按清单列表（index）的摘要固定。
+# 第三方 Subsonic 客户端连局域网端口，详情页的开关打开后显示地址和账号。App 的原生音乐界面按 OpenSubsonic 经网页代理浏览
+# （provides.media_source.browse），播放、离线下载和给 Agent 找歌走 media 服务的媒体源接口。上游 GPL-3.0-only，镜像按清单列表（index）的摘要固定。
 services:
   navidrome:
     image: deluan/navidrome:0.64.2@sha256:38dc2727bfcfd5ede290f8ada114fc90368146f265ae4701ddddbcbe2a44ee52
@@ -20,9 +21,10 @@ services:
       ND_ENABLEEXTERNALSERVICES: "false"
       # 分享链接指向插件子域名，收件人没有云吞会话、会被跳到核心登录页，所以关掉分享。
       ND_ENABLESHARING: "false"
-      # 网关代登录：只信任核心的地址。Navidrome 的白名单只认 CIDR，要带 /32。
+      # 网关代登录：只信任核心的地址，和同一网络命名空间里的 media 服务（它从 127.0.0.1 来）。
+      # Navidrome 的白名单只认 CIDR，要带 /32，多个用逗号隔开。局域网端口由 Docker 发布，来源不会是 127.0.0.1。
       ND_REVERSEPROXYUSERHEADER: Remote-User
-      ND_REVERSEPROXYWHITELIST: ${WONTON_CORE_ADDRESS}/32
+      ND_REVERSEPROXYWHITELIST: ${WONTON_CORE_ADDRESS}/32,127.0.0.1/32
       # 空库时用内置 admin 建号；provision 随后把它换成用户自己的账号。
       ND_DEVAUTOCREATEADMINPASSWORD: ${WONTON_SECRET_CLIENT_PASSWORD}
     volumes:
@@ -33,6 +35,26 @@ services:
       interval: 30s
       timeout: 5s
       start_period: 30s
+      start_interval: 1s
+
+  # 媒体源适配器（images/navidrome-media/，由仓库根 scripts/publish.sh 构建发布）：把核心的 media_source 路径翻成
+  # OpenSubsonic。共用 navidrome 的网络命名空间：经 127.0.0.1 带 Remote-User 调上游，不需要每个人的口令；核心按
+  # provides.media_source 的 service: navidrome、port: 8090 连到它。
+  media:
+    image: ghcr.io/wontonapp/wonton-plugins/navidrome/navidrome-media:0.2.0
+    network_mode: service:navidrome
+    user: "${PUID}:${PGID}"
+    read_only: true
+    environment:
+      NAVIDROME_MEDIA_KEYS: /data/keys
+    # 只存核心签来的凭据，和 Navidrome 的数据分开。
+    volumes:
+      - ${WONTON_APP_DATA}/media:/data
+    healthcheck:
+      test: ["CMD", "/wonton-navidrome-media", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
       start_interval: 1s
 
   # 一次性服务：等主服务健康后建用户账号、删掉内置 admin；/data/.owner-ready 在就跳过。
@@ -60,9 +82,9 @@ configs:
     file: provision.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.navidrome.navidrome
-  version: 0.1.3
+  version: 0.2.0
   kind: app
   title: { zh: "家庭音乐库（Navidrome）", en: "Home Music Library (Navidrome)", zh-Hant: "家庭音樂庫（Navidrome）", ja: "家庭音楽ライブラリ（Navidrome）" }
   description:
@@ -102,16 +124,10 @@ x-wonton:
 
       音楽ファイルは読み取り専用で変化しません。
   release_notes:
-    zh: |
-      插件包迁入官方插件合仓，并更新名称和说明。
-
-      商店介绍重写：手机播放器的连接步骤移到「安装后要做的事」；补繁体中文和日文。
-    en: |
-      Moved into the official Wonton plugin monorepo with updated name and description.
-
-      Store copy rewritten: the phone-player steps moved to the pre-install notice; Traditional Chinese and Japanese added.
-    zh-Hant: "外掛包遷入官方外掛合倉，並更新名稱和說明。\n\n商店介紹重寫：手機播放器的連線步驟移到「安裝後要做的事」；補繁體中文和日文。"
-    ja: "プラグインを公式プラグインリポジトリへ移動し、名前と説明を更新しました。\n\nストア紹介を書き直し、スマホプレーヤーの接続手順を「インストール後の手順」に移しました。繁体字中国語と日本語を追加。"
+    zh: 在 App 里点开就是原生的音乐界面，网页版留在“更多”里，App 能直接播放、下载离线。
+    en: Opens as a native music screen in the app, with the web version under More. The app can play songs and download them for offline listening.
+    zh-Hant: 在 App 裡點開就是原生的音樂介面，網頁版留在「更多」裡，App 能直接播放、下載離線。
+    ja: アプリで開くとネイティブの音楽画面になり、Web 版は「その他」に残ります。アプリで直接再生・オフライン用ダウンロードができます。
   webui:
     service: navidrome
     port: 4533
@@ -132,6 +148,18 @@ x-wonton:
       generate: { bytes: 32 }
     client_password:
       generate: { bytes: 32 }
+  # 核心当使用方：播放、离线下载和列歌经 media 服务；App 按 OpenSubsonic 经网页代理浏览，原生界面代替网页。
+  provides:
+    media_source:
+      service: navidrome
+      port: 8090
+      operations: [download, playback, list]
+      kinds: [audio]
+      browse: opensubsonic
+      credentials:
+        service: media
+        issue: [/wonton-navidrome-media, credentials, issue, "{name}"]
+        revoke: [/wonton-navidrome-media, credentials, revoke, "{name}"]
   permissions:
     - storage.share.music:read
     - network.lan
