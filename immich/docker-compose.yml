@@ -179,6 +179,8 @@ services:
       WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?核心没有注入用户邮箱}
       IMMICH_ADMIN_PASSWORD: ${WONTON_SECRET_ADMIN_PASSWORD}
       STATE_DIR: /state
+      # 设置里的“家庭账号”：这个用户名建的相册标成家庭相册。:- 兜底同其他设置。
+      HOUSEHOLD_USER: ${WONTON_SETTING_HOUSEHOLD_USER:-}
     volumes:
       # 分片先落这里，收尾时一次交给 Immich（POST /assets 只收整个文件）；一周没收尾的启动时清掉。
       - ${WONTON_APP_DATA}/media-adapter:/state
@@ -411,6 +413,7 @@ x-wonton:
       Store copy rewritten: sign-in and account creation moved to the pre-install notice, with container/issuer wording in everyday words; Traditional Chinese and Japanese added.
     zh-Hant: "新增媒體源服務：雲吞 App 的手機自動備份和原生相簿經它讀寫各人自己的照片庫（要配合支援它的雲吞版本）；第一次替某位家人辦事時自動開好他的帳號，之後他用網頁登入還是同一個帳號。\n\n家人第一次開啟相簿就自動建好自己的帳號（預設一般使用者，不開放公開註冊）。角色的應用清單裡要勾上本應用，沒勾時登入被拒，帳號建不出來。勾了在本應用當管理員的人建成管理員，每次登入按目前角色同步，後台手動改的角色下次登入會被覆蓋。升級前先把以前手動建過的帳號信箱改成內部位址（`<使用者名稱>@wonton.internal`），否則第一次登入會另建一個帳號。\n\n外掛遷入官方合倉，自建映象改由官方倉庫釋出；本版包含源 main 的 Immich v3.4.1 更新。\n\n商店介紹重寫：登入和建號移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
     ja: "メディアソースのサービスを追加しました。Wonton アプリのスマホ自動バックアップとネイティブの写真画面は、これを通じて各自のライブラリを読み書きします（対応する Wonton のバージョンが必要です）。家族のアカウントは本人のために初めて使われたときに作られ、後で Web からサインインしても同じアカウントです。\n\n家族が初めて写真を開くと、自分のアカウントが自動で作られます（既定では一般ユーザー、一般からの登録は受け付けません）。その人のロールのアプリ一覧で本アプリにチェックが要り、無いとログインが拒否されアカウントは作られません。本アプリの管理者にチェックした人は管理者として作られ、ログインのたびに現在のロールへ同期され、管理画面で手動変更したロールは次のログインで上書きされます。更新前に、以前手動で作ったアカウントのメールアドレスを内部アドレス（`<ユーザー名>@wonton.internal`）へ変えてください。そうしないと最初のログインで別のアカウントが作られます。\n\nプラグインを公式リポジトリへ移動し、自前ビルドのイメージは公式リポジトリからの配布に変わりました。本版には source main の Immich v3.4.1 更新が入っています。\n\nストア紹介を書き直し、サインインとアカウント作成を「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
+  settings: settings.schema.json
   webui:
     service: server
     port: 2283

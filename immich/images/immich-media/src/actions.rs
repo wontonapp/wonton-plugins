@@ -109,10 +109,15 @@ pub async fn run(app: &App, account: &Account, action: LibraryAction) -> Result<
             favorite,
         } => {
             let list = ids(&list)?;
-            let body = json!({"ids": list, "isFavorite": favorite});
-            app.call::<Value>(account, Method::PUT, "/assets", Some(&body))
-                .await?;
-            Ok(json!({"changed": list.len()}))
+            each_or_all(
+                app,
+                account,
+                Method::PUT,
+                "/assets",
+                &list,
+                |ids| json!({"ids": ids, "isFavorite": favorite}),
+            )
+            .await
         }
         LibraryAction::CreateAlbum {
             title,
@@ -156,20 +161,75 @@ pub async fn run(app: &App, account: &Account, action: LibraryAction) -> Result<
         }
         LibraryAction::Trash { ids: list } => {
             let list = ids(&list)?;
-            let body = json!({"ids": list, "force": false});
-            app.call::<Value>(account, Method::DELETE, "/assets", Some(&body))
-                .await?;
-            Ok(json!({"changed": list.len()}))
+            each_or_all(
+                app,
+                account,
+                Method::DELETE,
+                "/assets",
+                &list,
+                |ids| json!({"ids": ids, "force": false}),
+            )
+            .await
         }
         LibraryAction::Restore { ids: list } => {
             let list = ids(&list)?;
-            let body = json!({"ids": list});
-            let reply: Value = app
-                .call(account, Method::POST, "/trash/restore/assets", Some(&body))
-                .await?;
-            Ok(json!({"changed": reply["count"].as_u64().unwrap_or(0)}))
+            let path = "/trash/restore/assets";
+            each_or_all(
+                app,
+                account,
+                Method::POST,
+                path,
+                &list,
+                |ids| json!({"ids": ids}),
+            )
+            .await
         }
     }
+}
+
+/// 这个人看不到或改不了、或已经不在的那一条：逐条结果里记下，不连累其余的。
+fn skippable(failure: &Failure) -> bool {
+    matches!(failure.code, Code::PermissionDenied | Code::MediaGone)
+}
+
+/// Immich 的收藏、进回收站、恢复全有或全无：混进一条别人的照片（时间线带着 partner 的）整批 400。
+/// 先整批做；整批被拒时逐条再做，做不了的各带原因进 `failed`，其余照做；一条都做不了才回失败。
+async fn each_or_all(
+    app: &App,
+    account: &Account,
+    method: Method,
+    path: &str,
+    list: &[&str],
+    body: impl Fn(&[&str]) -> Value,
+) -> Result<Value> {
+    match app
+        .call::<Value>(account, method.clone(), path, Some(&body(list)))
+        .await
+    {
+        Ok(_) => return Ok(json!({"changed": list.len()})),
+        Err(err) if list.len() > 1 && skippable(&err) => {}
+        Err(err) => return Err(err),
+    }
+    let mut changed = 0;
+    let mut failed = Vec::new();
+    for id in list {
+        match app
+            .call::<Value>(account, method.clone(), path, Some(&body(&[id])))
+            .await
+        {
+            Ok(_) => changed += 1,
+            Err(err) if skippable(&err) => failed.push((id, err)),
+            Err(err) => return Err(err),
+        }
+    }
+    if changed == 0 {
+        return Err(failed.swap_remove(0).1);
+    }
+    let failed: Vec<Value> = failed
+        .into_iter()
+        .map(|(id, failure)| json!({"id": id, "failure": failure}))
+        .collect();
+    Ok(json!({"changed": changed, "failed": failed}))
 }
 
 async fn album_assets(

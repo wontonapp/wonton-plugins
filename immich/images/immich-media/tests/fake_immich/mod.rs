@@ -410,27 +410,35 @@ async fn favorite(
 ) -> Response {
     let mut world = w.lock().unwrap();
     let me = who!(world, headers);
-    for id in body["ids"].as_array().unwrap() {
-        let asset = world
-            .assets
-            .iter_mut()
-            .find(|a| a.id == *id && a.owner == me);
-        match asset {
-            Some(asset) => asset.favorite = body["isFavorite"].as_bool().unwrap(),
-            None => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    "Not found or no asset.update access",
-                )
-                    .into_response();
-            }
-        }
+    let ids = body["ids"].as_array().unwrap();
+    // 和 Immich 一样先查整批的权限，有一条不行整批不动。
+    let mine = |a: &Asset| ids.contains(&json!(a.id)) && a.owner == me;
+    if world.assets.iter().filter(|a| mine(a)).count() != ids.len() {
+        return (
+            StatusCode::BAD_REQUEST,
+            "Not found or no asset.update access",
+        )
+            .into_response();
+    }
+    for asset in world.assets.iter_mut().filter(|a| mine(a)) {
+        asset.favorite = body["isFavorite"].as_bool().unwrap();
     }
     StatusCode::NO_CONTENT.into_response()
 }
 
 async fn thumbnail(Path(id): Path<String>, headers: HeaderMap) -> Response {
     let body = format!("thumbnail-of-{id}");
+    let etag = format!("\"{id}\"");
+    if headers.get("if-none-match").is_some_and(|v| *v == *etag) {
+        return (StatusCode::NOT_MODIFIED, [("etag", etag)]).into_response();
+    }
+    if headers.get("range").is_some_and(|v| *v == "bytes=999-") {
+        return (
+            StatusCode::RANGE_NOT_SATISFIABLE,
+            [("content-range", format!("bytes */{}", body.len()))],
+        )
+            .into_response();
+    }
     match headers.get("range") {
         Some(range) => (
             StatusCode::PARTIAL_CONTENT,

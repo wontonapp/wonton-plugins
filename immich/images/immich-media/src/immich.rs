@@ -46,12 +46,22 @@ impl Client {
 
     /// 发出去，非 2xx 按状态码分类。
     pub async fn send(&self, builder: RequestBuilder, what: &str) -> Result<Response> {
+        self.send_allowing(builder, what, &[]).await
+    }
+
+    /// 同 [`Self::send`]，`also` 里的状态码也照常回（取字节时的 304、416）。
+    pub async fn send_allowing(
+        &self,
+        builder: RequestBuilder,
+        what: &str,
+        also: &[u16],
+    ) -> Result<Response> {
         let response = builder
             .send()
             .await
             .map_err(|err| failure::unreachable(what, &err))?;
         let status = response.status();
-        if status.is_success() {
+        if status.is_success() || also.contains(&status.as_u16()) {
             return Ok(response);
         }
         let body = response.text().await.unwrap_or_default();

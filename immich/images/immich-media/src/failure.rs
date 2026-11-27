@@ -92,6 +92,9 @@ pub fn from_immich(status: reqwest::StatusCode, what: &str, body: &str) -> Failu
         401 => Failure::new(Code::AuthenticationRequired, message),
         403 => Failure::new(Code::PermissionDenied, message),
         404 => Failure::gone(message),
+        // Immich 的对象级访问检查（`Not found or no <对象>.<动作> access`）也回 400：说的是这个人看不到或改不了，
+        // 不是请求写错了。
+        400 if body.contains("Not found or no ") => Failure::new(Code::PermissionDenied, message),
         400 | 422 => Failure::protocol(message),
         413 | 507 => Failure::new(Code::ServerStorageFull, message),
         429 => Failure::new(Code::RateLimited, message),

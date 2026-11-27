@@ -66,6 +66,20 @@ impl App {
     }
 }
 
+/// 接哪些写操作：Immich 七样都接。
+pub async fn features(State(app): State<App>, headers: HeaderMap) -> Result<Json<Value>> {
+    app.person(&headers).await?;
+    Ok(Json(json!({"actions": [
+        "favorite",
+        "create_album",
+        "add_to_album",
+        "remove_from_album",
+        "share_album",
+        "trash",
+        "restore",
+    ]})))
+}
+
 pub async fn timeline(State(app): State<App>, headers: HeaderMap) -> Result<Json<Value>> {
     let account = app.person(&headers).await?;
     let path = "/timeline/buckets?visibility=timeline&withPartners=true&order=desc";
@@ -356,9 +370,10 @@ async fn stream(app: &App, account: &Account, path: &str, headers: &HeaderMap) -
             builder = builder.header(*name, value);
         }
     }
+    // 条件请求命中（304）和 `Range` 越界（416）照原样回，客户端核的缓存和续传靠它们。
     let upstream = app
         .immich
-        .send(builder, &format!("GET {path}"))
+        .send_allowing(builder, &format!("GET {path}"), &[304, 416])
         .await
         .map_err(|err| app.on_immich_error(&account.user, err))?;
     let mut response = Response::builder().status(upstream.status().as_u16());

@@ -85,6 +85,7 @@ pub fn router(app: App) -> Router {
                 .delete(uploads::delete),
         )
         .route("/uploads/{id}/finish", post(uploads::finish))
+        .route("/library", get(library::features))
         .route("/library/timeline", get(library::timeline))
         .route("/library/timeline/{month}", get(library::bucket))
         .route("/library/albums", get(library::albums))

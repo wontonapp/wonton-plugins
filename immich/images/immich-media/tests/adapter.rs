@@ -378,6 +378,22 @@ async fn bytes_pass_through_with_range_and_unknown_renditions_are_refused() {
     );
     assert_eq!(response.text().await.unwrap(), "thum");
 
+    let cached = rig
+        .req(reqwest::Method::GET, &path, ALICE)
+        .header("If-None-Match", format!("\"{id}\""))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(cached.status().as_u16(), 304, "缓存命中照原样回，不是失败");
+    let beyond = rig
+        .req(reqwest::Method::GET, &path, ALICE)
+        .header("Range", "bytes=999-")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(beyond.status().as_u16(), 416);
+    assert!(beyond.headers().contains_key("content-range"));
+
     let bad = format!("/library/items/{id}/content?rendition=hologram");
     assert_eq!(
         rig.json(rig.req(reqwest::Method::GET, &bad, ALICE)).await.1["code"],
@@ -409,6 +425,16 @@ async fn native_actions_run_as_the_person_and_create_shared_albums() {
         .await;
     assert_eq!((status, result), (200, json!({"changed": 1})));
     assert!(rig.world.lock().unwrap().assets[0].favorite);
+
+    let (_, features) = rig
+        .json(rig.req(reqwest::Method::GET, "/library", ALICE))
+        .await;
+    assert!(
+        features["actions"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("favorite"))
+    );
 
     let create =
         json!({"kind": "create_album", "title": "晚饭", "ids": [id], "share_with": ["dad"]});
@@ -480,4 +506,59 @@ async fn a_key_revoked_in_immich_is_reported_then_reopened_on_the_next_request()
         "重开不重建号"
     );
     assert!(world.sessions.is_empty(), "开户用的会话都退出了");
+}
+
+#[tokio::test]
+async fn a_batch_with_someone_elses_photo_does_the_rest_and_lists_the_refused_one() {
+    let rig = rig().await;
+    let (_, done) = rig.upload(ALICE, "e.jpg", b"evening", None).await;
+    let mine = done["item_id"].clone();
+    let theirs = {
+        let mut world = rig.world.lock().unwrap();
+        let dad = world.user_by_email("dad@example.com").unwrap().id.clone();
+        world.add_asset(&dad, "2025-11-03T10:00:00.000Z")
+    };
+    let fav = json!({"kind": "favorite", "ids": [mine, theirs], "favorite": true});
+    let (status, result) = rig
+        .json(
+            rig.req(reqwest::Method::POST, "/library/actions", ALICE)
+                .json(&fav),
+        )
+        .await;
+    assert_eq!(status, 200, "{result}");
+    assert_eq!(result["changed"], 1);
+    assert_eq!(result["failed"][0]["id"], json!(theirs));
+    assert_eq!(result["failed"][0]["failure"]["code"], "permission_denied");
+    {
+        let world = rig.world.lock().unwrap();
+        assert!(
+            world
+                .assets
+                .iter()
+                .find(|a| json!(a.id) == mine)
+                .unwrap()
+                .favorite
+        );
+        assert!(
+            !world
+                .assets
+                .iter()
+                .find(|a| json!(a.id) == json!(theirs))
+                .unwrap()
+                .favorite
+        );
+    }
+
+    let only_theirs = json!({"kind": "favorite", "ids": [theirs], "favorite": true});
+    let (status, refused) = rig
+        .json(
+            rig.req(reqwest::Method::POST, "/library/actions", ALICE)
+                .json(&only_theirs),
+        )
+        .await;
+    assert_eq!(
+        (status, refused["code"].clone()),
+        (403, json!("permission_denied")),
+        "别人的照片是没权限，不是请求写错了"
+    );
 }
