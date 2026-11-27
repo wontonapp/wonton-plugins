@@ -136,13 +136,16 @@ async fn healthz(State(app): Shared) -> Response {
     }
 }
 
+/// 请求替谁办：`X-Wonton-User` 里 Matrix ID 的本地部分（[`accounts::local_part`]）。
 fn person(headers: &HeaderMap) -> Reply<String> {
-    headers
+    let raw = headers
         .get(USER_HEADER)
         .and_then(|v| v.to_str().ok())
         .filter(|v| !v.is_empty())
+        .ok_or_else(|| Failure::bad_request("缺 X-Wonton-User：认不出是谁，不拿别人兜底"))?;
+    accounts::local_part(raw)
         .map(str::to_owned)
-        .ok_or_else(|| Failure::bad_request("缺 X-Wonton-User：认不出是谁，不拿别人兜底"))
+        .ok_or_else(|| Failure::bad_request(format!("X-Wonton-User 不是 Matrix ID：{raw:?}")))
 }
 
 /// 以这个人的身份做一件事。本人令牌被 Jellyfin 拒了（管理员在 Jellyfin 里删了设备）就重拿一次再试。
@@ -349,8 +352,13 @@ async fn hls(
     .await
 }
 
-async fn revoke(State(app): Shared, Json(body): Json<Revoke>) -> Reply<StatusCode> {
-    app.accounts.revoke(&body.name).await?;
+/// 收回的是请求里这个人的上游凭据；体里的 `name` 是核心那把能力凭据的名字，由凭据命令另行吊销。
+async fn revoke(
+    State(app): Shared,
+    headers: HeaderMap,
+    Json(_credential): Json<Revoke>,
+) -> Reply<StatusCode> {
+    app.accounts.revoke(&person(&headers)?).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
