@@ -474,3 +474,65 @@ async fn item_detail_maps_exif_place_people_owner_and_falls_back_without_exif() 
         );
     }
 }
+
+#[tokio::test]
+async fn an_immich_account_that_is_no_family_member_is_an_unknown_owner_and_never_named() {
+    let rig = rig().await;
+    let alice = rig.alice().await;
+    let dad = rig.dad();
+    let (outsider, theirs, their_album, our_album) = {
+        let mut world = rig.world.lock().unwrap();
+        // Immich 后台手工建的号：邮箱对不上任何家人。
+        let outsider = world.add_user("outsider@example.com", "x");
+        world.partners.push((outsider.clone(), alice.clone()));
+        let theirs = world.add_asset(&outsider, "2025-11-05T10:00:00.000Z");
+        let their_album = world.add_album("外面的", &outsider, &[&alice]);
+        world
+            .albums
+            .iter_mut()
+            .find(|a| a.0 == their_album)
+            .unwrap()
+            .3 = vec![theirs.clone()];
+        let our_album = world.add_album("给外面", &alice, &[&outsider, &dad]);
+        (outsider, theirs, their_album, our_album)
+    };
+
+    let get = |path: String| rig.json(rig.req(reqwest::Method::GET, &path, ALICE));
+    let (_, month) = get("/library/timeline/2025-11".into()).await;
+    let (_, albums) = get("/library/albums".into()).await;
+    let (_, page) = get(format!("/library/albums/{their_album}")).await;
+    let (_, detail) = get(format!("/library/items/{theirs}")).await;
+
+    let unknown = json!({
+        "id": theirs, "kind": "photo", "taken_at": 1_762_336_800_000u64,
+        "aspect": 1.5, "live": false, "favorite": false, "owner_unknown": true,
+    });
+    assert_eq!(month["assets"], json!([unknown]), "{month}");
+    assert_eq!(page["assets"], json!([unknown]), "{page}");
+    assert_eq!(detail["asset"], unknown, "{detail}");
+    let album = |id: &str| {
+        albums["albums"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|a| a["id"] == id)
+            .unwrap()
+            .clone()
+    };
+    assert_eq!(album(&their_album)["owner"], json!("unknown"));
+    assert_eq!(page["album"]["owner"], json!("unknown"));
+    assert_eq!(
+        album(&our_album)["members"],
+        json!([OWNER]),
+        "对不上的人不进成员名单"
+    );
+
+    // 回包里哪儿都不出现这个号的邮箱、名字或 Immich id。
+    for body in [&month, &albums, &page, &detail] {
+        let text = body.to_string();
+        assert!(
+            !text.contains("outsider") && !text.contains(&outsider),
+            "{text}"
+        );
+    }
+}

@@ -44,11 +44,8 @@ impl App {
             .filter_map(|u| {
                 let id = u["id"].as_str()?.to_owned();
                 let email = u["email"].as_str()?;
-                let name = match self.accounts.user_of_email(email) {
-                    Some(user) => matrix_id(&user, &account.server),
-                    None => email.to_owned(),
-                };
-                Some((id, name))
+                let user = self.accounts.user_of_email(email)?;
+                Some((id, matrix_id(&user, &account.server)))
             })
             .collect();
         let household = self

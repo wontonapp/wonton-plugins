@@ -11,16 +11,16 @@ use crate::failure::{Failure, Result};
 /// 这个人能看到的 Immich 用户，翻成家人的 Matrix ID（同一台服务器上）。
 #[derive(Debug, Default)]
 pub struct Users {
-    /// Immich 用户 id → Matrix ID。对不上家人的（Immich 后台手工建的号）没有 Matrix ID，写它在 Immich 里的
-    /// 邮箱：仍然标得出“不是我的”，也共享不到它
+    /// Immich 用户 id → Matrix ID，只有认得回家人的号。对不上的（Immich 后台手工建的号）不在这里：它的条目
+    /// 和相册标成主人不明，它不进成员名单，也共享不到它；它的邮箱、名字和 Immich id 都不往外写
     pub ids: HashMap<String, String>,
     /// 家庭相册库主的 Matrix ID；没设就不单列家庭相册
     pub household: Option<String>,
 }
 
 impl Users {
-    fn name<'a>(&'a self, immich_id: &'a str) -> &'a str {
-        self.ids.get(immich_id).map_or(immich_id, String::as_str)
+    fn matrix_id(&self, immich_id: &str) -> Option<&str> {
+        self.ids.get(immich_id).map(String::as_str)
     }
 
     /// 反查：这个 Matrix ID 在 Immich 里的用户 id。
@@ -45,19 +45,44 @@ pub struct PhotoAsset {
     pub favorite: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub owner: Option<String>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub owner_unknown: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thumbhash: Option<String>,
+}
+
+/// 条目的主人：本人的什么都不写；家人的写 Matrix ID；对不上家人的只标主人不明。
+#[derive(Debug, PartialEq)]
+enum Owner {
+    Me,
+    Person(String),
+    Unknown,
+}
+
+impl Owner {
+    fn of(owner_id: Option<&str>, me: &str, users: &Users) -> Self {
+        match owner_id {
+            None => Self::Me,
+            Some(id) if id == me => Self::Me,
+            Some(id) => users
+                .matrix_id(id)
+                .map_or(Self::Unknown, |name| Self::Person(name.to_owned())),
+        }
+    }
+
+    fn fields(self) -> (Option<String>, bool) {
+        match self {
+            Self::Me => (None, false),
+            Self::Person(name) => (Some(name), false),
+            Self::Unknown => (None, true),
+        }
+    }
 }
 
 pub fn millis(text: &str) -> Result<u64> {
     chrono::DateTime::parse_from_rfc3339(text)
         .map(|at| at.timestamp_millis().max(0) as u64)
         .map_err(|err| Failure::protocol(format!("Immich 的时间看不懂：{text}：{err}")))
-}
-
-fn owner(owner_id: Option<&str>, me: &str, users: &Users) -> Option<String> {
-    let id = owner_id?;
-    (id != me).then(|| users.name(id).to_owned())
 }
 
 fn column<'a>(bucket: &'a Value, name: &str, len: usize) -> Result<&'a [Value]> {
@@ -92,6 +117,7 @@ pub fn bucket_assets(bucket: &Value, me: &str, users: &Users) -> Result<Vec<Phot
         let created = created[i]
             .as_str()
             .ok_or_else(|| Failure::protocol("Immich 时间线的 fileCreatedAt 不是字符串"))?;
+        let (owner, owner_unknown) = Owner::of(owners[i].as_str(), me, users).fields();
         assets.push(PhotoAsset {
             id: id.to_owned(),
             kind: if image[i].as_bool().unwrap_or(true) {
@@ -104,7 +130,8 @@ pub fn bucket_assets(bucket: &Value, me: &str, users: &Users) -> Result<Vec<Phot
             duration_ms: duration[i].as_u64(),
             live: live[i].is_string(),
             favorite: favorite[i].as_bool().unwrap_or(false),
-            owner: owner(owners[i].as_str(), me, users),
+            owner,
+            owner_unknown,
             thumbhash: thumbhash[i].as_str().map(str::to_owned),
         });
     }
@@ -120,6 +147,7 @@ pub fn asset(value: &Value, me: &str, users: &Users) -> Result<PhotoAsset> {
         .as_str()
         .ok_or_else(|| Failure::protocol("Immich 的条目没有 fileCreatedAt"))?;
     let (width, height) = (value["width"].as_f64(), value["height"].as_f64());
+    let (owner, owner_unknown) = Owner::of(value["ownerId"].as_str(), me, users).fields();
     Ok(PhotoAsset {
         id: id.to_owned(),
         kind: if value["type"] == "VIDEO" {
@@ -135,7 +163,8 @@ pub fn asset(value: &Value, me: &str, users: &Users) -> Result<PhotoAsset> {
         duration_ms: value["duration"].as_u64(),
         live: value["livePhotoVideoId"].is_string(),
         favorite: value["isFavorite"].as_bool().unwrap_or(false),
-        owner: owner(value["ownerId"].as_str(), me, users),
+        owner,
+        owner_unknown,
         thumbhash: value["thumbhash"].as_str().map(str::to_owned),
     })
 }
@@ -216,19 +245,17 @@ pub fn album(value: &Value, me: &str, users: &Users) -> Result<Value> {
     let owner_id = *members
         .first()
         .ok_or_else(|| Failure::protocol("Immich 的相册没有库主"))?;
-    let owner = if owner_id == me {
-        "me".to_owned()
-    } else {
-        let name = users.name(owner_id);
-        if Some(name) == users.household.as_deref() {
+    let owner = match Owner::of(Some(owner_id), me, users) {
+        Owner::Me => "me".to_owned(),
+        Owner::Person(name) if Some(name.as_str()) == users.household.as_deref() => {
             "household".to_owned()
-        } else {
-            format!("person:{name}")
         }
+        Owner::Person(name) => format!("person:{name}"),
+        Owner::Unknown => "unknown".to_owned(),
     };
-    let names: Vec<String> = members[1..]
+    let names: Vec<&str> = members[1..]
         .iter()
-        .map(|id| users.name(id).to_owned())
+        .filter_map(|id| users.matrix_id(id))
         .collect();
     let mut out = json!({
         "id": id,
