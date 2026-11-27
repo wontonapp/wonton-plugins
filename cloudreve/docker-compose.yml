@@ -25,11 +25,12 @@ services:
       start_interval: 1s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.cloudreve.cloudreve
   version: 0.1.3
   kind: app
-  title: { zh: "私人网盘（Cloudreve）", en: "Personal Cloud Drive (Cloudreve)", zh-Hant: "私人網盤（Cloudreve）", ja: "個人クラウドドライブ（Cloudreve）" }
+  title: { en: "Cloudreve" }
+  subtitle: { zh: "私人网盘", en: "Personal Cloud Drive", zh-Hant: "私人網盤", ja: "個人クラウドドライブ" }
   description:
     zh: 像把百度网盘整个搬回家：文件在线预览、一键分享，还能把下载链接交给它，它下好直接放进网盘。用 Cloudreve 自己的账号登录，适合常分享、常离线下载的人。
     en: "Like moving a whole cloud drive service home: preview files online, share with one tap, and hand it a download link to fetch straight into your drive. It has its own Cloudreve sign-in; good if you share a lot or queue up downloads."

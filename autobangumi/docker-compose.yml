@@ -67,11 +67,12 @@ configs:
     file: config/mcp-token.sh
 
 x-wonton:
-  spec: "0.13"
+  spec: "0.17"
   id: org.autobangumi.autobangumi
   version: 0.1.3
   kind: app
-  title: { zh: "自动追番（AutoBangumi）", en: "Anime Auto-Downloader (AutoBangumi)", zh-Hant: "自動追番（AutoBangumi）", ja: "アニメ自動追跡（AutoBangumi）" }
+  title: { en: "AutoBangumi" }
+  subtitle: { zh: "自动追番", en: "Anime Auto-Downloader", zh-Hant: "自動追番", ja: "アニメ自動追跡" }
   description:
     zh: 像订追剧日历一样自动追新番：番剧一更新就自动下载、改好名字放进媒体库
     en: Follows new anime for you — each new episode is downloaded, renamed and filed into your media library automatically

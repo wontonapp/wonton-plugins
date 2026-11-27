@@ -194,11 +194,12 @@ volumes:
   tessdata-extra:
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.paperless-ngx.paperless-ngx
   version: 0.1.4
   kind: app
-  title: { zh: "电子档案柜（Paperless-ngx）", en: "Document Archive (Paperless-ngx)", zh-Hant: "電子檔案櫃（Paperless-ngx）", ja: "電子書類棚（Paperless-ngx）" }
+  title: { en: "Paperless-ngx" }
+  subtitle: { zh: "电子档案柜", en: "Document Archive", zh-Hant: "電子檔案櫃", ja: "電子書類棚" }
   description:
     zh: 像一个会自己归档的文件柜：扫描件和 PDF 丢进去，自动认出上面的字、分好类，以后搜一个词就能找到。适合把纸质发票、合同、说明书变成电子档案。
     en: "A filing cabinet that files itself: drop in scans and PDFs and it reads the text and sorts them, so a single word finds them later. For turning paper bills, contracts and manuals into a searchable archive."

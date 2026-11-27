@@ -55,11 +55,12 @@ configs:
     file: passwd-init.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.eclipse.mosquitto
   version: 0.1.2
   kind: app
-  title: { zh: "设备消息中转（Mosquitto）", en: "Device Message Relay (Mosquitto)", zh-Hant: "裝置訊息中轉（Mosquitto）", ja: "機器メッセージ中継（Mosquitto）" }
+  title: { en: "Mosquitto" }
+  subtitle: { zh: "设备消息中转", en: "Device Message Relay", zh-Hant: "裝置訊息中轉", ja: "機器メッセージ中継" }
   description:
     zh: 像家里的邮局：智能设备发来的消息经它送到各个软件，软件的指令也经它送回设备。
     en: "A post office for your smart home: messages from devices are carried to your apps, and commands are carried back."

@@ -60,11 +60,12 @@ configs:
     file: setup-done.sh
 
 x-wonton:
-  spec: "0.14"
+  spec: "0.17"
   id: io.github.vrtmrz.obsidian-livesync
-  version: 0.1.0
+  version: 0.1.1
   kind: app
-  title: { zh: 笔记同步（Obsidian LiveSync）, en: Note Sync (Obsidian LiveSync) }
+  title: { en: "Obsidian LiveSync" }
+  subtitle: { zh: "笔记同步", en: "Note Sync" }
   description:
     zh: 把家里电脑和手机里的 Obsidian 笔记同步到一起，像自己的百度网盘一样方便，数据只保存在自己家里。
     en: Sync Obsidian notes across your family's computers and phones, with the data kept at home.
@@ -90,7 +91,7 @@ x-wonton:
       Open the LAN entry in the plugin details and copy the displayed username and password. Then open the HTTPS client entry and enter its HTTPS address, the same credentials, and the database name obsidiandb in Obsidian LiveSync.
 
       Computers can use the LAN HTTP address. Obsidian on phones uses the system-trusted HTTPS address required by the upstream project. The client entry opens after the database and account initialization succeeds.
-  release_notes: { zh: 插件包迁入官方插件合仓，并增加 HTTPS 客户端入口。, en: "Moved into the official plugin monorepo and added an HTTPS client entry." }
+  release_notes: { zh: "应用名改回原名 Obsidian LiveSync，用途“笔记同步”放到名字下面。", en: "The app now shows its own name, Obsidian LiveSync, with \"Note Sync\" underneath." }
   setup:
     zh: 在 Obsidian 安装 LiveSync 社区插件，打开本插件的局域网入口复制账号密码，再打开 HTTPS 客户端入口，把对应地址、账号、密码和数据库名 obsidiandb 填进去。
     en: Install the LiveSync community plugin in Obsidian, copy the username and password from the LAN entry, then open the HTTPS client entry and enter its address, credentials, and database name obsidiandb.

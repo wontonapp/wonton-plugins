@@ -131,11 +131,12 @@ configs:
     content: "${WONTON_SECRET_SAMBA_PASSWORD}"
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.samba.samba
   version: 0.1.4
   kind: app
-  title: { zh: "电脑共享盘（Samba）", en: "Network Drive (Samba)", zh-Hant: "電腦共享磁碟（Samba）", ja: "共有ドライブ（Samba）" }
+  title: { en: "Samba" }
+  subtitle: { zh: "电脑共享盘", en: "Network Drive", zh-Hant: "電腦共享磁碟", ja: "共有ドライブ" }
   description:
     zh: 让家里的电脑像打开 U 盘一样打开共享文件夹：在 Windows 资源管理器、Mac 访达里直接用，不用装软件。只在家里的网络能用，出门连不上。
     en: "Open the shared folders from your computer's own file manager, like a USB drive: works in Windows File Explorer and Mac Finder with nothing to install. Only works on your home network."

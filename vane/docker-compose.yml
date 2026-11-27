@@ -73,11 +73,12 @@ configs:
     file: web/patch-search.cjs
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.github.itzcrazykns.vane
   version: 0.2.2
   kind: app
-  title: { zh: "AI 搜索（Vane）", en: "AI Search (Vane)", zh-Hant: "AI 搜尋（Vane）", ja: "AI 検索（Vane）" }
+  title: { en: "Vane" }
+  subtitle: { zh: "AI 搜索", en: "AI Search", zh-Hant: "AI 搜尋", ja: "AI 検索" }
   description:
     zh: 会先查资料再回答的 AI：每个问题都先上网搜，再写出标明出处的回答，适合查新闻、找资料。
     en: "An AI that searches before it answers: every question goes to the web first, and the answer comes back with its sources. Good for news and research."

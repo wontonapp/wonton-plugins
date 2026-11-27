@@ -52,11 +52,12 @@ configs:
     file: init.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: run.halo.halo
   version: 0.1.3
   kind: app
-  title: { zh: "个人博客（Halo）", en: "Blog (Halo)", zh-Hant: "個人部落格（Halo）", ja: "個人ブログ（Halo）" }
+  title: { en: "Halo" }
+  subtitle: { zh: "个人博客", en: "Blog", zh-Hant: "個人部落格", ja: "個人ブログ" }
   description:
     zh: 像写日记一样写博客，把文章、游记和照片发成自己的网站
     en: Write posts like a diary and publish them as your own blog

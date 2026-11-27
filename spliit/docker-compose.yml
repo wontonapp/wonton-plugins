@@ -49,11 +49,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.spliit.spliit
   version: 0.1.3
   kind: app
-  title: { zh: "AA 记账（Spliit）", en: "Expense Sharing (Spliit)", zh-Hant: "AA 記帳（Spliit）", ja: "割り勘家計簿（Spliit）" }
+  title: { en: "Spliit" }
+  subtitle: { zh: "AA 记账", en: "Expense Sharing", zh-Hant: "AA 記帳", ja: "割り勘家計簿" }
   description:
     zh: 和家人朋友聚餐、合租、旅行后分账：建一个群，谁付了钱记一笔，谁欠谁多少自动算清。
     en: "Split expenses with family and friends for dinners, shared flats and trips: create a group, log who paid, and see who owes what."

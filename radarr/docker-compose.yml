@@ -93,11 +93,12 @@ configs:
     file: scripts/mail.sh
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: video.radarr.radarr
   version: 0.1.2
   kind: app
-  title: { zh: "电影下载（Radarr）", en: "Movie Downloads (Radarr)", zh-Hant: "電影下載（Radarr）", ja: "映画ダウンロード（Radarr）" }
+  title: { en: "Radarr" }
+  subtitle: { zh: "电影下载", en: "Movie Downloads", zh-Hant: "電影下載", ja: "映画ダウンロード" }
   description:
     zh: 把想看的电影加进片单，自动搜索、下载、整理好，在 Jellyfin 里直接看
     en: Add movies to your watchlist and Radarr searches, downloads and organizes them for your media library

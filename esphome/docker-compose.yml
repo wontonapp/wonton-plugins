@@ -41,12 +41,13 @@ services:
 
 x-wonton:
   # stable 核心支持到 0.11；用到的字段最高只到 0.8（mcp.headers、optional_permissions、show_owner）。
-  spec: "0.11"
+  spec: "0.17"
   # 反向域名：上游官网 esphome.io。
   id: io.esphome.esphome
   version: 0.1.2
   kind: app
-  title: { zh: "自制智能设备（ESPHome）", en: "DIY Smart Devices (ESPHome)", zh-Hant: "自製智慧裝置（ESPHome）", ja: "自作スマート家電（ESPHome）" }
+  title: { en: "ESPHome" }
+  subtitle: { zh: "自制智能设备", en: "DIY Smart Devices", zh-Hant: "自製智慧裝置", ja: "自作スマート家電" }
   description:
     zh: 给自制的智能设备写程序、无线更新，接入智能家居
     en: Write the software for your DIY smart devices, update them over the air and hook them into your smart home

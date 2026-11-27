@@ -23,11 +23,12 @@ services:
     restart: unless-stopped
 
 x-wonton:
-  spec: "0.14"
+  spec: "0.17"
   id: app.neko.browser
   version: 0.1.2
   kind: app
-  title: { zh: "云端浏览器（Neko）", en: "Remote Browser (Neko)", zh-Hant: "雲端瀏覽器（Neko）", ja: "リモートブラウザ（Neko）" }
+  title: { en: "Neko" }
+  subtitle: { zh: "云端浏览器", en: "Remote Browser", zh-Hant: "雲端瀏覽器", ja: "リモートブラウザ" }
   description:
     zh: 在家里的服务器上开一个浏览器，手机上就能远程看和操作。
     en: Run a browser on your home server and view and control it from your phone.

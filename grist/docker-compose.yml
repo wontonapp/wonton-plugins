@@ -46,11 +46,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.getgrist.grist
   version: 0.1.2
   kind: app
-  title: { zh: "能算的表格（Grist）", en: "Linked Spreadsheets (Grist)", zh-Hant: "能算的表格（Grist）", ja: "連携表計算（Grist）" }
+  title: { en: "Grist" }
+  subtitle: { zh: "能算的表格", en: "Linked Spreadsheets", zh-Hant: "能算的表格", ja: "連携表計算" }
   description:
     zh: 像会自动算的 Excel：家里的资产、报销、清单放进互相联动的表格里，汇总自己算好，还能画成图表
     en: "Like a spreadsheet that recalculates itself: track budgets, inventories and lists in linked tables, with totals and charts for free"

@@ -81,11 +81,12 @@ configs:
     file: config/init-owner.py
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.kavitareader.kavita
   version: 0.1.2
   kind: app
-  title: { zh: "漫画书架（Kavita）", en: "Comics & E-Book Shelf (Kavita)", zh-Hant: "漫畫書架（Kavita）", ja: "マンガ本棚（Kavita）" }
+  title: { en: "Kavita" }
+  subtitle: { zh: "漫画书架", en: "Comics & E-Book Shelf", zh-Hant: "漫畫書架", ja: "マンガ本棚" }
   description:
     zh: 像漫画 App 的书架：漫画和电子书放进去，网页里翻页看，读到哪一页自动记住，换手机接着读。漫画、小说都爱看的人选它。
     en: "Like a manga app's bookshelf: add comics and e-books, read them in the browser, and it remembers your page so you can pick up on your phone. For people who read both manga and novels."

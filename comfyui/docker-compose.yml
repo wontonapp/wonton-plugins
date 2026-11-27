@@ -89,14 +89,15 @@ services:
       start_interval: 5s
 
 x-wonton:
-  spec: "0.14"
+  spec: "0.17"
   # AMD 第一次启动要下载 6.4 GB 的 PyTorch ROCm 轮子。
   install_timeout_secs: 1800
   # 反向域名：上游是 comfy.org。
   id: org.comfy.comfyui
-  version: 0.1.2
+  version: 0.1.3
   kind: app
-  title: { zh: "AI 画图（ComfyUI）", en: "AI Image Studio (ComfyUI)", zh-Hant: "AI 畫圖（ComfyUI）", ja: "AI 画像生成（ComfyUI）" }
+  title: { en: "ComfyUI" }
+  subtitle: { zh: "AI 画图", en: "AI Image Studio", zh-Hant: "AI 畫圖", ja: "AI 画像生成" }
   description:
     zh: 用家里的显卡让 AI 画图、做视频：把步骤像积木一样连起来，放进模型就能出图。上手有门槛，适合愿意折腾的 AI 绘画爱好者。
     en: "Make AI images and videos on your own graphics card: connect the steps like building blocks, add a model and generate. There's a learning curve — best for AI art hobbyists."
@@ -142,25 +143,7 @@ x-wonton:
       ページ内でカスタムノードを入れて機能を足せます。ノードは第三者のコードなので、入れる前に目を通してください。
 
       モデルは同梱されず、自分で置きます。モデルの取得とノードの導入にはインターネットが必要です。
-  release_notes:
-    zh: |
-      AMD 主机用 AMD 官方发的 ROCm 版镜像，NVIDIA 和 CPU 行为不变。
-
-      插件包迁入官方插件合仓，保留 ComfyUI v0.44.0 构建镜像和 web_get 数据探针。
-
-      商店介绍重写：放模型和显存要求移到「安装后要做的事」，数据目录、自定义节点、出网权限等说法换成日常用语；补繁体中文和日文。
-
-      判重装也看 torch 版本。
-    en: |
-      AMD hosts use AMD's official ROCm image; NVIDIA and CPU behave the same.
-
-      Moved into the official Wonton plugin monorepo; keeps the ComfyUI v0.44.0 image build and web_get data probes.
-
-      Store copy rewritten: model placement and VRAM needs moved to the pre-install notice, with data-directory/custom-node/outbound wording in everyday words; Traditional Chinese and Japanese added.
-
-      Reinstall decisions also check the torch version.
-    zh-Hant: "AMD 主機用 AMD 官方發的 ROCm 版映像，NVIDIA 和 CPU 行為不變。\n\n外掛包遷入官方外掛合倉，保留 ComfyUI v0.44.0 構建映象和 web_get 資料探針。\n\n商店介紹重寫：放模型和顯示記憶體要求移到「安裝後要做的事」，資料目錄、自訂節點、外網權限等說法換成日常用語。補繁體中文和日文。\n\n判重裝也看 torch 版本。"
-    ja: "AMD ホストは AMD 公式の ROCm 版イメージを使います。NVIDIA と CPU の動作は変わりません。\n\nプラグインを公式プラグインリポジトリへ移動しました。ComfyUI v0.44.0 のビルドイメージと web_get データプローブは維持しています。\n\nストア紹介を書き直し、モデルの配置とビデオメモリ要件を「インストール後の手順」に移し、データディレクトリやカスタムノード、外部通信などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加しました。\n\n再インストールの判断でも torch のバージョンを確認します。"
+  release_notes: { zh: "应用名改回原名 ComfyUI，用途“AI 画图”放到名字下面。", en: "The app now shows its own name, ComfyUI, with \"AI Image Studio\" underneath.", zh-Hant: "應用名稱改回原名 ComfyUI，用途「AI 畫圖」放到名稱下方。", ja: "アプリ名を元の名前 ComfyUI に戻し、用途「AI 画像生成」を名前の下に表示します。" }
   # ComfyUI 没有登录页（网关挡着，只有登录用户打得开），也不支持 OIDC 或代理用户名，所以 none。
   webui:
     service: comfyui

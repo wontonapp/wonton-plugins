@@ -58,11 +58,12 @@ configs:
           rwmda: @acct
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: me.ocv.copyparty
   version: 0.1.2
   kind: app
-  title: { zh: "家庭网盘（Copyparty）", en: "Home Drive (Copyparty)", zh-Hant: "家庭網盤（Copyparty）", ja: "家庭クラウドドライブ（Copyparty）" }
+  title: { en: "Copyparty" }
+  subtitle: { zh: "家庭网盘", en: "Home Drive", zh-Hant: "家庭網盤", ja: "家庭クラウドドライブ" }
   description:
     zh: 像百度网盘，但文件存在家里的服务器上：手机、电脑打开网页就能上传下载，照片、视频、音乐直接在线看。最简单好上手，还能开链接让别人下载或往里传文件。
     en: "Like Google Drive, but the files live on your home server: upload and download from any phone or computer browser, with photos, videos and music playing right there. The easiest drive to start with, and you can hand out links for others to download from or upload to."

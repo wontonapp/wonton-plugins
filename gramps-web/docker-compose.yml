@@ -122,11 +122,12 @@ services:
       start_interval: 10s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.gramps-project.grampsweb
   version: 0.1.2
   kind: app
-  title: { zh: "家谱（Gramps Web）", en: "Family Tree (Gramps Web)", zh-Hant: "家譜（Gramps Web）", ja: "家系図（Gramps Web）" }
+  title: { en: "Gramps Web" }
+  subtitle: { zh: "家谱", en: "Family Tree", zh-Hant: "家譜", ja: "家系図" }
   description:
     zh: 把家谱放到网上，和亲戚一起补充：加人、写生平、传老照片，谁打开都是最新的。
     en: Put your family tree online and build it together — add relatives, stories and photos, always up to date for everyone.

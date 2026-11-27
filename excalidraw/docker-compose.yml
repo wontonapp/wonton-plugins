@@ -20,11 +20,12 @@ services:
       start_interval: 1s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.excalidraw.excalidraw
   version: 0.1.2
   kind: app
-  title: { zh: "手绘画板（Excalidraw）", en: "Sketch Board (Excalidraw)", zh-Hant: "手繪畫板（Excalidraw）", ja: "手描きホワイトボード（Excalidraw）" }
+  title: { en: "Excalidraw" }
+  subtitle: { zh: "手绘画板", en: "Sketch Board", zh-Hant: "手繪畫板", ja: "手描きホワイトボード" }
   description:
     zh: 像在白纸上随手画：流程图、示意图、草图都是手绘风格，画完能导出成图片。
     en: "Like sketching on paper: flowcharts, diagrams and doodles in a hand-drawn style, ready to export as images."

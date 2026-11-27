@@ -63,11 +63,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: me.rxresu.resume
   version: 0.1.3
   kind: app
-  title: { zh: "简历制作（Reactive Resume）", en: "Resume Builder (Reactive Resume)", zh-Hant: "履歷製作（Reactive Resume）", ja: "履歴書作成（Reactive Resume）" }
+  title: { en: "Reactive Resume" }
+  subtitle: { zh: "简历制作", en: "Resume Builder", zh-Hant: "履歷製作", ja: "履歴書作成" }
   description:
     zh: 在线做一份好看的简历：像用现成模板填空，填好经历挑个模板，就能导出 PDF 去投递。
     en: "Build a polished resume online: fill in your experience, pick one of dozens of templates and export a PDF."

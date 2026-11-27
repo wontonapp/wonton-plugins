@@ -185,11 +185,12 @@ configs:
       SELECT 1 / count(*) FROM users WHERE lower(username) = lower(:'owner');
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.miniflux.miniflux
   version: 0.1.4
   kind: app
-  title: { zh: "订阅阅读器（Miniflux）", en: "Feed Reader (Miniflux)", zh-Hant: "訂閱閱讀器（Miniflux）", ja: "フィードリーダー（Miniflux）" }
+  title: { en: "Miniflux" }
+  subtitle: { zh: "订阅阅读器", en: "Feed Reader", zh-Hant: "訂閱閱讀器", ja: "フィードリーダー" }
   description:
     zh: 像一份自己编的报纸：订阅的网站和博客更新都收在一个地方，一页页读完
     en: "Like a newspaper you put together: every update from the sites and blogs you follow arrives in one place to read through"

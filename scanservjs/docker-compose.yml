@@ -32,11 +32,12 @@ configs:
     file: config/config.local.js
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: io.github.sbs20.scanservjs
   version: 0.1.2
   kind: app
-  title: { zh: "网页扫描（scanservjs）", en: "Web Scanning (scanservjs)", zh-Hant: "網頁掃描（scanservjs）", ja: "Web スキャン（scanservjs）" }
+  title: { en: "scanservjs" }
+  subtitle: { zh: "网页扫描", en: "Web Scanning", zh-Hant: "網頁掃描", ja: "Web スキャン" }
   description:
     zh: 把网络扫描仪变成网页，手机上点一下就扫，文件自动进「文档」文件夹。
     en: Turn a network scanner into a web page — scan from your phone, and files land in the Documents folder.

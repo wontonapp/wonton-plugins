@@ -41,11 +41,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.13"
+  spec: "0.17"
   id: org.traccar.traccar
   version: 0.1.4
   kind: app
-  title: { zh: "定位地图（Traccar）", en: "Location Map (Traccar)", zh-Hant: "定位地圖（Traccar）", ja: "位置マップ（Traccar）" }
+  title: { en: "Traccar" }
+  subtitle: { zh: "定位地图", en: "Location Map", zh-Hant: "定位地圖", ja: "位置マップ" }
   description:
     zh: 像一张全家共用的定位地图：手机、车载定位器、老人手表和宠物项圈的位置和轨迹都汇到这里看。
     en: "One shared map for the family: see the location and history of phones, car trackers, watches and pet collars."

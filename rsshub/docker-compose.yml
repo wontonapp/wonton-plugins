@@ -37,11 +37,12 @@ services:
 x-wonton:
   # 0.8：密钥的用户填写项（input）和主人可见（show_owner）；
   # 0.11：provides 第三方能力（能力依赖），旧核心会如实提示升级。
-  spec: "0.11"
+  spec: "0.17"
   id: app.rsshub.rsshub
   version: 0.1.2
   kind: app
-  title: { zh: "万物订阅源（RSSHub）", en: "Feeds for Anything (RSSHub)", zh-Hant: "萬物訂閱源（RSSHub）", ja: "あらゆるサイトの購読（RSSHub）" }
+  title: { en: "RSSHub" }
+  subtitle: { zh: "万物订阅源", en: "Feeds for Anything", zh-Hant: "萬物訂閱源", ja: "あらゆるサイトの購読" }
   description:
     zh: 把没有订阅功能的网站变成能订阅的：B 站 UP 主、微博、知乎、GitHub 的更新，像订报纸一样送进你的阅读器。要和阅读器插件（如 Miniflux）配合使用。
     en: "Turns sites without feeds into subscriptions: follow Bilibili uploaders, Weibo, Zhihu and GitHub updates like a newspaper, right inside your reader (e.g. Miniflux)."

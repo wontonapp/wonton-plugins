@@ -134,11 +134,12 @@ configs:
             userIdentifier: preferred_username
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.filebrowser.quantum
   version: 0.1.5
   kind: app
-  title: { zh: "文件浏览（File Browser）", en: "File Browser", zh-Hant: "檔案瀏覽（File Browser）", ja: "ファイル閲覧（File Browser）" }
+  title: { en: "FileBrowser Quantum" }
+  subtitle: { zh: "文件浏览", en: "File Manager", zh-Hant: "檔案瀏覽", ja: "ファイル閲覧" }
   description:
     zh: 像电脑上的文件夹窗口搬进了网页：翻看家里的共享文件夹，照片视频直接预览，上传、下载、改名、移动都能做。最轻巧，打开就是你的文件。
     en: "Your computer's folder window, in a browser: go through the shared folders on your home server, preview photos and videos, and upload, download, rename or move files. The lightest option — it opens straight to your files."

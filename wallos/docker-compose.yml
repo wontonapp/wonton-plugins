@@ -87,11 +87,12 @@ configs:
     file: wonton-login.php
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.wallos.wallos
   version: 0.1.2
   kind: app
-  title: { zh: "订阅管家（Wallos）", en: "Subscription Tracker (Wallos)", zh-Hant: "訂閱管家（Wallos）", ja: "サブスク管理（Wallos）" }
+  title: { en: "Wallos" }
+  subtitle: { zh: "订阅管家", en: "Subscription Tracker", zh-Hant: "訂閱管家", ja: "サブスク管理" }
   description:
     zh: 像给订阅请的记账员：视频会员、网盘、域名这些按期扣费的服务记在一起，到期前提醒，全家花销一目了然。
     en: "A ledger for your recurring subscriptions: track what you pay for, see upcoming renewals and get a heads-up before each due date."

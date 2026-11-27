@@ -69,11 +69,12 @@ configs:
     file: config/init.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: net.mayswind.ezbookkeeping
   version: 0.1.4
   kind: app
-  title: { zh: "随身账本（ezBookkeeping）", en: "Pocket Ledger (ezBookkeeping)", zh-Hant: "隨身帳本（ezBookkeeping）", ja: "ポケット家計簿（ezBookkeeping）" }
+  title: { en: "ezBookkeeping" }
+  subtitle: { zh: "随身账本", en: "Pocket Ledger", zh-Hant: "隨身帳本", ja: "ポケット家計簿" }
   description:
     zh: 像随身的小账本，记下每天的花销和收入，还能导入支付宝、微信的账单
     en: A pocket ledger for daily spending and income, with Alipay and WeChat bill import

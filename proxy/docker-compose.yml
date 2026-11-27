@@ -97,11 +97,12 @@ configs:
   subscription-page: { file: web/subscription.html }
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.wonton.proxy
   version: 0.1.4
   kind: app
-  title: { zh: "上网代理（Mihomo）", en: "Internet Proxy (Mihomo)", zh-Hant: "上網代理（Mihomo）", ja: "インターネットプロキシ（Mihomo）" }
+  title: { en: "Mihomo" }
+  subtitle: { zh: "上网代理", en: "Internet Proxy", zh-Hant: "上網代理", ja: "インターネットプロキシ" }
   description:
     zh: 填一次你的代理订阅，家里服务器上的其他应用上网就走你挑的线路：网页里切线路、看流量，也能打开给家里其他设备用。
     en: "Add your proxy subscription once and the other apps on your home server go online through the route you pick: switch routes and watch traffic in the browser, and optionally share it with other devices at home."

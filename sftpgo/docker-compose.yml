@@ -88,11 +88,12 @@ configs:
     content: ${WONTON_SECRET_CLIENT_PASSWORD}
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.sftpgo.sftpgo
   version: 0.2.1
   kind: app
-  title: { zh: "文件传输站（SFTPGo）", en: "File Transfer Hub (SFTPGo)", zh-Hant: "檔案傳輸站（SFTPGo）", ja: "ファイル転送ハブ（SFTPGo）" }
+  title: { en: "SFTPGo" }
+  subtitle: { zh: "文件传输站", en: "File Transfer Hub", zh-Hant: "檔案傳輸站", ja: "ファイル転送ハブ" }
   description:
     zh: 给传文件用的中转站：在家里用电脑、手机上的传输软件（比如 FileZilla）直接连上来批量传文件，网页里也能上传下载和分享。适合常大批量倒文件、习惯用传输软件的人。
     en: "A transfer station for your files: at home, connect a transfer app such as FileZilla from your computer or phone to move files in bulk, or upload, download and share in the browser. For big batches and people who already use a transfer app."

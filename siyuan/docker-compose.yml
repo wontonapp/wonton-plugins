@@ -107,11 +107,12 @@ configs:
       </html>
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.b3log.siyuan
   version: 0.1.2
   kind: app
-  title: { zh: "知识笔记本（思源笔记）", en: "Knowledge Notebook (SiYuan)", zh-Hant: "知識筆記本（思源筆記）", ja: "知識ノート（SiYuan）" }
+  title: { zh: "思源笔记", en: "SiYuan", zh-Hant: "思源筆記", ja: "SiYuan" }
+  subtitle: { zh: "知识笔记本", en: "Knowledge Notebook", zh-Hant: "知識筆記本", ja: "知識ノート" }
   description:
     zh: 给长期积累用的笔记本：任何一段话都能被别的笔记引用，笔记之间自然连成一张网，还带大纲和复习卡片。写读书笔记、学习笔记，越记越成体系。
     en: "A notebook for knowledge you build over years: any paragraph can be linked from another note so your notes grow into a web, with outlines and flashcards built in. Great for study and reading notes."

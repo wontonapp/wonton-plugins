@@ -54,11 +54,12 @@ configs:
 
 x-wonton:
   # setup 是 0.11 的字段、show_owner 是 0.8 的；未用 0.12 的 settings，声明 0.11。
-  spec: "0.11"
+  spec: "0.17"
   id: game.razzia.app
   version: 0.1.2
   kind: app
-  title: { zh: "抢答游戏（Razzia）", en: "Quiz Game (Razzia)", zh-Hant: "搶答遊戲（Razzia）", ja: "クイズゲーム（Razzia）" }
+  title: { en: "Razzia" }
+  subtitle: { zh: "抢答游戏", en: "Quiz Game", zh-Hant: "搶答遊戲", ja: "クイズゲーム" }
   description:
     zh: 像 Kahoot 的家庭抢答：一人出题当主持，大家用手机加入房间抢答，看谁答得又快又对。
     en: A Kahoot-style quiz for the household — one person hosts, everyone joins on their phone, the fastest right answer wins.

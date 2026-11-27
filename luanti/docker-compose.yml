@@ -81,11 +81,12 @@ configs:
     file: download-game.sh
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: org.luanti.luanti
   version: 0.1.3
   kind: app
-  title: { zh: "沙盒游戏（Luanti）", en: "Sandbox Game (Luanti)", zh-Hant: "沙盒遊戲（Luanti）", ja: "サンドボックスゲーム（Luanti）" }
+  title: { en: "Luanti" }
+  subtitle: { zh: "沙盒游戏", en: "Sandbox Game", zh-Hant: "沙盒遊戲", ja: "サンドボックスゲーム" }
   description:
     zh: 自己的体素沙盒游戏服务器，家人用 Luanti 客户端连上来一起玩。
     en: Your own voxel sandbox game server, join together from Luanti clients.
