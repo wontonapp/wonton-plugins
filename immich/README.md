@@ -58,6 +58,17 @@ OIDC。
   就恢复，不用动照片。权限只给搜索和缩略图要的 `asset.read`、`asset.view`（实测：搜索和缩略图可用，
   同一把 key 删照片、上传返回 403）。token 文件属主和搜索服务是同一个用户、权限 0400，别的插件和 Bot 读不到。
   key 失效不影响照片网页（健康检查只看 Immich 的 ping），工具调用时会单独报“权限失效，重启插件会重建”。
+- 媒体源（`provides.media_source`，`images/immich-media/`）：云吞 App 的手机自动备份和原生相册经核心找它，它把核心的契约翻成
+  Immich 自己的接口，不改上游。每个请求带核心签的能力凭据（只存摘要）和 `X-Wonton-User`，适配器用这个人自己的 Immich key
+  去调，家人之间按 Immich 自己的权限隔开（自己的、partner 共享给他的、共享相册）。
+  开户：第一次替某个家人办事时，用管理员（主人账号，密码是 `admin_password`）登录，没有号就按 `<用户名>@wonton.internal` 建，
+  有号（之前网页 OIDC 建的）就给它换一个随机密码，再用这个密码登录、建一把只含浏览、上传、相册、人物权限的 key（名字
+  `wonton-media`），账号文件 0600 放在插件数据目录 `media-adapter/accounts/`。Immich 不许管理员替别人建 key，所以要这一步；
+  家人网页走 OIDC，用不到这个密码。主人自己的密码不改（局域网直连在用）。在 Immich 里删了这把 key，下一次请求回
+  `authentication_required` 并丢掉记录，再下一次重新建。
+  上传：Immich 的 `POST /assets` 只收整个文件，核心按断点续传的样子分片写，所以分片先落 `media-adapter/uploads/`，收尾时
+  核对 SHA-1 再一次交给 Immich；一周没收尾的启动时清掉。去重按 SHA-1 问 Immich 的 `bulk-upload-check`，只在这个人的库里算。
+  实况照片的动态那段先传，静态那张按动态那段的校验和找回它再关联（`livePhotoVideoId`）。
 
 核心升级时容器会按新的签发方自动重建，不用重装；账号按已有的身份记录认回原账号，数据不动。
 
@@ -93,6 +104,7 @@ scripts/dev.sh install
 | `icon.png`、`screenshots/` | 商店图标和竖屏截图 |
 | `bootstrap/bootstrap.cjs` | 一次性服务：建管理员，每次启动按用户名核对用户身份，核对搜索服务的 Immich API key（对不上就重建）和 photos 的外部图库 |
 | `images/immich-mcp/` | 只读搜索服务的源码和 Dockerfile：一个 `search_photos` 工具，经核心的 MCP 总线给 Bot 用 |
+| `images/immich-media/` | 媒体源适配器的源码和 Dockerfile：手机备份的分片上传、原生相册的浏览和本人的写操作 |
 | `../scripts/check.sh` | 从仓库根以 `WONTON_PLUGIN=immich scripts/check.sh` 检查插件包 |
 | `../scripts/dev.sh` | 从仓库根以 `WONTON_PLUGIN=immich scripts/dev.sh` 管理开发环境 |
 | `smoke-probes.sh` | `WONTON_PLUGIN=immich scripts/dev.sh smoke` 对这个插件逐项的探测 |
