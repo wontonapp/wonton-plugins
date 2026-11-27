@@ -96,6 +96,12 @@ impl Jellyfin {
         decode(self.send(req, what).await?, what).await
     }
 
+    /// Jellyfin 自己在不在：`/health` 不要凭据。
+    pub async fn alive(&self) -> Reply<()> {
+        let req = self.http.get(format!("{}/health", self.base));
+        self.send(req, "查 Jellyfin 在不在").await.map(|_| ())
+    }
+
     /// 只要成功、不要回体的调用（Jellyfin 这类接口回 204）。
     pub async fn call(
         &self,

@@ -78,6 +78,30 @@ pub fn router(app: Arc<App>) -> Router {
         .with_state(app)
 }
 
+/// 还没填管理员 key 时给人看的原因。
+pub const NO_ADMIN_KEY: &str =
+    "还没填 Jellyfin 的 API 密钥：在 Jellyfin 的 控制台 → API 密钥 里新建一把，填到插件详情页";
+
+/// 还没填管理员 key 时的服务。插件照样装上（核心标“待配置”），主人才能打开网页去建 key；媒体源的接口
+/// 一律回 `plugin_unavailable` 说去哪填。健康检查只问 Jellyfin 自己在不在：拿“没 key”判不健康，
+/// 插件就装不上，也就没地方去建 key。
+pub fn unconfigured(jellyfin: Jellyfin) -> Router {
+    Router::new()
+        .route(
+            "/healthz",
+            get(move || async move {
+                match jellyfin.alive().await {
+                    Ok(()) => StatusCode::NO_CONTENT.into_response(),
+                    Err(f) => {
+                        eprintln!("健康检查没过：{}", f.message);
+                        f.into_response()
+                    }
+                }
+            }),
+        )
+        .fallback(|| async { Failure::new(Code::PluginUnavailable, NO_ADMIN_KEY).into_response() })
+}
+
 /// 只认核心签给本提供方的凭据（`credentials issue`）；一把都没签时谁都不放行。
 async fn authorize(State(app): Shared, req: Request, next: Next) -> Response {
     let presented = req
@@ -112,13 +136,16 @@ async fn healthz(State(app): Shared) -> Response {
     }
 }
 
+/// 请求替谁办：`X-Wonton-User` 里 Matrix ID 的本地部分（[`accounts::local_part`]）。
 fn person(headers: &HeaderMap) -> Reply<String> {
-    headers
+    let raw = headers
         .get(USER_HEADER)
         .and_then(|v| v.to_str().ok())
         .filter(|v| !v.is_empty())
+        .ok_or_else(|| Failure::bad_request("缺 X-Wonton-User：认不出是谁，不拿别人兜底"))?;
+    accounts::local_part(raw)
         .map(str::to_owned)
-        .ok_or_else(|| Failure::bad_request("缺 X-Wonton-User：认不出是谁，不拿别人兜底"))
+        .ok_or_else(|| Failure::bad_request(format!("X-Wonton-User 不是 Matrix ID：{raw:?}")))
 }
 
 /// 以这个人的身份做一件事。本人令牌被 Jellyfin 拒了（管理员在 Jellyfin 里删了设备）就重拿一次再试。
@@ -325,8 +352,13 @@ async fn hls(
     .await
 }
 
-async fn revoke(State(app): Shared, Json(body): Json<Revoke>) -> Reply<StatusCode> {
-    app.accounts.revoke(&body.name).await?;
+/// 收回的是请求里这个人的上游凭据；体里的 `name` 是核心那把能力凭据的名字，由凭据命令另行吊销。
+async fn revoke(
+    State(app): Shared,
+    headers: HeaderMap,
+    Json(_credential): Json<Revoke>,
+) -> Reply<StatusCode> {
+    app.accounts.revoke(&person(&headers)?).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 

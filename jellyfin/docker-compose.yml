@@ -55,7 +55,8 @@ services:
       jellyfin:
         condition: service_healthy
     healthcheck:
-      # 查的是真能用：Jellyfin 在、管理员 key 有效；key 填错时适配器不健康，日志写明原因。
+      # 查的是真能用：Jellyfin 在、管理员 key 有效；key 填错时适配器不健康，日志写明原因。没填 key 时只看
+      # Jellyfin 在不在：插件照样装上（待配置），主人才能打开网页去建 key；媒体源接口这时回“插件未就绪”。
       test: ["CMD", "/wonton-jellyfin-media", "healthcheck"]
       interval: 30s
       timeout: 15s

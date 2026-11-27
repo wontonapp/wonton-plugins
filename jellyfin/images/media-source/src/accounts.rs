@@ -64,6 +64,13 @@ struct AuthResult {
     access_token: String,
 }
 
+/// `X-Wonton-User` 是这个人的 Matrix ID（`@mom:example.org`）；它的本地部分就是云吞用户名，Jellyfin
+/// 里用同名用户。媒体接口只给这台服务器上已配对的设备，所以不会有别家服务器的同名人。
+pub fn local_part(user_id: &str) -> Option<&str> {
+    let (local, server) = user_id.strip_prefix('@')?.split_once(':')?;
+    (!local.is_empty() && !server.is_empty()).then_some(local)
+}
+
 /// 云吞的用户名只含这些字符；别的拒掉，免得拼进文件名和 Jellyfin 用户名出事。
 pub fn valid_person(person: &str) -> bool {
     !person.is_empty()
@@ -277,6 +284,18 @@ mod tests {
         assert!(!valid_person(""));
         assert!(!valid_person("../etc"));
         assert!(!valid_person("a b"));
+    }
+
+    #[test]
+    fn the_person_is_the_local_part_of_the_matrix_id() {
+        assert_eq!(local_part("@mom:example.org"), Some("mom"));
+        assert_eq!(
+            local_part("@li.si-2:home.example.org:8448"),
+            Some("li.si-2")
+        );
+        assert_eq!(local_part("mom"), None);
+        assert_eq!(local_part("@:example.org"), None);
+        assert_eq!(local_part("@mom:"), None);
     }
 
     #[test]

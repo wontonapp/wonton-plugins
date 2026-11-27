@@ -10,7 +10,7 @@ use std::sync::Arc;
 use wonton_jellyfin_media::accounts::Accounts;
 use wonton_jellyfin_media::jellyfin::Jellyfin;
 use wonton_jellyfin_media::store::Credentials;
-use wonton_jellyfin_media::{App, router};
+use wonton_jellyfin_media::{App, NO_ADMIN_KEY, router, unconfigured};
 
 const PORT: u16 = 8090;
 
@@ -95,22 +95,21 @@ async fn main() -> ExitCode {
     }
     let base = std::env::var("JELLYFIN_URL").unwrap_or_else(|_| "http://jellyfin:8096".into());
     let key = std::env::var("JELLYFIN_API_KEY").unwrap_or_default();
-    if key.trim().is_empty() {
-        eprintln!(
-            "没有 Jellyfin 的 API key：在 Jellyfin 的 控制台 → API 密钥 里新建一把，填到插件详情页"
-        );
-        return ExitCode::FAILURE;
-    }
     let jellyfin = Jellyfin::new(base);
-    let app = Arc::new(App {
-        accounts: Accounts::new(
-            data_dir().join("users"),
-            jellyfin.clone(),
-            key.trim().to_owned(),
-        ),
-        credentials: credentials(),
-        jellyfin,
-    });
+    let service = if key.trim().is_empty() {
+        eprintln!("{NO_ADMIN_KEY}");
+        unconfigured(jellyfin)
+    } else {
+        router(Arc::new(App {
+            accounts: Accounts::new(
+                data_dir().join("users"),
+                jellyfin.clone(),
+                key.trim().to_owned(),
+            ),
+            credentials: credentials(),
+            jellyfin,
+        }))
+    };
     let listener = match tokio::net::TcpListener::bind(("0.0.0.0", PORT)).await {
         Ok(l) => l,
         Err(e) => {
@@ -123,7 +122,7 @@ async fn main() -> ExitCode {
     };
     let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
         .expect("装得上 SIGTERM 处理");
-    let served = axum::serve(listener, router(app)).with_graceful_shutdown(async move {
+    let served = axum::serve(listener, service).with_graceful_shutdown(async move {
         tokio::select! { _ = shutdown => {}, _ = term.recv() => {} }
     });
     match served.await {

@@ -106,41 +106,16 @@ pub async fn plan(
     req: &PlaybackRequest,
     now_ms: u64,
 ) -> Reply<PlaybackPlan> {
-    // 换音轨或开字幕时不走直链：直链里放的是文件原样，选哪条轨要播放器自己认 Jellyfin 的轨号，两端
-    // 播放器的轨序和 Jellyfin 对不上。改走 HLS 让 Jellyfin 按轨号重封装（编码能直接拷贝时不重编）。
-    let wants_tracks = req.subtitle.is_some() || req.audio.is_some();
-    let body = json!({
-        "UserId": who.user_id,
-        "DeviceProfile": jellyfin_profile(&req.profile),
-        "MaxStreamingBitrate": bitrate(&req.profile),
-        "StartTimeTicks": ms_to_ticks(req.position_ms),
-        "AudioStreamIndex": req.audio,
-        "SubtitleStreamIndex": req.subtitle,
-        "EnableDirectPlay": !wants_tracks,
-        "EnableDirectStream": true,
-        "EnableTranscoding": true,
-        "AllowVideoStreamCopy": true,
-        "AllowAudioStreamCopy": true,
-        "AutoOpenLiveStream": false,
-    });
-    let path = format!(
-        "/Items/{}/PlaybackInfo?userId={}",
-        encode(&req.item.id),
-        encode(&who.user_id)
-    );
-    let info: JfPlaybackInfo = jf.post(&path, &body, &who.identity(), "取播放信息").await?;
-    if let Some(code) = info.error_code.as_deref() {
-        return Err(playback_error(code));
+    // 开字幕或换了非默认音轨时不走直链：直链里放的是文件原样，选哪条轨要播放器自己认 Jellyfin 的轨号，
+    // 两端播放器的轨序和 Jellyfin 对不上。改走 HLS 让 Jellyfin 按轨号重封装（编码能直接拷贝时不重编）。
+    // 壳常把默认音轨原样带回来，那等于没换，照样直放；默认轨是哪条要问过 Jellyfin 才知道，所以先按能直放
+    // 问，带的不是默认轨再按不直放重问一次。
+    let (mut source, mut play_session) = info(jf, who, req, req.subtitle.is_none()).await?;
+    let other_audio = picks_other_audio(req.audio, source.default_audio_stream_index);
+    if other_audio && req.subtitle.is_none() {
+        (source, play_session) = info(jf, who, req, false).await?;
     }
-    let source = info
-        .media_sources
-        .into_iter()
-        .next()
-        .ok_or_else(|| Failure::new(Code::MediaGone, "这一条没有能放的文件"))?;
-    let play_session = info
-        .play_session_id
-        .ok_or_else(|| Failure::new(Code::Protocol, "Jellyfin 没给播放会话号"))?;
-    let direct = source.supports_direct_play && !wants_tracks;
+    let direct = source.supports_direct_play && req.subtitle.is_none() && !other_audio;
     let session = Session {
         u: who.person.clone(),
         i: req.item.id.clone(),
@@ -174,6 +149,51 @@ pub async fn plan(
         duration_ms: source.run_time_ticks.map(ticks_to_ms).unwrap_or(0),
         expires_at: now_ms + PLAN_TTL_MS,
     })
+}
+
+async fn info(
+    jf: &Jellyfin,
+    who: &Account,
+    req: &PlaybackRequest,
+    direct: bool,
+) -> Reply<(JfSource, String)> {
+    let body = json!({
+        "UserId": who.user_id,
+        "DeviceProfile": jellyfin_profile(&req.profile),
+        "MaxStreamingBitrate": bitrate(&req.profile),
+        "StartTimeTicks": ms_to_ticks(req.position_ms),
+        "AudioStreamIndex": req.audio,
+        "SubtitleStreamIndex": req.subtitle,
+        "EnableDirectPlay": direct,
+        "EnableDirectStream": true,
+        "EnableTranscoding": true,
+        "AllowVideoStreamCopy": true,
+        "AllowAudioStreamCopy": true,
+        "AutoOpenLiveStream": false,
+    });
+    let path = format!(
+        "/Items/{}/PlaybackInfo?userId={}",
+        encode(&req.item.id),
+        encode(&who.user_id)
+    );
+    let info: JfPlaybackInfo = jf.post(&path, &body, &who.identity(), "取播放信息").await?;
+    if let Some(code) = info.error_code.as_deref() {
+        return Err(playback_error(code));
+    }
+    let source = info
+        .media_sources
+        .into_iter()
+        .next()
+        .ok_or_else(|| Failure::new(Code::MediaGone, "这一条没有能放的文件"))?;
+    let play_session = info
+        .play_session_id
+        .ok_or_else(|| Failure::new(Code::Protocol, "Jellyfin 没给播放会话号"))?;
+    Ok((source, play_session))
+}
+
+/// 带来的音轨是不是换了一条：没带、或者带的就是默认轨，都不算。
+fn picks_other_audio(requested: Option<u16>, default: Option<i32>) -> bool {
+    requested.is_some_and(|index| Some(i32::from(index)) != default)
 }
 
 fn playback_error(code: &str) -> Failure {
@@ -368,6 +388,14 @@ mod tests {
             "master.m3u8?DeviceId=d&VideoCodec=h264"
         );
         assert!(hls_tail("/audio/x/master.m3u8").is_err());
+    }
+
+    #[test]
+    fn the_default_audio_track_is_not_a_switch() {
+        assert!(!picks_other_audio(None, Some(1)));
+        assert!(!picks_other_audio(Some(1), Some(1)));
+        assert!(picks_other_audio(Some(2), Some(1)));
+        assert!(picks_other_audio(Some(1), None));
     }
 
     #[test]
