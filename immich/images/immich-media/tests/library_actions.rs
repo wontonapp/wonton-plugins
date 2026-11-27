@@ -17,7 +17,9 @@ async fn restore_puts_the_photo_back_in_the_library() {
     let alice = rig.alice().await;
     let id = {
         let mut world = rig.world.lock().unwrap();
-        world.add_trashed_asset(&alice, "2025-11-03T10:00:00.000Z")
+        let id = world.add_asset(&alice, "2025-11-03T10:00:00.000Z");
+        world.asset(&id).trashed = true;
+        id
     };
 
     let (status, result) = rig
@@ -38,7 +40,9 @@ async fn restore_of_an_id_that_is_gone_or_someone_elses_is_permission_denied() {
     let dad = rig.dad();
     let theirs = {
         let mut world = rig.world.lock().unwrap();
-        world.add_trashed_asset(&dad, "2025-11-03T10:00:00.000Z")
+        let id = world.add_asset(&dad, "2025-11-03T10:00:00.000Z");
+        world.asset(&id).trashed = true;
+        id
     };
 
     for id in [UNKNOWN.to_owned(), theirs.clone()] {
@@ -70,8 +74,10 @@ async fn restore_in_a_batch_brings_back_the_owners_photo_and_lists_the_refused_o
     let dad = rig.dad();
     let (mine, theirs) = {
         let mut world = rig.world.lock().unwrap();
-        let mine = world.add_trashed_asset(&alice, "2025-11-03T10:00:00.000Z");
-        let theirs = world.add_trashed_asset(&dad, "2025-11-04T10:00:00.000Z");
+        let mine = world.add_asset(&alice, "2025-11-03T10:00:00.000Z");
+        world.asset(&mine).trashed = true;
+        let theirs = world.add_asset(&dad, "2025-11-04T10:00:00.000Z");
+        world.asset(&theirs).trashed = true;
         (mine, theirs)
     };
     let ids = vec![mine.clone(), theirs.clone(), UNKNOWN.to_owned()];
@@ -93,6 +99,6 @@ async fn restore_in_a_batch_brings_back_the_owners_photo_and_lists_the_refused_o
     );
     let world = rig.world.lock().unwrap();
     assert!(!world.assets[0].trashed, "自己的那张恢复了");
-    assert!(world.assets[1].trashed, "别人的那张没动");
+    assert!(world.assets[1].trashed, "别人的那张还在回收站");
     assert_eq!(world.restores.len(), 4, "先整批，再逐条：整批 + 三条");
 }

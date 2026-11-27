@@ -19,7 +19,7 @@ pub struct User {
     pub password: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Asset {
     pub id: String,
     pub owner: String,
@@ -34,6 +34,7 @@ pub struct Asset {
     pub city: Option<String>,
     pub country: Option<String>,
     pub person: Option<String>,
+    pub exif: Option<Value>,
 }
 
 #[derive(Clone, Debug)]
@@ -87,23 +88,11 @@ impl World {
             id: id.clone(),
             owner: owner.into(),
             checksum: format!("{:040}", self.next),
-            live: None,
             name: format!("{id}.jpg"),
             size: 1,
             created: created.into(),
-            favorite: false,
-            trashed: false,
-            file_missing: false,
-            city: None,
-            country: None,
-            person: None,
+            ..Default::default()
         });
-        id
-    }
-
-    pub fn add_trashed_asset(&mut self, owner: &str, created: &str) -> String {
-        let id = self.add_asset(owner, created);
-        self.asset(&id).trashed = true;
         id
     }
 
@@ -135,24 +124,6 @@ impl World {
     /// 让这一条的文件不在盘上（Immich 的行还在）：取字节回 404。
     pub fn remove_asset_file(&mut self, id: &str) {
         self.asset(id).file_missing = true;
-    }
-
-    pub fn remove_person_file(&mut self, id: &str) {
-        self.people
-            .iter_mut()
-            .find(|p| p.id == id)
-            .unwrap()
-            .file_missing = true;
-    }
-
-    pub fn place_of(&mut self, id: &str, city: &str, country: &str) {
-        let asset = self.asset(id);
-        asset.city = Some(city.into());
-        asset.country = Some(country.into());
-    }
-
-    pub fn face_of(&mut self, id: &str, person: &str) {
-        self.asset(id).person = Some(person.into());
     }
 
     pub fn add_album(&mut self, name: &str, owner: &str, members: &[&str]) -> String {
@@ -418,12 +389,7 @@ async fn upload(State(w): State<Shared>, headers: HeaderMap, mut form: Multipart
         name: fields["filename"].clone(),
         size,
         created: fields["fileCreatedAt"].clone(),
-        favorite: false,
-        trashed: false,
-        file_missing: false,
-        city: None,
-        country: None,
-        person: None,
+        ..Default::default()
     });
     (
         StatusCode::CREATED,
@@ -554,7 +520,8 @@ async fn album_detail(
     if !album.2.contains(&me) {
         return not_allowed("album.read");
     }
-    // 权限查过之后行没了：Immich 是 `findOrFail` 的 404。
+    // 真实 Immich 的权限检查也是查 album 表（`access.repository.ts`），行没了通常先在 access
+    // 回 400；只有两查之间被删才走到 `findOrFail` 的 404。这里的 vanished 只模拟后一种竞态。
     if world.vanished_albums.contains(&id) {
         return (StatusCode::NOT_FOUND, "").into_response();
     }
@@ -567,10 +534,9 @@ fn asset_json(world: &World, asset: &Asset) -> Value {
         .person
         .iter()
         .filter_map(|id| world.people.iter().find(|person| &person.id == id))
-        .filter(|person| !person.name.is_empty())
         .map(|person| json!({"id": person.id, "name": person.name}))
         .collect();
-    json!({
+    let mut out = json!({
         "id": asset.id,
         "type": if video { "VIDEO" } else { "IMAGE" },
         "fileCreatedAt": asset.created,
@@ -586,15 +552,12 @@ fn asset_json(world: &World, asset: &Asset) -> Value {
         "height": 2000,
         "duration": if video { Some(3000) } else { None::<u32> },
         "thumbhash": Value::Null,
-        "exifInfo": {
-            "exifImageWidth": 3000,
-            "exifImageHeight": 2000,
-            "fileSizeInByte": asset.size,
-            "city": asset.city,
-            "country": asset.country,
-        },
         "people": people,
-    })
+    });
+    if let Some(exif) = &asset.exif {
+        out["exifInfo"] = exif.clone();
+    }
+    out
 }
 
 async fn search_impl(shared: Shared, headers: HeaderMap, body: Value, smart: bool) -> Response {
