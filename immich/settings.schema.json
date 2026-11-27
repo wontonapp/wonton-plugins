@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "x-wonton-order": ["household_user"],
+  "properties": {
+    "household_user": {
+      "type": "string",
+      "default": "",
+      "pattern": "^[a-z0-9._-]{0,64}$",
+      "x-wonton-title": { "zh": "家庭账号", "en": "Household account" },
+      "x-wonton-description": {
+        "zh": "这个用户名建的相册在 App 里单列为“家庭相册”，不填就没有",
+        "en": "Albums owned by this username show up as \"Family albums\" in the app; leave empty for none"
+      }
+    }
+  }
+}

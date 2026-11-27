@@ -162,6 +162,40 @@ services:
       start_period: 1m
       start_interval: 5s
 
+  # 媒体源适配器（images/immich-media/，自己写的，MIT）：把核心的 media_source 契约（手机自动备份的分片上传、
+  # App 原生相册的浏览和本人的写操作）翻成 Immich 自己的接口，不改上游。每个请求带核心签的能力凭据和
+  # X-Wonton-User，适配器用这个人自己的 Immich key 去调，家人之间按 Immich 自己的权限隔开。
+  # 第一次替某个家人办事时开户（和网页 OIDC 自动开户同一个时机），要管理员登录一次，所以要 admin_password；
+  # 账号、key、分片暂存都在它自己的状态目录，只有它读写。
+  media:
+    image: ghcr.io/wontonapp/wonton-plugins/immich/immich-media:0.4.0
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    read_only: true
+    environment:
+      TZ: "${TZ}"
+      IMMICH_URL: http://server:2283
+      WONTON_OWNER_NAME: ${WONTON_OWNER_NAME:?核心没有注入用户名字}
+      WONTON_OWNER_EMAIL: ${WONTON_OWNER_EMAIL:?核心没有注入用户邮箱}
+      IMMICH_ADMIN_PASSWORD: ${WONTON_SECRET_ADMIN_PASSWORD}
+      STATE_DIR: /state
+      # 设置里的“家庭账号”：这个用户名建的相册标成家庭相册。:- 兜底同其他设置。
+      HOUSEHOLD_USER: ${WONTON_SETTING_HOUSEHOLD_USER:-}
+    volumes:
+      # 分片先落这里，收尾时一次交给 Immich（POST /assets 只收整个文件）；一周没收尾的启动时清掉。
+      - ${WONTON_APP_DATA}/media-adapter:/state
+    depends_on:
+      # 管理员账号由 bootstrap 建，开户要用它登录。
+      bootstrap:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/wonton-immich-media", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 1m
+      start_interval: 5s
+
   machine-learning:
     # CPU 版。清单不申请显卡：只有一个 CPU 镜像，申请了就会把设备交进来却用不上；显卡版另开 PR。
     image: ghcr.io/immich-app/immich-machine-learning:v3.4.1@sha256:8adebf414256f6e4f837bfbb66fa94f14f4da7260e3a1d65cbba49e4e35d8764
@@ -295,9 +329,9 @@ configs:
       }
 
 x-wonton:
-  spec: "0.13"
+  spec: "0.16"
   id: app.immich.immich
-  version: 0.3.8
+  version: 0.4.0
   kind: app
   title: { zh: "手机相册备份（Immich）", en: "Phone Photo Backup (Immich)", zh-Hant: "手機相簿備份（Immich）", ja: "スマホ写真バックアップ（Immich）" }
   description:
@@ -362,19 +396,24 @@ x-wonton:
       Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
   release_notes:
     zh: |
+      新增媒体源服务：云吞 App 的手机自动备份和原生相册经它读写各人自己的照片库（要配合支持它的云吞版本）；第一次替某位家人办事时自动开好他的账号，之后他用网页登录还是同一个账号。
+
       家人第一次打开相册就自动建好自己的账号（默认普通用户，不开放公共注册）。角色的应用清单里要勾上本应用，没勾时登录被拒，账号建不出来。勾了在本应用当管理员的人建成管理员，每次登录按当前角色同步，后台手工改的角色下次登录会被覆盖。升级前先把以前手工建过的账号邮箱改成内部地址（`<用户名>@wonton.internal`），否则第一次登录会另建一个账号。
 
       插件迁入官方合仓，自建镜像改由官方仓库发布；本版包含源 main 的 Immich v3.4.1 更新。
 
       商店介绍重写：登录和建号移到「安装后要做的事」，容器、签发方等说法换成日常用语；补繁体中文和日文。
     en: |
+      New media source service: the Wonton app's automatic phone backup and native photo views read and write each person's own library through it (needs a Wonton version that supports it). A family member's account is created the first time it is used on their behalf, and signing in on the web later lands in the same account.
+
       Family members get their own account the first time they open Photos (a regular user by default; public registration stays closed). The app must be ticked in the person's role; without the tick the login is rejected and no account is created. Those ticked as this app's admin become admins, synced to their current role on each login and overriding manual admin toggles on the next login. Before upgrading, change the email of any manually created account to its internal address (`<username>@wonton.internal`), or the first login creates a second account.
 
       Moved the plugin into the official monorepo, with custom images published from the official repository. Includes the Immich v3.4.1 update from the source main branch.
 
       Store copy rewritten: sign-in and account creation moved to the pre-install notice, with container/issuer wording in everyday words; Traditional Chinese and Japanese added.
-    zh-Hant: "家人第一次開啟相簿就自動建好自己的帳號（預設一般使用者，不開放公開註冊）。角色的應用清單裡要勾上本應用，沒勾時登入被拒，帳號建不出來。勾了在本應用當管理員的人建成管理員，每次登入按目前角色同步，後台手動改的角色下次登入會被覆蓋。升級前先把以前手動建過的帳號信箱改成內部位址（`<使用者名稱>@wonton.internal`），否則第一次登入會另建一個帳號。\n\n外掛遷入官方合倉，自建映象改由官方倉庫釋出；本版包含源 main 的 Immich v3.4.1 更新。\n\n商店介紹重寫：登入和建號移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
-    ja: "家族が初めて写真を開くと、自分のアカウントが自動で作られます（既定では一般ユーザー、一般からの登録は受け付けません）。その人のロールのアプリ一覧で本アプリにチェックが要り、無いとログインが拒否されアカウントは作られません。本アプリの管理者にチェックした人は管理者として作られ、ログインのたびに現在のロールへ同期され、管理画面で手動変更したロールは次のログインで上書きされます。更新前に、以前手動で作ったアカウントのメールアドレスを内部アドレス（`<ユーザー名>@wonton.internal`）へ変えてください。そうしないと最初のログインで別のアカウントが作られます。\n\nプラグインを公式リポジトリへ移動し、自前ビルドのイメージは公式リポジトリからの配布に変わりました。本版には source main の Immich v3.4.1 更新が入っています。\n\nストア紹介を書き直し、サインインとアカウント作成を「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
+    zh-Hant: "新增媒體源服務：雲吞 App 的手機自動備份和原生相簿經它讀寫各人自己的照片庫（要配合支援它的雲吞版本）；第一次替某位家人辦事時自動開好他的帳號，之後他用網頁登入還是同一個帳號。\n\n家人第一次開啟相簿就自動建好自己的帳號（預設一般使用者，不開放公開註冊）。角色的應用清單裡要勾上本應用，沒勾時登入被拒，帳號建不出來。勾了在本應用當管理員的人建成管理員，每次登入按目前角色同步，後台手動改的角色下次登入會被覆蓋。升級前先把以前手動建過的帳號信箱改成內部位址（`<使用者名稱>@wonton.internal`），否則第一次登入會另建一個帳號。\n\n外掛遷入官方合倉，自建映象改由官方倉庫釋出；本版包含源 main 的 Immich v3.4.1 更新。\n\n商店介紹重寫：登入和建號移到「安裝後要做的事」，容器、簽發方等說法換成日常用語；補繁體中文和日文。"
+    ja: "メディアソースのサービスを追加しました。Wonton アプリのスマホ自動バックアップとネイティブの写真画面は、これを通じて各自のライブラリを読み書きします（対応する Wonton のバージョンが必要です）。家族のアカウントは本人のために初めて使われたときに作られ、後で Web からサインインしても同じアカウントです。\n\n家族が初めて写真を開くと、自分のアカウントが自動で作られます（既定では一般ユーザー、一般からの登録は受け付けません）。その人のロールのアプリ一覧で本アプリにチェックが要り、無いとログインが拒否されアカウントは作られません。本アプリの管理者にチェックした人は管理者として作られ、ログインのたびに現在のロールへ同期され、管理画面で手動変更したロールは次のログインで上書きされます。更新前に、以前手動で作ったアカウントのメールアドレスを内部アドレス（`<ユーザー名>@wonton.internal`）へ変えてください。そうしないと最初のログインで別のアカウントが作られます。\n\nプラグインを公式リポジトリへ移動し、自前ビルドのイメージは公式リポジトリからの配布に変わりました。本版には source main の Immich v3.4.1 更新が入っています。\n\nストア紹介を書き直し、サインインとアカウント作成を「インストール後の手順」に移し、コンテナや発行者などの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
+  settings: settings.schema.json
   webui:
     service: server
     port: 2283
@@ -388,6 +427,17 @@ x-wonton:
     service: mcp
     port: 8080
     transport: streamable-http
+  # 给核心的媒体源：手机自动备份（upload）和 App 原生相册（library）。凭据由核心签，
+  # 命令在 media 容器里执行，只存值的摘要。
+  provides:
+    media_source:
+      service: media
+      port: 8090
+      operations: [upload, library]
+      kinds: [photo, video]
+      credentials:
+        issue: [/wonton-immich-media, credential, issue, "{name}"]
+        revoke: [/wonton-immich-media, credential, revoke, "{name}"]
   # 局域网直连给 Immich 官方 App 和第三方客户端：端口受详情页开关管（默认关），
   # 账号是 bootstrap 建的用户账号——Immich 的登录名是邮箱，密码是建号时核心生成的 admin_password。
   # 官方 App 的 OAuth 回调是自定义 scheme，核心只登记网关上的回调路径，App 走不了 OAuth，用密码登录。
