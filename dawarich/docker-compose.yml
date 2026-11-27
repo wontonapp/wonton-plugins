@@ -3,7 +3,7 @@
 # 上游 compose 里的 /dawarich_db_data、/var/shared 挂载是 SQLite 缓存时代的遗留，代码里零引用，不搬。
 services:
   app:
-    image: freikin/dawarich:1.22.0@sha256:b8ee8d9fdff92a9d6ca570f98e0e875624f4bfb24b61363f8246bba124d5849d
+    image: freikin/dawarich:1.23.0@sha256:c9c6a9c04fa2ad11c438fc0b0ea3b7d95fc7e6d8c7a3cfa98bf1fc5aef2dbfd4
     # 上游入口脚本要求以 root 启动：按 PUID/PGID 修数据目录属主后用 gosu 降权，
     # 官方注释明说这种镜像不要写 compose 的 user:。核心也把数据目录交给 PUID:PGID，两边一致。
     environment:
@@ -81,7 +81,7 @@ services:
   # 一次性：等应用健康后建主人管理员账号（OIDC 首次登录按 provider+uid 对上同一个号），
   # 删掉上游种子在空库时建的 demo@dawarich.app（口令公开在 GitHub 上）。每次创建容器都会重跑，必须幂等。
   owner-init:
-    image: freikin/dawarich:1.22.0@sha256:b8ee8d9fdff92a9d6ca570f98e0e875624f4bfb24b61363f8246bba124d5849d
+    image: freikin/dawarich:1.23.0@sha256:c9c6a9c04fa2ad11c438fc0b0ea3b7d95fc7e6d8c7a3cfa98bf1fc5aef2dbfd4
     entrypoint: ["bin/rails", "runner"]
     command: ["/usr/local/bin/wonton-owner-init.rb"]
     environment:
