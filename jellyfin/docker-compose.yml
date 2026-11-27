@@ -122,7 +122,7 @@ x-wonton:
     media_source:
       service: media
       port: 8090
-      operations: [list, playback, download]
+      operations: [list, playback, download, catalog]
       kinds: [video]
       credentials:
         issue: [/wonton-jellyfin-media, credentials, issue, "{name}"]

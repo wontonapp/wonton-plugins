@@ -2,6 +2,7 @@
 //! 错误归类和按人注入凭据；重试、断点、队列、会话状态都在核心，适配器重启不丢东西。
 
 pub mod accounts;
+pub mod catalog;
 pub mod contract;
 pub mod failure;
 pub mod items;
@@ -31,9 +32,9 @@ use jellyfin::{Jellyfin, encode};
 use playback::Session;
 use store::Credentials;
 
-/// 本适配器真做得到的：Jellyfin 能列片、出播放计划、给下载；不能收上传。音乐交给音乐的提供方，这里只报视频。
+/// 本适配器真做得到的：Jellyfin 能列片、出播放计划、给下载、给原生页浏览；不能收上传。音乐交给音乐的提供方，这里只报视频。
 pub const CAPABILITIES: Capabilities = Capabilities {
-    operations: &["list", "playback", "download"],
+    operations: &["list", "playback", "download", "catalog"],
     kinds: &["video"],
 };
 
@@ -63,6 +64,12 @@ pub fn router(app: Arc<App>) -> Router {
         .route("/playback/{session}/stopped", post(stopped))
         .route("/playback/{session}/stream", get(stream))
         .route("/playback/{session}/hls/{*rest}", get(hls))
+        .route("/catalog/libraries", get(catalog_libraries))
+        .route("/catalog/shelves/{shelf}", get(catalog_shelf))
+        .route("/catalog/entries", get(catalog_entries))
+        .route("/catalog/entries/{id}", get(catalog_detail))
+        .route("/catalog/genres", get(catalog_genres))
+        .route("/catalog/actions", post(catalog_actions))
         .route("/revoke", post(revoke))
         .layer(middleware::from_fn_with_state(app.clone(), authorize));
     Router::new()
@@ -192,12 +199,12 @@ async fn artwork(
     Path(id): Path<String>,
     Query(q): Query<ArtworkQuery>,
 ) -> Reply<Response> {
+    // 认不得的种类按主图给（规范：新版本加的种类旧提供方回主图），不报错。
     let kind = match q.kind.as_deref().unwrap_or("primary") {
-        "primary" => "Primary",
         "backdrop" => "Backdrop",
         "thumb" => "Thumb",
         "logo" => "Logo",
-        other => return Err(Failure::bad_request(format!("不认识的图片种类：{other}"))),
+        _ => "Primary",
     };
     let width = q.width.unwrap_or(600).clamp(64, 3840);
     let path = format!(
@@ -321,4 +328,82 @@ async fn hls(
 async fn revoke(State(app): Shared, Json(body): Json<Revoke>) -> Reply<StatusCode> {
     app.accounts.revoke(&body.name).await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+async fn catalog_libraries(State(app): Shared, headers: HeaderMap) -> Reply<Response> {
+    let found = as_person(&app, &headers, |who| {
+        let app = app.clone();
+        async move { catalog::libraries(&app.jellyfin, &who).await }
+    })
+    .await?;
+    Ok(Json(found).into_response())
+}
+
+async fn catalog_shelf(
+    State(app): Shared,
+    headers: HeaderMap,
+    Path(shelf): Path<String>,
+    Query(q): Query<catalog::LibraryQuery>,
+) -> Reply<Response> {
+    let page = as_person(&app, &headers, |who| {
+        let (app, shelf, library) = (app.clone(), shelf.clone(), q.library.clone());
+        async move { catalog::shelf(&app.jellyfin, &who, &shelf, library.as_deref()).await }
+    })
+    .await?;
+    Ok(Json(page).into_response())
+}
+
+async fn catalog_entries(
+    State(app): Shared,
+    headers: HeaderMap,
+    Query(q): Query<catalog::EntriesQuery>,
+) -> Reply<Response> {
+    let page = as_person(&app, &headers, |who| {
+        let (app, q) = (app.clone(), &q);
+        async move { catalog::entries(&app.jellyfin, &who, q).await }
+    })
+    .await?;
+    Ok(Json(page).into_response())
+}
+
+async fn catalog_detail(
+    State(app): Shared,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Reply<Response> {
+    let found = as_person(&app, &headers, |who| {
+        let (app, id) = (app.clone(), id.clone());
+        async move { catalog::detail(&app.jellyfin, &who, &id).await }
+    })
+    .await?;
+    Ok(Json(found).into_response())
+}
+
+async fn catalog_genres(
+    State(app): Shared,
+    headers: HeaderMap,
+    Query(q): Query<catalog::LibraryQuery>,
+) -> Reply<Response> {
+    let found = as_person(&app, &headers, |who| {
+        let (app, library) = (app.clone(), q.library.clone());
+        async move { catalog::genres(&app.jellyfin, &who, library.as_deref()).await }
+    })
+    .await?;
+    Ok(Json(found).into_response())
+}
+
+/// 体自己解析：认不得的动作要按错误信封回 `protocol`，不用 axum 自带的纯文本拒绝。
+async fn catalog_actions(
+    State(app): Shared,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> Reply<Response> {
+    let action: catalog::wire::CatalogAction = serde_json::from_slice(&body)
+        .map_err(|e| Failure::bad_request(format!("看不懂的写操作：{e}")))?;
+    let result = as_person(&app, &headers, |who| {
+        let (app, action) = (app.clone(), &action);
+        async move { catalog::act(&app.jellyfin, &who, action).await }
+    })
+    .await?;
+    Ok(Json(result).into_response())
 }
