@@ -76,11 +76,12 @@ configs:
     file: web/entrypoint.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: ai.vllm.vllm
   version: 0.1.2
   kind: model
-  title: { zh: "本地 AI 模型（vLLM）", en: "Local AI Models (vLLM)", zh-Hant: "本機 AI 模型（vLLM）", ja: "ローカル AI モデル（vLLM）" }
+  title: { en: "vLLM" }
+  subtitle: { zh: "本地 AI 模型", en: "Local AI Models", zh-Hant: "本機 AI 模型", ja: "ローカル AI モデル" }
   description:
     zh: 在家里服务器的 NVIDIA 显卡上高速运行 AI 模型，多人同时用也不卡；默认模型要 24 GB 以上显存，适合显卡好、用的人多的家庭。
     en: Run AI models fast on your home server's NVIDIA graphics card, smooth even with many people at once. The default model needs 24 GB or more of video memory, so it suits homes with a powerful card.

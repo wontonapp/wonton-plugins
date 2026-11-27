@@ -54,11 +54,12 @@ configs:
     file: connect-arrs.py
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: media.bazarr.bazarr
   version: 0.1.2
   kind: app
-  title: { zh: "字幕助手（Bazarr）", en: "Subtitles (Bazarr)", zh-Hant: "字幕助手（Bazarr）", ja: "字幕ヘルパー（Bazarr）" }
+  title: { en: "Bazarr" }
+  subtitle: { zh: "字幕助手", en: "Subtitles", zh-Hant: "字幕助手", ja: "字幕ヘルパー" }
   description:
     zh: 给下载好的电影和剧集自动配字幕，字幕就放在视频旁边
     en: Automatically finds subtitles for downloaded movies and shows, right next to the video

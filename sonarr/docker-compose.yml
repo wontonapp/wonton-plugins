@@ -89,11 +89,12 @@ configs:
     file: mail.sh
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: tv.sonarr.sonarr
   version: 0.1.2
   kind: app
-  title: { zh: "剧集追更（Sonarr）", en: "TV Show Downloads (Sonarr)", zh-Hant: "劇集追更（Sonarr）", ja: "ドラマ自動取得（Sonarr）" }
+  title: { en: "Sonarr" }
+  subtitle: { zh: "剧集追更", en: "TV Show Downloads", zh-Hant: "劇集追更", ja: "ドラマ自動取得" }
   description:
     zh: 追剧自动化：想看的剧加进片单，新一集一出就自动下载进剧集库
     en: "Follow TV shows hands-off: add a series and new episodes download into your library automatically"

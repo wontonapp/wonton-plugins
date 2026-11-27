@@ -146,11 +146,12 @@ configs:
     file: wonton-owner-init.rb
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: app.dawarich.dawarich
   version: 0.1.2
   kind: app
-  title: { zh: "足迹记录（Dawarich）", en: "Location History (Dawarich)", zh-Hant: "足跡記錄（Dawarich）", ja: "行動履歴（Dawarich）" }
+  title: { en: "Dawarich" }
+  subtitle: { zh: "足迹记录", en: "Location History", zh-Hant: "足跡記錄", ja: "行動履歴" }
   description:
     zh: 像谷歌地图的时间线，手机自动记下去过哪里，网页上看轨迹和统计
     en: "Like Google Maps Timeline: your phone records where you have been, and you browse tracks and stats on the web"

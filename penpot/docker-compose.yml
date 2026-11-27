@@ -128,11 +128,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.penpot.penpot
   version: 0.1.2
   kind: app
-  title: { zh: "界面设计（Penpot）", en: "Design Studio (Penpot)", zh-Hant: "介面設計（Penpot）", ja: "UI デザイン（Penpot）" }
+  title: { en: "Penpot" }
+  subtitle: { zh: "界面设计", en: "Design Studio", zh-Hant: "介面設計", ja: "UI デザイン" }
   description:
     zh: 像网页版的 Figma：画 App 和网站的界面、做能点着看的演示稿，导出成图片或 PDF。适合做设计的人。
     en: "Like Figma in your browser: design app and website screens, build clickable mock-ups, and export images or PDFs. For people who do design work."

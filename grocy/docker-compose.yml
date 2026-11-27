@@ -31,11 +31,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: info.grocy.grocy
   version: 0.1.2
   kind: app
-  title: { zh: "厨房库存（Grocy）", en: "Pantry & Chores (Grocy)", zh-Hant: "廚房庫存（Grocy）", ja: "台所の在庫管理（Grocy）" }
+  title: { en: "Grocy" }
+  subtitle: { zh: "厨房库存", en: "Pantry & Chores", zh-Hant: "廚房庫存", ja: "台所の在庫管理" }
   description:
     zh: 管家里的东西还剩多少、什么时候过期：食品保质期、购物清单和家务提醒，像给厨房配了本账。
     en: "Keep track of what's in your home: food expiry dates, shopping lists and chores, like a ledger for your kitchen."

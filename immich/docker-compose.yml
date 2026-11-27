@@ -295,11 +295,12 @@ configs:
       }
 
 x-wonton:
-  spec: "0.13"
+  spec: "0.17"
   id: app.immich.immich
   version: 0.3.8
   kind: app
-  title: { zh: "手机相册备份（Immich）", en: "Phone Photo Backup (Immich)", zh-Hant: "手機相簿備份（Immich）", ja: "スマホ写真バックアップ（Immich）" }
+  title: { en: "Immich" }
+  subtitle: { zh: "手机相册备份", en: "Phone Photo Backup", zh-Hant: "手機相簿備份", ja: "スマホ写真バックアップ" }
   description:
     zh: 像 Google 相册：手机里的照片和视频备份到家里，能按人脸、地点和画面内容搜，还能建共享相册给家人看。照片类里最全面，适合要从手机备份照片的人。
     en: "Like Google Photos: back up your phone's photos and videos to your home server, search by face, place or what's in the picture, and share albums with family. The most complete photo app, best if you want phone backups."

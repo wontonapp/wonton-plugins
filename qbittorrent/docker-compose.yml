@@ -64,7 +64,7 @@ configs:
     file: config/init.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.qbittorrent.qbittorrent
   # 向其他插件提供下载器能力：经核心网络别名 torrent_client.wonton.internal 转发的
   # qBittorrent Web API v2（/api/v2/）请求免凭据（认证白名单只放核心地址）。
@@ -72,7 +72,8 @@ x-wonton:
     torrent_client: { service: qbittorrent, port: 8080 }
   version: 0.3.2
   kind: app
-  title: { zh: "BT 下载（qBittorrent）", en: "Torrent Downloader (qBittorrent)", zh-Hant: "BT 下載（qBittorrent）", ja: "トレントダウンローダー（qBittorrent）" }
+  title: { en: "qBittorrent" }
+  subtitle: { zh: "BT 下载", en: "Torrent Downloader", zh-Hant: "BT 下載", ja: "トレントダウンローダー" }
   description:
     zh: 像迅雷：贴上磁力链接或种子文件就开始下载，下完自动存进共享文件夹 downloads，并在云吞私聊里通知你。手机上的界面也好用。
     en: "Like a download manager on your home server: paste a magnet link or add a .torrent file, and it downloads into the downloads shared folder and lets you know in Wonton when it's done. The interface works well on phones too."

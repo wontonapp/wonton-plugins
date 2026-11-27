@@ -67,11 +67,12 @@ configs:
     file: mcp/openapi.json
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: app.github.xxnuo.mtranserver
   version: 0.1.3
   kind: app
-  title: { zh: "离线翻译（MTranServer）", en: "Offline Translation (MTranServer)", zh-Hant: "離線翻譯（MTranServer）", ja: "オフライン翻訳（MTranServer）" }
+  title: { en: "MTranServer" }
+  subtitle: { zh: "离线翻译", en: "Offline Translation", zh-Hant: "離線翻譯", ja: "オフライン翻訳" }
   description:
     zh: 在自己家里跑的翻译服务，像翻译网站一样好用：装上浏览器翻译扩展接上它，整页、划词都能翻，文字不出家门。
     en: "A translation service running at home, like the online ones: browser translate extensions plug into it, and your text never leaves home."

@@ -323,11 +323,12 @@ volumes:
   beat:
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: de.wger.workout
   version: 0.1.2
   kind: app
-  title: { zh: "健身助手（wger）", en: "Workout & Nutrition (wger)", zh-Hant: "健身助手（wger）", ja: "筋トレと食事の記録（wger）" }
+  title: { en: "wger" }
+  subtitle: { zh: "健身助手", en: "Workout & Nutrition", zh-Hant: "健身助手", ja: "筋トレと食事の記録" }
   description:
     zh: 像手机里的健身 App，把训练计划排到每天，练完记一笔，吃了什么和体重变化也记得清清楚楚。
     en: "Like a fitness app on your phone: plan workouts for each day, log them as you go, and keep track of what you eat and how your weight changes."

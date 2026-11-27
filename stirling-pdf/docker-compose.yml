@@ -77,11 +77,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.stirlingtools.stirling-pdf
   version: 0.2.1
   kind: app
-  title: { zh: "PDF 工具箱（Stirling-PDF）", en: "PDF Toolbox (Stirling-PDF)", zh-Hant: "PDF 工具箱（Stirling-PDF）", ja: "PDF ツールボックス（Stirling-PDF）" }
+  title: { en: "Stirling-PDF" }
+  subtitle: { zh: "PDF 工具箱", en: "PDF Toolbox", zh-Hant: "PDF 工具箱", ja: "PDF ツールボックス" }
   description:
     zh: 处理 PDF 的万能工具箱：合并、拆分、压缩、加密码、转图片、认字等 60 多种操作，打开网页就能用，文件只在家里处理。
     en: "An all-in-one PDF toolbox: merge, split, compress, add a password, convert to images, recognize text and more — over 60 tools in the browser, with files processed at home."

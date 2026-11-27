@@ -75,11 +75,12 @@ configs:
     file: mail.sh
 
 x-wonton:
-  spec: "0.13"
+  spec: "0.17"
   id: com.lidarr.lidarr
   version: 0.1.3
   kind: app
-  title: { zh: "音乐下载（Lidarr）", en: "Music Downloads (Lidarr)", zh-Hant: "音樂下載（Lidarr）", ja: "音楽ダウンロード（Lidarr）" }
+  title: { en: "Lidarr" }
+  subtitle: { zh: "音乐下载", en: "Music Downloads", zh-Hant: "音樂下載", ja: "音楽ダウンロード" }
   description:
     zh: 你关注的歌手出了新专辑，自动帮你下载到家里的曲库，用音乐播放应用直接听。
     en: When artists you follow release new music, it is downloaded to your home library and ready to play.

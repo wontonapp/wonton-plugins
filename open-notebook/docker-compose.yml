@@ -45,11 +45,12 @@ services:
       retries: 3
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.github.lfnovo.opennotebook
   version: 0.1.3
   kind: app
-  title: { zh: "AI 资料笔记本（Open Notebook）", en: "AI Notebook (Open Notebook)", zh-Hant: "AI 資料筆記本（Open Notebook）", ja: "AI 資料ノート（Open Notebook）" }
+  title: { en: "Open Notebook" }
+  subtitle: { zh: "AI 资料笔记本", en: "AI Notebook", zh-Hant: "AI 資料筆記本", ja: "AI 資料ノート" }
   description:
     zh: 把网址、文件丢进去，AI 读完帮你答题、写摘要，还能把资料做成一档播客。
     en: Add links and files, and the AI reads them to answer questions, write summaries, and turn your material into a podcast.

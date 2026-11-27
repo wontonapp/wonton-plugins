@@ -78,11 +78,12 @@ configs:
         enabled: false
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.donetick.donetick
   version: 0.1.2
   kind: app
-  title: { zh: "家务打卡（Donetick）", en: "Chore Chart (Donetick)", zh-Hant: "家事打卡（Donetick）", ja: "家事チェック（Donetick）" }
+  title: { en: "Donetick" }
+  subtitle: { zh: "家务打卡", en: "Chore Chart", zh-Hant: "家事打卡", ja: "家事チェック" }
   description:
     zh: 像一张全家的值日表：家务轮着做、做完打卡，逾期会提醒，攒积分能换奖励
     en: "A shared chore chart for the family: rotate tasks, check them off, earn points for rewards"

@@ -66,11 +66,12 @@ services:
       start_interval: 1s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: software.homebox
   version: 0.2.1
   kind: app
-  title: { zh: "物品登记（HomeBox）", en: "Home Inventory (HomeBox)", zh-Hant: "物品登記（HomeBox）", ja: "家財目録（HomeBox）" }
+  title: { en: "HomeBox" }
+  subtitle: { zh: "物品登记", en: "Home Inventory", zh-Hant: "物品登記", ja: "家財目録" }
   description:
     zh: 把家里的东西登记在册：放在哪、多少钱买的、保修到哪天，一查就知道；还能打印二维码贴上，扫一下就找到。
     en: "A record of everything you own: where it is, what it cost and when the warranty ends. Print a QR label, stick it on, and a scan pulls up the item."

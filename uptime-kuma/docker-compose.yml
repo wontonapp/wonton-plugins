@@ -54,11 +54,12 @@ configs:
     file: setup-admin.mjs
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: fyi.kuma.uptime-kuma
   version: 0.2.2
   kind: app
-  title: { zh: "网站监控（Uptime Kuma）", en: "Site Monitoring (Uptime Kuma)", zh-Hant: "網站監控（Uptime Kuma）", ja: "サイト監視（Uptime Kuma）" }
+  title: { en: "Uptime Kuma" }
+  subtitle: { zh: "网站监控", en: "Site Monitoring", zh-Hant: "網站監控", ja: "サイト監視" }
   description:
     zh: 盯着你的网站和服务，掉线时提醒你。
     en: Watch your sites and services and get alerted when they go down.

@@ -181,11 +181,12 @@ configs:
     file: init/owner.py
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.openwebui.open-webui
   version: 0.2.3
   kind: app
-  title: { zh: "AI 聊天（Open WebUI）", en: "AI Chat (Open WebUI)", zh-Hant: "AI 聊天（Open WebUI）", ja: "AI チャット（Open WebUI）" }
+  title: { en: "Open WebUI" }
+  subtitle: { zh: "AI 聊天", en: "AI Chat", zh-Hant: "AI 聊天", ja: "AI チャット" }
   description:
     zh: 像自家的 AI 网页：在浏览器里和 AI 聊天，上传 PDF、Word 还能针对文件提问，聊天记录都存在家里。
     en: "Like your own ChatGPT website: chat with AI in the browser, upload PDFs or Word files and ask about them, with your history kept at home."

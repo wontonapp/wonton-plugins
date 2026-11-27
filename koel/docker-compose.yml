@@ -122,11 +122,12 @@ configs:
       exec docker-php-entrypoint "$$@"
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: dev.koel.koel
   version: 0.2.1
   kind: app
-  title: { zh: "网页音乐库（Koel）", en: "Web Music Player (Koel)", zh-Hant: "網頁音樂庫（Koel）", ja: "Web 音楽プレーヤー（Koel）" }
+  title: { en: "Koel" }
+  subtitle: { zh: "网页音乐库", en: "Web Music Player", zh-Hant: "網頁音樂庫", ja: "Web 音楽プレーヤー" }
   description:
     zh: 网页做得最精致的自家音乐库：按歌手、专辑听歌、建歌单，还能看收听统计，家里人可以各开账号。适合主要在网页上听歌的人。
     en: "A home music library with the most polished web player: listen by artist and album, build playlists, see your listening stats, and invite family to their own accounts. Best if you mostly listen in the browser."

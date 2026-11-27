@@ -209,11 +209,12 @@ configs:
     file: ./oidc-relay/probe.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.nextcloud.nextcloud
   version: 0.2.2
   kind: app
-  title: { zh: "网盘全家桶（Nextcloud）", en: "All-in-One Cloud (Nextcloud)", zh-Hant: "網盤全家桶（Nextcloud）", ja: "オールインワンクラウド（Nextcloud）" }
+  title: { en: "Nextcloud" }
+  subtitle: { zh: "网盘全家桶", en: "All-in-One Cloud", zh-Hant: "網盤全家桶", ja: "オールインワンクラウド" }
   description:
     zh: 功能最全的家庭网盘，像 iCloud：手机照片自动备份，电脑文件夹自动同步，网页里还能记笔记，日历、在线文档等可以从它的应用商店再加。适合想把文件、照片、笔记放在一处的人，也最占资源。
     en: "The most complete home cloud, like iCloud: phone photos back up automatically, computer folders stay in sync, notes live in the browser, and calendars or online documents can be added from its own app store. For keeping files, photos and notes in one place — it also needs the most resources."

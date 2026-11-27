@@ -76,11 +76,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: io.ghostfolio.ghostfolio
   version: 0.1.2
   kind: app
-  title: { zh: "投资记账（Ghostfolio）", en: "Portfolio Tracker (Ghostfolio)", zh-Hant: "投資記帳（Ghostfolio）", ja: "資産管理（Ghostfolio）" }
+  title: { en: "Ghostfolio" }
+  subtitle: { zh: "投资记账", en: "Portfolio Tracker", zh-Hant: "投資記帳", ja: "資産管理" }
   description:
     zh: 像证券 App 的收益页，把股票、基金和加密货币的买卖记进来，随时看总资产和涨跌盈亏
     en: "A portfolio tracker for stocks, funds and crypto: total value, daily moves and gains at a glance"

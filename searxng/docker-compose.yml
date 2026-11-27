@@ -74,11 +74,12 @@ configs:
           'all://': "${WONTON_PROXY_URL:-}"
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.searxng.searxng
   version: 0.1.2
   kind: app
-  title: { zh: "网页搜索（SearXNG）", en: "Web Search (SearXNG)", zh-Hant: "網頁搜尋（SearXNG）", ja: "Web 検索（SearXNG）" }
+  title: { en: "SearXNG" }
+  subtitle: { zh: "网页搜索", en: "Web Search", zh-Hant: "網頁搜尋", ja: "Web 検索" }
   description:
     zh: 像百度，但一次帮你搜好几家，不记录你搜了什么；家里的 AI 助手也用它上网查资料。
     en: Like a search engine, but queries several at once and keeps no record of what you searched; your home AI assistant uses it to look things up too.

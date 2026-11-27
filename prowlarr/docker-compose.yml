@@ -69,11 +69,12 @@ configs:
     file: mail.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.prowlarr.prowlarr
   version: 0.2.2
   kind: app
-  title: { zh: "资源站管理（Prowlarr）", en: "Torrent Site Manager (Prowlarr)", zh-Hant: "資源站管理（Prowlarr）", ja: "配信サイト管理（Prowlarr）" }
+  title: { en: "Prowlarr" }
+  subtitle: { zh: "资源站管理", en: "Torrent Site Manager", zh-Hant: "資源站管理", ja: "配信サイト管理" }
   description:
     zh: 把你常去找资源的下载网站集中管好：添加一次，自动同步给 Radarr、Sonarr、qBittorrent 这些应用，也能在这里直接搜、送去下载。偏进阶，装了自动追剧工具才用得上。
     en: "Keeps the download sites you search in one place: add them once and they sync to download apps like Radarr, Sonarr and qBittorrent, or search and send things to download right here. For advanced setups with automatic movie and TV downloaders."

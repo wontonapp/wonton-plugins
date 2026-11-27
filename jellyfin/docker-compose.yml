@@ -39,11 +39,12 @@ configs:
     file: config/system.xml
 
 x-wonton:
-  spec: "0.15"
+  spec: "0.17"
   id: org.jellyfin.media
   version: 0.2.0
   kind: app
-  title: { zh: 家庭影院（Jellyfin）, en: Home Theater (Jellyfin) }
+  title: { en: "Jellyfin" }
+  subtitle: { zh: "家庭影院", en: "Home Theater" }
   description:
     zh: 像自家的爱奇艺：存在家里的电影、剧集和音乐排成一面墙，手机、电脑上打开网页就能看。适合把存下的片子全家一起看。
     en: "Like your own Netflix: the movies, shows and music you keep at home become a poster wall to watch from any phone or computer."

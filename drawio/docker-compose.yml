@@ -25,11 +25,12 @@ services:
       start_interval: 1s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.jgraph.drawio
   version: 0.1.2
   kind: app
-  title: { zh: "画图（draw.io）", en: "Diagrams (draw.io)", zh-Hant: "畫圖（draw.io）", ja: "図の作成（draw.io）" }
+  title: { en: "draw.io" }
+  subtitle: { zh: "画图", en: "Diagrams", zh-Hant: "畫圖", ja: "図の作成" }
   description:
     zh: 像一块随开随用的白板，画流程图、架构图、思维导图和平面布置图，浏览器打开就能画。比手绘风的 Excalidraw 更规整，适合要交出去的正式图。
     en: "A whiteboard that is always ready: draw flowcharts, architecture diagrams, mind maps and floor plans right in your browser. Tidier than the hand-drawn style of Excalidraw — a fit for diagrams you present."

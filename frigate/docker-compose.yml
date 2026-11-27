@@ -125,12 +125,13 @@ configs:
         auth_secret: ${WONTON_SECRET_FRIGATE_PROXY}
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   # 反向域名：上游官网 frigate.video。
   id: video.frigate.frigate
   version: 0.1.2
   kind: app
-  title: { zh: "家庭监控（Frigate）", en: "Home Camera NVR (Frigate)", zh-Hant: "家庭監控（Frigate）", ja: "防犯カメラ録画（Frigate）" }
+  title: { en: "Frigate" }
+  subtitle: { zh: "家庭监控", en: "Home Camera NVR", zh-Hant: "家庭監控", ja: "防犯カメラ録画" }
   description:
     zh: 像 24 小时值班的保安：接上家里的摄像头，有人、车、动物出现才录像并标出来，手机上随时回看，录像只存在家里。
     en: "Like a 24/7 security guard: connect your home cameras and it records only when a person, car or animal shows up, marks them, and lets you review events from your phone — recordings never leave home."

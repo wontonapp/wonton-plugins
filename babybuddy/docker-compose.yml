@@ -89,11 +89,12 @@ services:
             admin.save(update_fields=["password"])
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: app.babybuddy.family
   version: 0.1.2
   kind: app
-  title: { zh: "育儿记录（Baby Buddy）", en: "Baby Buddy", zh-Hant: "育兒記錄（Baby Buddy）", ja: "育児記録（Baby Buddy）" }
+  title: { en: "Baby Buddy" }
+  subtitle: { zh: "育儿记录", en: "Baby Tracker", zh-Hant: "育兒記錄", ja: "育児記録" }
   description:
     zh: 喂奶、换尿布、睡觉，点一下就记上，全家一起记宝宝的日常
     en: Log feedings, diaper changes and sleep with one tap, together as a family

@@ -69,11 +69,12 @@ configs:
     file: config/configure-mail.py
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: io.changedetection
   version: 0.1.2
   kind: app
-  title: { zh: "网页变化提醒（changedetection.io）", en: "Web Page Change Alerts (changedetection.io)", zh-Hant: "網頁變化提醒（changedetection.io）", ja: "ページ変化の通知（changedetection.io）" }
+  title: { en: "changedetection.io" }
+  subtitle: { zh: "网页变化提醒", en: "Web Page Change Alerts", zh-Hant: "網頁變化提醒", ja: "ページ変化の通知" }
   description:
     zh: 给在意的网页定个闹钟：降价、补货、新公告，它定时去看，页面一变就提醒你。
     en: "Set an alarm on any web page — price drops, restocks, new announcements: it checks on a schedule and tells you as soon as the page changes."

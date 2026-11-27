@@ -36,11 +36,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.wonton.files
   version: 0.2.5
   kind: app
-  title: { zh: "文件查找（Files）", en: "File Search (Files)", zh-Hant: "檔案尋找（Files）", ja: "ファイル検索（Files）" }
+  title: { en: "Files" }
+  subtitle: { zh: "文件查找", en: "File Search", zh-Hant: "檔案尋找", ja: "ファイル検索" }
   icon: icon.svg
   notices: [NOTICE]
   description:

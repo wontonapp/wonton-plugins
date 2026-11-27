@@ -23,11 +23,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.15"
+  spec: "0.17"
   id: io.github.analogj.scrutiny
-  version: 0.1.0
+  version: 0.1.1
   kind: app
-  title: { zh: 硬盘体检（Scrutiny）, en: Drive Health (Scrutiny) }
+  title: { en: "Scrutiny" }
+  subtitle: { zh: "硬盘体检", en: "Drive Health" }
   description:
     zh: 像定期给硬盘体检：每天读一次硬盘的健康数据，坏道、温度、通电时间有变化就在网页上标出来，趁硬盘彻底坏掉之前换掉。
     en: "A regular check-up for your hard drives: it reads their health data every day and flags rising bad sectors, temperature and power-on hours on a web page, so you can replace a drive before it fails."
@@ -57,9 +58,7 @@ x-wonton:
       NVMe drives ask for one extra confirmation: reading their health data needs a wider privilege, and the warning spells out what the plugin gains.
 
       Data stays on this machine. The page sits behind Wonton's login; the app has no account of its own.
-  release_notes:
-    zh: 首个版本：勾选要监控的硬盘，读健康数据，在网页里看仪表盘和指标变化。
-    en: "First release: pick the drives to watch, read their health data, follow dashboards and metric trends on the web page."
+  release_notes: { zh: "应用名改回原名 Scrutiny，用途“硬盘体检”放到名字下面。", en: "The app now shows its own name, Scrutiny, with \"Drive Health\" underneath." }
   webui:
     service: scrutiny
     port: 8080

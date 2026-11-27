@@ -56,11 +56,12 @@ configs:
     file: web/init.py
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: app.astrbot.chatbot
   version: 0.1.2
   kind: app
-  title: { zh: "AI 聊天机器人（AstrBot）", en: "AI Chatbot (AstrBot)", zh-Hant: "AI 聊天機器人（AstrBot）", ja: "AI チャットボット（AstrBot）" }
+  title: { en: "AstrBot" }
+  subtitle: { zh: "AI 聊天机器人", en: "AI Chatbot", zh-Hant: "AI 聊天機器人", ja: "AI チャットボット" }
   description:
     zh: 把 AI 助手接进飞书、钉钉、QQ、Telegram 等聊天软件，在群里或私聊里帮你回答问题
     en: Connect an AI assistant to Feishu, DingTalk, QQ, Telegram and more, so it answers for you in group or direct chats

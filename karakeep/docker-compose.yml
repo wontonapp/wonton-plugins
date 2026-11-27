@@ -140,11 +140,12 @@ volumes:
   meilisearch:
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.karakeep.karakeep
   version: 0.1.2
   kind: app
-  title: { zh: "智能收藏夹（Karakeep）", en: "Smart Bookmarks (Karakeep)", zh-Hant: "智慧收藏夾（Karakeep）", ja: "スマートブックマーク（Karakeep）" }
+  title: { en: "Karakeep" }
+  subtitle: { zh: "智能收藏夹", en: "Smart Bookmarks", zh-Hant: "智慧收藏夾", ja: "スマートブックマーク" }
   description:
     zh: 像微信收藏：网址、文章、笔记、图片都能存进来，自动打好标签，日后搜里面的内容就能找回。适合看到什么都想先存下来的人。
     en: "A save-it-for-later box for everything: keep links, articles, notes and images, get tags added automatically, and find anything later by searching what's inside."

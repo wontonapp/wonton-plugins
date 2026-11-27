@@ -137,11 +137,12 @@ configs:
     file: config/notify-init.py
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: com.tubearchivist.app
   version: 0.2.1
   kind: app
-  title: { zh: "频道存档（TubeArchivist）", en: "YouTube Channel Archive (TubeArchivist)", zh-Hant: "頻道存檔（TubeArchivist）", ja: "チャンネル保存（TubeArchivist）" }
+  title: { en: "TubeArchivist" }
+  subtitle: { zh: "频道存档", en: "YouTube Channel Archive", zh-Hant: "頻道存檔", ja: "チャンネル保存" }
   description:
     zh: 订阅 YouTube 频道后，新视频自动下载到家里，随时离线看，原视频下架也不怕；家庭影院（Jellyfin）也能读到这些视频。适合追频道、想长期留档的人。
     en: Subscribe to YouTube channels and new videos download to your home server automatically, ready to watch offline even if the originals disappear; Jellyfin can pick them up too. For following channels and keeping an archive.

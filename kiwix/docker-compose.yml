@@ -138,11 +138,12 @@ configs:
     file: web/down.html
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.kiwix.kiwix-serve
   version: 0.1.3
   kind: app
-  title: { zh: "离线百科（Kiwix）", en: "Offline Encyclopedia (Kiwix)", zh-Hant: "離線百科（Kiwix）", ja: "オフライン百科事典（Kiwix）" }
+  title: { en: "Kiwix" }
+  subtitle: { zh: "离线百科", en: "Offline Encyclopedia", zh-Hant: "離線百科", ja: "オフライン百科事典" }
   description:
     zh: 像把一整套维基百科下载回家，断网也能查。
     en: Like keeping a whole Wikipedia at home that works without internet.

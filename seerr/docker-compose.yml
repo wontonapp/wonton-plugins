@@ -69,11 +69,12 @@ configs:
     file: init/init-owner-email.js
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.seerr.seerr
   version: 0.2.1
   kind: app
-  title: { zh: "求片点播（Seerr）", en: "Movie & TV Requests (Seerr)", zh-Hant: "求片點播（Seerr）", ja: "視聴リクエスト（Seerr）" }
+  title: { en: "Seerr" }
+  subtitle: { zh: "求片点播", en: "Movie & TV Requests", zh-Hant: "求片點播", ja: "視聴リクエスト" }
   description:
     zh: 像给家庭影院“点单”：搜到想看的电影或剧集一键求片，片子进了 Jellyfin 等影库就通知你。它自己不播放也不下载，要配合家庭影院用。
     en: "Like ordering for your home theater: find a movie or show, request it with one tap, and get a heads-up when it lands in Jellyfin or another library. It doesn't play or download anything itself."

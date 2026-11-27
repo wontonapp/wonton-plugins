@@ -86,11 +86,12 @@ services:
       start_interval: 5s
 
 x-wonton:
-  spec: "0.13"
+  spec: "0.17"
   id: app.romm.romm
   version: 0.2.1
   kind: app
-  title: { zh: "复古游戏厅（RomM）", en: "Retro Game Room (RomM)", zh-Hant: "復古遊戲廳（RomM）", ja: "レトロゲームルーム（RomM）" }
+  title: { en: "RomM" }
+  subtitle: { zh: "复古游戏厅", en: "Retro Game Room", zh-Hant: "復古遊戲廳", ja: "レトロゲームルーム" }
   description:
     zh: 像网页版的怀旧游戏机：把红白机、GBA 这些老游戏的文件放进去，点开就在浏览器里玩，存档跟着账号走。
     en: "A retro console in your browser: add game files for the NES, Game Boy Advance and other classics, then play right in the browser with saves tied to your account."

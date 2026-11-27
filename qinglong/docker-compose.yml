@@ -56,11 +56,12 @@ configs:
       body: $$content'
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: com.github.whyour.qinglong
   version: 0.1.2
   kind: app
-  title: { zh: "定时任务（青龙）", en: "Scheduled Tasks (Qinglong)", zh-Hant: "定時任務（青龍）", ja: "定時タスク（Qinglong）" }
+  title: { zh: "青龙", en: "Qinglong", zh-Hant: "青龍", ja: "Qinglong" }
+  subtitle: { zh: "定时任务", en: "Scheduled Tasks", zh-Hant: "定時任務", ja: "定時タスク" }
   description:
     zh: 像手机上的定时提醒，在家里电脑上定时跑脚本：每天备份文件、抓取信息、发条提醒都行。会写 Python、JavaScript 或 Shell 脚本，把它交给青龙到点执行；现成的脚本仓库也能一键导入。
     en: "Like a recurring reminder on your phone, it runs scripts on schedule at home: daily backups, fetching information, sending a notice. Hand it any Python, JavaScript or Shell script and Qinglong runs it on time; ready-made script repos can be imported with one click."

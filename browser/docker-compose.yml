@@ -75,11 +75,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.wonton.browser
   version: 0.1.3
   kind: app
-  title: { zh: "让 Bot 上网（浏览器）", en: "Bot on the Web (Browser)", zh-Hant: "讓 Bot 上網（瀏覽器）", ja: "Bot に Web を使わせる（ブラウザ）" }
+  title: { zh: "浏览器", en: "Browser", zh-Hant: "瀏覽器", ja: "ブラウザ" }
+  subtitle: { zh: "让 Bot 上网", en: "Bot on the Web", zh-Hant: "讓 Bot 上網", ja: "Bot に Web を使わせる" }
   description:
     zh: 让 Bot 替你上网办事：它开网页、点按、填表时你在旁边实时看着，需要时随时接手；你登录过的网站它也能直接用。
     en: "Lets your bot get things done on the web: watch live as it opens pages, clicks and fills in forms, and take over whenever you need to. It shares your sign-ins, so sites you're logged into work for it too."

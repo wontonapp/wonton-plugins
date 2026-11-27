@@ -94,11 +94,12 @@ configs:
     file: ./glance.yml
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: app.github.glanceapp.glance
   version: 0.1.4
   kind: app
-  title: { zh: "信息面板（Glance）", en: "Info Dashboard (Glance)", zh-Hant: "資訊面板（Glance）", ja: "情報ダッシュボード（Glance）" }
+  title: { en: "Glance" }
+  subtitle: { zh: "信息面板", en: "Info Dashboard", zh-Hant: "資訊面板", ja: "情報ダッシュボード" }
   description:
     zh: 把天气、日历、新闻和你订阅的网站更新放进一个页面
     en: Weather, calendar, news and your subscribed site updates on one page

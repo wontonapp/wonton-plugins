@@ -86,11 +86,12 @@ configs:
     file: config/configuration.yaml
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: io.home-assistant.home-assistant
   version: 0.2.3
   kind: app
-  title: { zh: "智能家居（Home Assistant）", en: "Smart Home (Home Assistant)", zh-Hant: "智慧家庭（Home Assistant）", ja: "スマートホーム（Home Assistant）" }
+  title: { en: "Home Assistant" }
+  subtitle: { zh: "智能家居", en: "Smart Home", zh-Hant: "智慧家庭", ja: "スマートホーム" }
   description:
     zh: 像米家 App，但不挑牌子：把家里各品牌的智能设备放进一个界面控制，开灯、调空调，还能设“到家自动开灯”这样的联动。
     en: "One app for every smart device, whatever the brand: control lights and air conditioning in one place and set routines like \"lights on when I get home\"."

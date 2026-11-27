@@ -98,11 +98,12 @@ volumes:
   db-data:
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: app.bookstack.bookstack
   version: 0.1.2
   kind: app
-  title: { zh: "家庭文档库（BookStack）", en: "Home Wiki (BookStack)", zh-Hant: "家庭文件庫（BookStack）", ja: "家庭向け Wiki（BookStack）" }
+  title: { en: "BookStack" }
+  subtitle: { zh: "家庭文档库", en: "Home Wiki", zh-Hant: "家庭文件庫", ja: "家庭向け Wiki" }
   description:
     zh: 像家里的一本本百科书：分书、章节、页面记资料，贴图带附件，全文搜索随找。用自己的账号登录，不占云吞身份。
     en: "Like a shelf of home encyclopedias: books, chapters and pages hold your notes with images and attachments, all full-text searchable. Signs in with its own account, apart from Wonton."

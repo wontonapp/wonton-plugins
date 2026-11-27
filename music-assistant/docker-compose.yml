@@ -27,11 +27,12 @@ services:
       start_interval: 2s
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   id: io.music-assistant.server
   version: 0.1.3
   kind: app
-  title: { zh: "全屋音乐（Music Assistant）", en: "Whole-Home Music (Music Assistant)", zh-Hant: "全屋音樂（Music Assistant）", ja: "家中音楽システム（Music Assistant）" }
+  title: { en: "Music Assistant" }
+  subtitle: { zh: "全屋音乐", en: "Whole-Home Music", zh-Hant: "全屋音樂", ja: "家中音楽システム" }
   description:
     zh: 把家里的音箱连成一个音响系统：本地音乐和各家在线音乐合成一个曲库，推到每个房间播放，还能让几个房间同步放同一首。适合家里有好几个房间、想统一控制音箱的人；和一个人戴耳机听的音乐库不一样。
     en: "Turn your speakers into one sound system: local music and online music services in a single library, played in every room, in sync if you like. For homes with speakers in several rooms that want one place to control them; not a personal headphone library."

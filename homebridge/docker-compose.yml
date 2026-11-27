@@ -45,12 +45,13 @@ configs:
     file: config/config.json
 
 x-wonton:
-  spec: "0.12"
+  spec: "0.17"
   # 反向域名：上游官网 homebridge.io。
   id: io.homebridge.homebridge
   version: 0.1.3
   kind: app
-  title: { zh: "苹果家庭桥接（Homebridge）", en: "Apple Home Bridge (Homebridge)", zh-Hant: "蘋果家庭橋接（Homebridge）", ja: "Apple Home ブリッジ（Homebridge）" }
+  title: { en: "Homebridge" }
+  subtitle: { zh: "苹果家庭桥接", en: "Apple Home Bridge", zh-Hant: "蘋果家庭橋接", ja: "Apple Home ブリッジ" }
   description:
     zh: 把米家、涂鸦这些本来不支持苹果“家庭”App 的智能设备接进去，像请了个翻译把各家设备的话翻给 iPhone 听。
     en: Bring smart devices that Apple Home does not support (Mi Home, Tuya, …) into the Home app and Siri — like a translator between your gadgets and your iPhone.

@@ -91,11 +91,12 @@ configs:
     file: config/init-db.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: io.gitea.gitea
   version: 0.2.2
   kind: app
-  title: { zh: "自家代码仓库（Gitea）", en: "Home Code Hosting (Gitea)", zh-Hant: "自家程式碼倉庫（Gitea）", ja: "自宅コード保管庫（Gitea）" }
+  title: { en: "Gitea" }
+  subtitle: { zh: "自家代码仓库", en: "Home Code Hosting", zh-Hant: "自家程式碼倉庫", ja: "自宅コード保管庫" }
   description:
     zh: 自己家的代码仓库：写代码的家人把项目存在家里，网页上一起看代码、提修改，电脑上的开发工具也能连进来用
     en: "Your own code host at home: keep projects at home, read and review code together on the web, and connect your desktop tools"

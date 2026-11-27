@@ -88,11 +88,12 @@ configs:
     file: create-users.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.radicale.radicale
   version: 0.1.2
   kind: app
-  title: { zh: "日历通讯录（Radicale）", en: "Calendar & Contacts (Radicale)", zh-Hant: "日曆通訊錄（Radicale）", ja: "カレンダーと連絡先（Radicale）" }
+  title: { en: "Radicale" }
+  subtitle: { zh: "日历通讯录", en: "Calendar & Contacts", zh-Hant: "日曆通訊錄", ja: "カレンダーと連絡先" }
   description:
     zh: 把家里人的手机日历和通讯录同步到自己家：手机自带的日历、联系人应用直接连上就能用，不用 iCloud、Google 这类外面的账号。
     en: "Sync your family's phone calendars and contacts to your own home: the built-in Calendar and Contacts apps connect directly, no iCloud or Google account needed."

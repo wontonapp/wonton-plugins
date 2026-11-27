@@ -82,11 +82,12 @@ configs:
     content: ""
 
 x-wonton:
-  spec: "0.13"
+  spec: "0.17"
   id: app.calibre-web-automated.books
   version: 0.1.4
   kind: app
-  title: { zh: "家庭书架（Calibre-Web Automated）", en: "Home Book Library (Calibre-Web Automated)", zh-Hant: "家庭書架（Calibre-Web Automated）", ja: "家庭の本棚（Calibre-Web Automated）" }
+  title: { en: "Calibre-Web Automated" }
+  subtitle: { zh: "家庭书架", en: "Home Book Library", zh-Hant: "家庭書架", ja: "家庭の本棚" }
   description:
     zh: 家里的电子书架：把书丢进去，自动转好格式、补封面和简介，全家人在手机、平板和电脑上随时读
     en: A bookshelf for the family's ebooks — drop books in and they are converted and catalogued automatically, ready to read on any screen

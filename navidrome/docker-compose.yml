@@ -60,11 +60,12 @@ configs:
     file: provision.sh
 
 x-wonton:
-  spec: "0.11"
+  spec: "0.17"
   id: org.navidrome.navidrome
   version: 0.1.3
   kind: app
-  title: { zh: "家庭音乐库（Navidrome）", en: "Home Music Library (Navidrome)", zh-Hant: "家庭音樂庫（Navidrome）", ja: "家庭音楽ライブラリ（Navidrome）" }
+  title: { en: "Navidrome" }
+  subtitle: { zh: "家庭音乐库", en: "Home Music Library", zh-Hant: "家庭音樂庫", ja: "家庭音楽ライブラリ" }
   description:
     zh: 像自家的音乐 App：共享文件夹里的歌按歌手、专辑整理好，网页里随时听；在家还能用手机上的音乐播放器连上来听。轻快省资源，适合习惯用手机 App 听歌的人。
     en: "Like your own music app: the songs in your shared folder sorted by artist and album, ready to play in the browser — and at home, many phone music apps can connect too. Light and quick; good if you like listening through a phone app."
