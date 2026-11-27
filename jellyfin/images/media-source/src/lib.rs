@@ -97,7 +97,11 @@ async fn healthz(State(app): Shared) -> Response {
         .await
     {
         Ok(_) => StatusCode::NO_CONTENT.into_response(),
-        Err(f) => f.into_response(),
+        Err(f) => {
+            // Docker 只看健康检查的退出码；原因写进容器日志，key 填错、Jellyfin 没起来才查得到。
+            eprintln!("健康检查没过：{}", f.message);
+            f.into_response()
+        }
     }
 }
 

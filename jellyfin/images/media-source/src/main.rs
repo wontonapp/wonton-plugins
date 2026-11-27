@@ -54,21 +54,31 @@ fn credentials_command(args: &[String]) -> ExitCode {
 /// 健康检查打本机 `/healthz`：它会去问 Jellyfin，管理员 key 不对时也算不健康。
 fn healthcheck() -> ExitCode {
     use std::io::{Read, Write};
-    let Ok(mut conn) = std::net::TcpStream::connect(("127.0.0.1", PORT)) else {
-        return ExitCode::FAILURE;
+    let mut conn = match std::net::TcpStream::connect(("127.0.0.1", PORT)) {
+        Ok(conn) => conn,
+        Err(e) => {
+            eprintln!("连不上适配器（127.0.0.1:{PORT}）：{e}");
+            return ExitCode::FAILURE;
+        }
     };
     let _ = conn.set_read_timeout(Some(std::time::Duration::from_secs(10)));
-    if conn
+    let mut reply = Vec::new();
+    let asked = conn
         .write_all(b"GET /healthz HTTP/1.0\r\nHost: localhost\r\n\r\n")
-        .is_err()
-    {
+        .and_then(|()| conn.read_to_end(&mut reply));
+    if let Err(e) = asked {
+        eprintln!("问 /healthz 没问到：{e}");
         return ExitCode::FAILURE;
     }
-    let mut head = [0u8; 12];
-    match conn.read_exact(&mut head) {
-        Ok(()) if head.starts_with(b"HTTP/1.") && &head[9..12] == b"204" => ExitCode::SUCCESS,
-        _ => ExitCode::FAILURE,
+    let reply = String::from_utf8_lossy(&reply);
+    let status = reply.lines().next().unwrap_or_default();
+    if status.starts_with("HTTP/1.") && status.get(9..12) == Some("204") {
+        return ExitCode::SUCCESS;
     }
+    // 输出进 `docker inspect` 的健康记录；回体是失败的类别和原因。
+    let body = reply.split_once("\r\n\r\n").map_or("", |(_, body)| body);
+    eprintln!("{status} {body}");
+    ExitCode::FAILURE
 }
 
 #[tokio::main]
