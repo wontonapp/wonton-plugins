@@ -206,7 +206,7 @@ x-wonton:
   id: app.ente.ente
   version: 0.1.2
   kind: app
-  title: { en: "Ente" }
+  title: { en: "Ente Photos" }
   subtitle: { zh: "加密相册", en: "Encrypted Photos", zh-Hant: "加密相簿", ja: "暗号化フォト" }
   description:
     zh: 像 Google 相册，但照片先加密再存进家里的服务器，连服务器自己都看不到内容：在网页里上传、按时间线翻、建相册。隐私最强，但要另注册 Ente 账号，备份只能在网页里做。

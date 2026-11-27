@@ -88,7 +88,7 @@ services:
 x-wonton:
   spec: "0.17"
   id: app.romm.romm
-  version: 0.2.1
+  version: 0.2.2
   kind: app
   title: { en: "RomM" }
   subtitle: { zh: "复古游戏厅", en: "Retro Game Room", zh-Hant: "復古遊戲廳", ja: "レトロゲームルーム" }
@@ -144,21 +144,7 @@ x-wonton:
       ジャケットや説明は外部サービス（IGDB など）から取得し、自分のキーが必要です。本バージョンでは未設定で、なくてもスキャンとプレイはできます。
 
       Wonton の更新後はプラグインが自動で作り直され、これまで通り開けます。入れ直す必要はありません。
-  release_notes:
-    zh: |
-      主人打开网页就是管理员，保存设置、管理资料不再被拒（登录令牌里带上应用认的 owner 组）。
-
-      应用发的信（密码重置、通知确认码）走云吞的内部邮箱，出现在你的 Wonton 私聊里。
-
-      商店介绍重写：放游戏文件和登录移到「安装后要做的事」，ROM、IGDB、容器等说法换成日常用语；补繁体中文和日文。
-    en: |
-      The owner now arrives as admin — saving settings and managing content is no longer refused (the sign-in token carries the owner group again).
-
-      Emails the app sends (password resets, notification codes) go through Wonton's internal mailbox and land in your Wonton private chat.
-
-      Store copy rewritten: putting game files in place and signing in moved to the pre-install notice, with ROM/IGDB/container wording in everyday words; Traditional Chinese and Japanese added.
-    zh-Hant: "主人開啟網頁就是管理員，儲存設定、管理資料不再被拒（登入權杖裡帶上應用認的 owner 組）。\n\n應用發的信（密碼重置、通知確認碼）走雲吞的內部郵箱，出現在你的 Wonton 私聊裡。\n\n商店介紹重寫：放遊戲檔案和登入移到「安裝後要做的事」，ROM、IGDB、容器等說法換成日常用語；補繁體中文和日文。"
-    ja: "オーナーはページを開くと管理者として入り、設定の保存やコンテンツ管理が拒否されなくなります（サインインのトークンにアプリが認識する owner グループが入ります）。\n\nアプリが送るメール（パスワード再設定、通知の確認コード）は Wonton の内部メールを通り、あなたの Wonton ダイレクトメッセージに現れます。\n\nストア紹介を書き直し、ゲームファイルの配置とサインインを「インストール後の手順」に移し、ROM・IGDB・コンテナなどの言い方を日常的な言葉にしました。繁体字中国語と日本語を追加。"
+  release_notes: { zh: "应用名改回原名 RomM，用途“复古游戏厅”放到名字下面。", en: "The app now shows its own name, RomM, with \"Retro Game Room\" underneath.", zh-Hant: "應用名稱改回原名 RomM，用途「復古遊戲廳」放到名稱下方。", ja: "アプリ名を元の名前 RomM に戻し、用途「レトロゲームルーム」を名前の下に表示します。" }
   webui:
     service: romm
     port: 8080
