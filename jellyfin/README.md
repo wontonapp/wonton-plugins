@@ -28,11 +28,31 @@ WONTON_PLUGIN=jellyfin scripts/dev.sh install
 
 Jellyfin 12.4 没有原生 OIDC，反向代理请求头也不是 Jellyfin 核心支持的登录方式，所以清单用 `sso: none`：云吞网关挡住网页，Jellyfin 保留自己的登录。不做自研认证侧车，也不把用户凭据交给插件。
 
+## App 直接浏览和播放（媒体源）
+
+清单的 `provides.media_source` 把 Jellyfin 接进云吞的媒体源能力（插件规范“媒体源”），App 的原生影视页、
+离线下载和 Agent 的找片、续播都经它，不经 Jellyfin 网页。干这件事的是本仓库自己的适配器
+`images/media-source/`：只把规范的路径翻成 Jellyfin 12.4 的接口，不存播放状态；重试、断点、队列都在核心。
+
+- **要一把管理员 API 密钥。** 建好管理员后在 Jellyfin 的 控制台 → API 密钥 新建一把，填到插件详情页。
+  没填时插件是“待配置”，网页照常能用；填错时适配器不健康，日志写明 Jellyfin 回了什么。
+- **一人一个 Jellyfin 用户。** 按云吞用户名找同名 Jellyfin 用户（不分大小写），没有就建一个，口令随机、不保存。
+  所以主人建管理员时用自己的云吞用户名，App 里看到的就是自己那个账号的进度。
+- **本人令牌走 Quick Connect。** 管理员密钥可以替任何用户批准 Quick Connect（12.4 实测），适配器以每人一台固定的
+  设备换出本人令牌，存在插件数据目录的 `media-source/users/`；全程不碰、不改任何人的口令。播放会话、进度、
+  “继续观看”和“已看”都记在本人名下。关掉 Quick Connect 时 App 播放会报“需要重新登录”并写明去哪打开。
+- **收回**：家里人退出时核心调 `POST /revoke`，适配器删掉 Jellyfin 里这个人的那台设备，令牌立即作废；
+  Jellyfin 用户和观看记录留着。
+- **流**：手机能直接解的走直链，其余（MKV、HEVC 以外的编码、选了字幕或换了音轨）由 Jellyfin 转成 HLS，
+  能拷贝的轨不重编。凭据只放请求头，播放列表和地址里不带。
+- 能力只报 `video`：音乐交给音乐的提供方，不和它抢。
+
 ## 目录里有什么
 
 | 路径 | 内容 |
 | --- | --- |
-| `docker-compose.yml` | 插件：Jellyfin 服务加上 `x-wonton` 清单 |
+| `docker-compose.yml` | 插件：Jellyfin、媒体源适配器两个服务加上 `x-wonton` 清单 |
+| `images/media-source/` | 媒体源适配器的源码和 Dockerfile |
 | `config/system.xml` | 首次创建配置目录时复制的中文海报信息默认配置 |
 | `icon.svg` | Jellyfin 官方图标 |
 | `NOTICE` | 图标、上游软件许可和商标声明 |
