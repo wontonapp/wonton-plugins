@@ -1,4 +1,4 @@
-//! 契约的失败信封：`{code, message, retry_after_secs?}`，码就是 ADR-0113 失败类别的名字，文案由壳按类别出，
+//! 契约的失败信封：`{code, message, retry_after_secs?}`，码就是核心媒体失败类别的名字，文案由壳按类别出，
 //! `message` 只给排查看。HTTP 状态码跟着类别走，核心按码不按状态码判。
 
 use axum::Json;

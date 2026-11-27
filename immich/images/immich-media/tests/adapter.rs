@@ -1,4 +1,4 @@
-//! 适配器的契约行为：核心照 ADR-0113 的契约发请求，断言落到了谁的 Immich 库里、回了什么类别。
+//! 适配器的契约行为：核心照 media_source 契约发请求，断言落到了谁的 Immich 库里、回了什么类别。
 //! 假 Immich 见 `fake_immich`。
 
 mod fake_immich;

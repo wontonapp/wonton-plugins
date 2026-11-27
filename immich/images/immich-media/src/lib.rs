@@ -1,4 +1,4 @@
-//! Immich 的媒体源适配器（ADR-0113 第 2、9 节）：把核心的 `media_source` 契约翻成 Immich 自己的接口，
+//! Immich 的媒体源适配器：把核心的 `media_source` 契约翻成 Immich 自己的接口，
 //! 只做字段映射、错误码归一和按人取凭据；不重试、不排队，任务和状态在核心。
 //!
 //! 每个请求带核心签的能力凭据（`Authorization: Bearer`）和 `X-Wonton-User`（替谁办），适配器用这个人
