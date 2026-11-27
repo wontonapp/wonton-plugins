@@ -1,16 +1,17 @@
 //! 测试用的假 Immich：只实现适配器用到的那几条接口，形状照钉住版本的 OpenAPI。
-//! 状态都在内存里，测试直接读它断言“落到了谁的库里”。
+//! 状态都在内存里，测试直接读它断言“落到了谁的库里”。每个测试文件各编一份，用不到的 helper 不少。
+#![allow(dead_code)]
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use axum::extract::{Multipart, Path, Query, State};
+use axum::body::Body;
+use axum::extract::{Multipart, OriginalUri, Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use serde_json::{Value, json};
-
 #[derive(Clone, Debug)]
 pub struct User {
     pub id: String,
@@ -28,6 +29,19 @@ pub struct Asset {
     pub size: usize,
     pub created: String,
     pub favorite: bool,
+    pub trashed: bool,
+    pub file_missing: bool,
+    pub city: Option<String>,
+    pub country: Option<String>,
+    pub person: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Person {
+    pub id: String,
+    pub owner: String,
+    pub name: String,
+    pub file_missing: bool,
 }
 
 #[derive(Default)]
@@ -37,7 +51,12 @@ pub struct World {
     pub sessions: HashMap<String, String>,
     pub assets: Vec<Asset>,
     pub albums: Vec<(String, String, Vec<String>, Vec<String>)>,
+    pub people: Vec<Person>,
     pub partners: Vec<(String, String)>,
+    pub vanished_albums: Vec<String>,
+    pub searches: Vec<(&'static str, Value)>,
+    pub restores: Vec<Value>,
+    pub ranges: Vec<String>,
     pub logins: usize,
     next: usize,
 }
@@ -73,8 +92,67 @@ impl World {
             size: 1,
             created: created.into(),
             favorite: false,
+            trashed: false,
+            file_missing: false,
+            city: None,
+            country: None,
+            person: None,
         });
         id
+    }
+
+    pub fn add_trashed_asset(&mut self, owner: &str, created: &str) -> String {
+        let id = self.add_asset(owner, created);
+        self.asset(&id).trashed = true;
+        id
+    }
+
+    pub fn add_video(&mut self, owner: &str, created: &str) -> String {
+        let id = self.add_asset(owner, created);
+        let checksum = format!("{:040}", self.next + 1);
+        let asset = self.asset(&id);
+        asset.name = format!("{id}.mov");
+        asset.size = 12;
+        asset.checksum = checksum;
+        id
+    }
+
+    pub fn add_person(&mut self, owner: &str, name: &str) -> String {
+        let id = self.id();
+        self.people.push(Person {
+            id: id.clone(),
+            owner: owner.into(),
+            name: name.into(),
+            file_missing: false,
+        });
+        id
+    }
+
+    pub fn asset(&mut self, id: &str) -> &mut Asset {
+        self.assets.iter_mut().find(|a| a.id == id).unwrap()
+    }
+
+    /// 让这一条的文件不在盘上（Immich 的行还在）：取字节回 404。
+    pub fn remove_asset_file(&mut self, id: &str) {
+        self.asset(id).file_missing = true;
+    }
+
+    pub fn remove_person_file(&mut self, id: &str) {
+        self.people
+            .iter_mut()
+            .find(|p| p.id == id)
+            .unwrap()
+            .file_missing = true;
+    }
+
+    pub fn place_of(&mut self, id: &str, city: &str, country: &str) {
+        let asset = self.asset(id);
+        asset.city = Some(city.into());
+        asset.country = Some(country.into());
+    }
+
+    pub fn face_of(&mut self, id: &str, person: &str) {
+        self.asset(id).person = Some(person.into());
     }
 
     pub fn add_album(&mut self, name: &str, owner: &str, members: &[&str]) -> String {
@@ -87,6 +165,10 @@ impl World {
             vec![],
         ));
         id
+    }
+
+    pub fn vanish_album(&mut self, id: &str) {
+        self.vanished_albums.push(id.into());
     }
 }
 
@@ -116,6 +198,85 @@ macro_rules! who {
             None => return deny(),
         }
     };
+}
+
+/// Immich 对象级访问检查的失败：看不到和不存在都是这个 400。
+fn not_allowed(permission: &str) -> Response {
+    (
+        StatusCode::BAD_REQUEST,
+        format!("Not found or no {permission} access"),
+    )
+        .into_response()
+}
+
+fn is_partner(world: &World, owner: &str, me: &str) -> bool {
+    world
+        .partners
+        .iter()
+        .any(|(from, to)| from == owner && to == me)
+}
+
+/// 看得到：自己的、partner 给我的、放进我在的相册的。和 Immich 的 `AssetRead`/`AssetView` 一致。
+fn readable(world: &World, me: &str, asset: &Asset) -> bool {
+    asset.owner == me
+        || is_partner(world, &asset.owner, me)
+        || world
+            .albums
+            .iter()
+            .any(|album| album.2.iter().any(|user| user == me) && album.3.contains(&asset.id))
+}
+
+/// 找不到、看不到、不是主人（`edit`）都回 Immich 的 400，返回下标。
+/// 失败直接带 `Response`（128 字节），比每个调用点再包一层简单。
+#[allow(clippy::result_large_err)]
+fn visible_asset(
+    world: &World,
+    me: &str,
+    id: &str,
+    edit: bool,
+    permission: &str,
+) -> Result<usize, Response> {
+    let index = world
+        .assets
+        .iter()
+        .position(|asset| asset.id == id)
+        .ok_or_else(|| not_allowed(permission))?;
+    let asset = &world.assets[index];
+    let allowed = if edit {
+        asset.owner == me
+    } else {
+        readable(world, me, asset)
+    };
+    if allowed {
+        Ok(index)
+    } else {
+        Err(not_allowed(permission))
+    }
+}
+
+/// 字节回包：`Range` 命中回 206 前四个字节并带上游的 `x-seen-range`，越界回 416。
+fn bytes_response(headers: &HeaderMap, body: &str, content_type: &str) -> Response {
+    let out = Response::builder().header("accept-ranges", "bytes");
+    if headers.get("range").is_some_and(|v| *v == "bytes=999-") {
+        return out
+            .status(StatusCode::RANGE_NOT_SATISFIABLE)
+            .header("content-range", format!("bytes */{}", body.len()))
+            .body(Body::from(String::new()))
+            .unwrap();
+    }
+    if let Some(range) = headers.get("range") {
+        return out
+            .status(StatusCode::PARTIAL_CONTENT)
+            .header("content-range", format!("bytes 0-3/{}", body.len()))
+            .header("x-seen-range", range.to_str().unwrap())
+            .header("content-type", content_type)
+            .body(Body::from(body[..4].to_owned()))
+            .unwrap();
+    }
+    out.status(StatusCode::OK)
+        .header("content-type", content_type)
+        .body(Body::from(body.to_owned()))
+        .unwrap()
 }
 
 async fn ping() -> Json<Value> {
@@ -258,6 +419,11 @@ async fn upload(State(w): State<Shared>, headers: HeaderMap, mut form: Multipart
         size,
         created: fields["fileCreatedAt"].clone(),
         favorite: false,
+        trashed: false,
+        file_missing: false,
+        city: None,
+        country: None,
+        person: None,
     });
     (
         StatusCode::CREATED,
@@ -349,14 +515,13 @@ async fn bucket(
     .into_response()
 }
 
-fn album_json(world: &World, album: &(String, String, Vec<String>, Vec<String>)) -> Value {
+fn album_json(album: &(String, String, Vec<String>, Vec<String>)) -> Value {
     let users: Vec<Value> = album
         .2
         .iter()
         .enumerate()
         .map(|(i, id)| json!({"role": if i == 0 { "owner" } else { "editor" }, "user": {"id": id}}))
         .collect();
-    let _ = world;
     json!({
         "id": album.0, "albumName": album.1, "albumUsers": users, "assetCount": album.3.len(),
         "shared": album.2.len() > 1, "albumThumbnailAssetId": album.3.first(),
@@ -370,10 +535,270 @@ async fn albums(State(w): State<Shared>, headers: HeaderMap) -> Response {
     let list: Vec<Value> = world
         .albums
         .iter()
-        .filter(|a| a.2.contains(&me))
-        .map(|a| album_json(&world, a))
+        .filter(|a| a.2.contains(&me) && !world.vanished_albums.contains(&a.0))
+        .map(album_json)
         .collect();
     Json(list).into_response()
+}
+
+async fn album_detail(
+    State(w): State<Shared>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Response {
+    let world = w.lock().unwrap();
+    let me = who!(world, headers);
+    let Some(album) = world.albums.iter().find(|a| a.0 == id) else {
+        return not_allowed("album.read");
+    };
+    if !album.2.contains(&me) {
+        return not_allowed("album.read");
+    }
+    // 权限查过之后行没了：Immich 是 `findOrFail` 的 404。
+    if world.vanished_albums.contains(&id) {
+        return (StatusCode::NOT_FOUND, "").into_response();
+    }
+    Json(album_json(album)).into_response()
+}
+
+fn asset_json(world: &World, asset: &Asset) -> Value {
+    let video = asset.name.ends_with(".mov");
+    let people: Vec<Value> = asset
+        .person
+        .iter()
+        .filter_map(|id| world.people.iter().find(|person| &person.id == id))
+        .filter(|person| !person.name.is_empty())
+        .map(|person| json!({"id": person.id, "name": person.name}))
+        .collect();
+    json!({
+        "id": asset.id,
+        "type": if video { "VIDEO" } else { "IMAGE" },
+        "fileCreatedAt": asset.created,
+        "fileModifiedAt": asset.created,
+        "createdAt": asset.created,
+        "updatedAt": asset.created,
+        "ownerId": asset.owner,
+        "isFavorite": asset.favorite,
+        "livePhotoVideoId": asset.live,
+        "originalFileName": asset.name,
+        "originalPath": format!("upload/{}", asset.name),
+        "width": 3000,
+        "height": 2000,
+        "duration": if video { Some(3000) } else { None::<u32> },
+        "thumbhash": Value::Null,
+        "exifInfo": {
+            "exifImageWidth": 3000,
+            "exifImageHeight": 2000,
+            "fileSizeInByte": asset.size,
+            "city": asset.city,
+            "country": asset.country,
+        },
+        "people": people,
+    })
+}
+
+async fn search_impl(shared: Shared, headers: HeaderMap, body: Value, smart: bool) -> Response {
+    let mut world = shared.lock().unwrap();
+    let me = who!(world, headers);
+    world
+        .searches
+        .push((if smart { "smart" } else { "metadata" }, body.clone()));
+    let album_ids: Vec<String> = body["albumIds"]
+        .as_array()
+        .map(|list| {
+            list.iter()
+                .filter_map(|id| id.as_str().map(str::to_owned))
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut pool: Vec<&Asset> = if album_ids.is_empty() {
+        visible(&world, &me).collect()
+    } else {
+        for id in &album_ids {
+            match world.albums.iter().find(|album| &album.0 == id) {
+                Some(album) if album.2.contains(&me) => {}
+                _ => return not_allowed("album.read"),
+            }
+        }
+        world
+            .albums
+            .iter()
+            .filter(|album| album_ids.contains(&album.0))
+            .flat_map(|album| album.3.iter())
+            .filter_map(|id| world.assets.iter().find(|asset| &asset.id == id))
+            .collect()
+    };
+    // 回收站里的不进搜索结果（Immich 默认按 deletedAt 为空过滤）。
+    pool.retain(|asset| !asset.trashed);
+    if let Some(ids) = body["personIds"].as_array() {
+        pool.retain(|asset| {
+            asset
+                .person
+                .as_ref()
+                .is_some_and(|person| ids.contains(&json!(person)))
+        });
+    }
+    if let Some(query) = body["query"].as_str() {
+        let query = query.to_lowercase();
+        pool.retain(|asset| asset.name.to_lowercase().contains(&query));
+    }
+    if let Some(city) = body["city"].as_str() {
+        pool.retain(|asset| asset.city.as_deref() == Some(city));
+    }
+    if let Some(country) = body["country"].as_str() {
+        pool.retain(|asset| asset.country.as_deref() == Some(country));
+    }
+    if let Some(after) = body["takenAfter"].as_str() {
+        pool.retain(|asset| asset.created.as_str() >= after);
+    }
+    if let Some(before) = body["takenBefore"].as_str() {
+        pool.retain(|asset| asset.created.as_str() <= before);
+    }
+    if let Some(kind) = body["type"].as_str() {
+        pool.retain(|asset| asset.name.ends_with(".mov") == (kind == "VIDEO"));
+    }
+    if let Some(favorite) = body["isFavorite"].as_bool() {
+        pool.retain(|asset| asset.favorite == favorite);
+    }
+    pool.sort_by(|a, b| b.created.cmp(&a.created));
+    let total = pool.len();
+    let page = body["page"].as_u64().unwrap_or(1).max(1);
+    let size = body["size"].as_u64().unwrap_or(250).max(1);
+    let start = ((page - 1) * size) as usize;
+    let items: Vec<Value> = pool
+        .iter()
+        .skip(start)
+        .take(size as usize)
+        .map(|asset| asset_json(&world, asset))
+        .collect();
+    let next = (start + items.len() < total).then(|| (page + 1).to_string());
+    Json(json!({
+        "albums": {"total": 0, "count": 0, "items": [], "facets": []},
+        "assets": {
+            "total": total, "count": items.len(), "items": items, "facets": [],
+            "nextPage": next, "nextCursor": null,
+        },
+    }))
+    .into_response()
+}
+
+async fn search(
+    OriginalUri(uri): OriginalUri,
+    State(w): State<Shared>,
+    headers: HeaderMap,
+    Json(body): Json<Value>,
+) -> Response {
+    search_impl(w, headers, body, uri.path().ends_with("/smart")).await
+}
+
+fn person_readable(world: &World, me: &str, person: &Person) -> bool {
+    person.owner == me || is_partner(world, &person.owner, me)
+}
+
+async fn people(State(w): State<Shared>, headers: HeaderMap) -> Response {
+    let world = w.lock().unwrap();
+    let me = who!(world, headers);
+    let list: Vec<Value> = world
+        .people
+        .iter()
+        .filter(|person| person_readable(&world, &me, person))
+        .map(|person| {
+            json!({
+                "id": person.id, "name": person.name, "isHidden": false, "birthDate": null,
+                "thumbnailPath": format!("/api/people/{}/thumbnail", person.id),
+            })
+        })
+        .collect();
+    Json(json!({"total": list.len(), "people": list, "hidden": 0})).into_response()
+}
+
+async fn person_thumbnail(
+    State(w): State<Shared>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Response {
+    let world = w.lock().unwrap();
+    let me = who!(world, headers);
+    let Some(person) = world.people.iter().find(|person| person.id == id) else {
+        return not_allowed("person.read");
+    };
+    if !person_readable(&world, &me, person) {
+        return not_allowed("person.read");
+    }
+    if person.file_missing {
+        return (StatusCode::NOT_FOUND, "").into_response();
+    }
+    bytes_response(&headers, &format!("face-of-{id}"), "image/jpeg")
+}
+
+async fn asset_detail(
+    State(w): State<Shared>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Response {
+    let world = w.lock().unwrap();
+    let me = who!(world, headers);
+    match visible_asset(&world, &me, &id, false, "asset.read") {
+        Ok(index) => Json(asset_json(&world, &world.assets[index])).into_response(),
+        Err(response) => response,
+    }
+}
+
+async fn original(State(w): State<Shared>, headers: HeaderMap, Path(id): Path<String>) -> Response {
+    let world = w.lock().unwrap();
+    let me = who!(world, headers);
+    let index = match visible_asset(&world, &me, &id, false, "asset.download") {
+        Ok(index) => index,
+        Err(response) => return response,
+    };
+    if world.assets[index].file_missing {
+        return (StatusCode::NOT_FOUND, "").into_response();
+    }
+    bytes_response(&headers, &format!("original-of-{id}"), "image/jpeg")
+}
+
+async fn playback(State(w): State<Shared>, headers: HeaderMap, Path(id): Path<String>) -> Response {
+    let mut world = w.lock().unwrap();
+    let me = who!(world, headers);
+    if let Some(range) = headers.get("range") {
+        world.ranges.push(range.to_str().unwrap().to_owned());
+    }
+    let index = match visible_asset(&world, &me, &id, false, "asset.view") {
+        Ok(index) => index,
+        Err(response) => return response,
+    };
+    let asset = &world.assets[index];
+    if !asset.name.ends_with(".mov") || asset.file_missing {
+        return (
+            StatusCode::NOT_FOUND,
+            "Asset not found or asset is not a video",
+        )
+            .into_response();
+    }
+    bytes_response(&headers, &format!("video-bytes-of-{id}"), "video/mp4")
+}
+
+async fn restore(State(w): State<Shared>, headers: HeaderMap, Json(body): Json<Value>) -> Response {
+    let mut world = w.lock().unwrap();
+    let me = who!(world, headers);
+    world.restores.push(body.clone());
+    let ids: Vec<String> = body["ids"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|id| id.as_str().unwrap().to_owned())
+        .collect();
+    let mut indexes = Vec::new();
+    for id in &ids {
+        match visible_asset(&world, &me, id, true, "asset.delete") {
+            Ok(index) => indexes.push(index),
+            Err(response) => return response,
+        }
+    }
+    for index in indexes {
+        world.assets[index].trashed = false;
+    }
+    Json(json!({"count": ids.len()})).into_response()
 }
 
 async fn create_album(
@@ -400,7 +825,7 @@ async fn create_album(
     let album = world.albums.iter_mut().find(|a| a.0 == id).unwrap();
     album.3 = assets;
     let album = album.clone();
-    (StatusCode::CREATED, Json(album_json(&world, &album))).into_response()
+    (StatusCode::CREATED, Json(album_json(&album))).into_response()
 }
 
 async fn favorite(
@@ -426,31 +851,26 @@ async fn favorite(
     StatusCode::NO_CONTENT.into_response()
 }
 
-async fn thumbnail(Path(id): Path<String>, headers: HeaderMap) -> Response {
+async fn thumbnail(
+    State(w): State<Shared>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Response {
+    let world = w.lock().unwrap();
+    let me = who!(world, headers);
+    let index = match visible_asset(&world, &me, &id, false, "asset.view") {
+        Ok(index) => index,
+        Err(response) => return response,
+    };
+    if world.assets[index].file_missing {
+        return (StatusCode::NOT_FOUND, "").into_response();
+    }
     let body = format!("thumbnail-of-{id}");
     let etag = format!("\"{id}\"");
     if headers.get("if-none-match").is_some_and(|v| *v == *etag) {
         return (StatusCode::NOT_MODIFIED, [("etag", etag)]).into_response();
     }
-    if headers.get("range").is_some_and(|v| *v == "bytes=999-") {
-        return (
-            StatusCode::RANGE_NOT_SATISFIABLE,
-            [("content-range", format!("bytes */{}", body.len()))],
-        )
-            .into_response();
-    }
-    match headers.get("range") {
-        Some(range) => (
-            StatusCode::PARTIAL_CONTENT,
-            [
-                ("content-range", format!("bytes 0-3/{}", body.len())),
-                ("x-seen-range", range.to_str().unwrap().into()),
-            ],
-            body[..4].to_owned(),
-        )
-            .into_response(),
-        None => ([("content-type", "image/webp")], body).into_response(),
-    }
+    bytes_response(&headers, &body, "image/webp")
 }
 
 pub async fn start(world: Shared) -> String {
@@ -465,10 +885,19 @@ pub async fn start(world: Shared) -> String {
         .route("/api/users", get(users))
         .route("/api/assets", post(upload).put(favorite))
         .route("/api/assets/bulk-upload-check", post(bulk_check))
+        .route("/api/assets/{id}", get(asset_detail))
         .route("/api/assets/{id}/thumbnail", get(thumbnail))
+        .route("/api/assets/{id}/original", get(original))
+        .route("/api/assets/{id}/video/playback", get(playback))
         .route("/api/timeline/buckets", get(buckets))
         .route("/api/timeline/bucket", get(bucket))
         .route("/api/albums", get(albums).post(create_album))
+        .route("/api/albums/{id}", get(album_detail))
+        .route("/api/search/smart", post(search))
+        .route("/api/search/metadata", post(search))
+        .route("/api/people", get(people))
+        .route("/api/people/{id}/thumbnail", get(person_thumbnail))
+        .route("/api/trash/restore/assets", post(restore))
         .with_state(world);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
