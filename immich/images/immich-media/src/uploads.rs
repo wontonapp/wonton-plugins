@@ -103,7 +103,7 @@ pub async fn start(
     if start.path.trim().is_empty() || start.size == 0 {
         return Err(Failure::protocol("上传要有路径，大小不能是 0"));
     }
-    // Immich 的时间线按拍摄时间排；没有就拒，不拿“现在”顶上，免得旧照片全堆在今天。
+    // Immich 的时间线按拍摄时间排；没有就拒，不拿上传时刻顶上，免得旧照片全堆在今天。
     if start.taken_at.is_none() {
         return Err(Failure::protocol("照片要带拍摄时间（taken_at）"));
     }

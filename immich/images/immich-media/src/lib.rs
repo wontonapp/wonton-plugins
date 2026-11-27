@@ -103,7 +103,7 @@ pub fn router(app: App) -> Router {
         .with_state(app)
 }
 
-/// 暂存超过一周还没收尾的上传：核心那边的任务早已结束或换了新的上传号，留着只占盘。
+/// 暂存超过一周仍未收尾的上传：核心那边的任务早已结束或换了新的上传号，留着只占盘。
 pub fn sweep_stale_uploads(app: &App, older_than: Duration) {
     let root = app.state.join("uploads");
     let Ok(users) = std::fs::read_dir(&root) else {
