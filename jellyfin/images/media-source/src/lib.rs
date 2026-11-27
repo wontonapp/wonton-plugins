@@ -78,6 +78,30 @@ pub fn router(app: Arc<App>) -> Router {
         .with_state(app)
 }
 
+/// 还没填管理员 key 时给人看的原因。
+pub const NO_ADMIN_KEY: &str =
+    "还没填 Jellyfin 的 API 密钥：在 Jellyfin 的 控制台 → API 密钥 里新建一把，填到插件详情页";
+
+/// 还没填管理员 key 时的服务。插件照样装上（核心标“待配置”），主人才能打开网页去建 key；媒体源的接口
+/// 一律回 `plugin_unavailable` 说去哪填。健康检查只问 Jellyfin 自己在不在：拿“没 key”判不健康，
+/// 插件就装不上，也就没地方去建 key。
+pub fn unconfigured(jellyfin: Jellyfin) -> Router {
+    Router::new()
+        .route(
+            "/healthz",
+            get(move || async move {
+                match jellyfin.alive().await {
+                    Ok(()) => StatusCode::NO_CONTENT.into_response(),
+                    Err(f) => {
+                        eprintln!("健康检查没过：{}", f.message);
+                        f.into_response()
+                    }
+                }
+            }),
+        )
+        .fallback(|| async { Failure::new(Code::PluginUnavailable, NO_ADMIN_KEY).into_response() })
+}
+
 /// 只认核心签给本提供方的凭据（`credentials issue`）；一把都没签时谁都不放行。
 async fn authorize(State(app): Shared, req: Request, next: Next) -> Response {
     let presented = req
