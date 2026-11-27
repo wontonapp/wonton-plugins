@@ -40,8 +40,8 @@ x-wonton:
   id: app.wonton.files
   version: 0.2.5
   kind: app
-  title: { en: "Files" }
-  subtitle: { zh: "文件查找", en: "File Search", zh-Hant: "檔案尋找", ja: "ファイル検索" }
+  title: { zh: "文件", en: "Files", zh-Hant: "檔案", ja: "ファイル" }
+  subtitle: { zh: "让 Bot 找文件", en: "File Search for the Bot", zh-Hant: "讓 Bot 找檔案", ja: "Bot にファイルを探させる" }
   icon: icon.svg
   notices: [NOTICE]
   description:
