@@ -75,11 +75,13 @@ fn push_match(token: &str, table: &[(&str, &'static str)], out: &mut Vec<&'stati
     }
 }
 
+/// Jellyfin 的码率字段是 32 位有符号整数，超过 `i32::MAX` 整个请求回 400（12.4 实测）；契约是 `u32`，
+/// 客户端把“不限”报成 `u32::MAX`，这里收进 Jellyfin 能收的范围。
 pub fn bitrate(profile: &DeviceProfile) -> u32 {
     if profile.max_bitrate == 0 {
         UNLIMITED_BITRATE
     } else {
-        profile.max_bitrate
+        profile.max_bitrate.min(i32::MAX as u32)
     }
 }
 
@@ -181,5 +183,14 @@ mod tests {
         let jf = jellyfin_profile(&hdr);
         assert_eq!(jf["MaxStreamingBitrate"], 8_000_000);
         assert_eq!(jf["CodecProfiles"], json!([]));
+    }
+
+    #[test]
+    fn bitrate_fits_in_jellyfin_int32() {
+        let mut p = profile(&["h264"], &["mp4"]);
+        p.max_bitrate = u32::MAX;
+        let jf = jellyfin_profile(&p);
+        assert_eq!(jf["MaxStreamingBitrate"], i32::MAX);
+        assert_eq!(jf["MaxStaticBitrate"], i32::MAX);
     }
 }
