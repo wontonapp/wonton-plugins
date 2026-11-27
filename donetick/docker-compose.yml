@@ -7,7 +7,7 @@
 services:
   donetick:
     # 上游官方镜像（AGPL-3.0），多架构清单列表摘要固定。
-    image: docker.io/donetick/donetick:v0.1.86@sha256:66253a32a8e8ed8c49c49418b43abe1181db23e07defe97748d2cb7508c487cd
+    image: docker.io/donetick/donetick:v0.1.89@sha256:cfe1875c9d04ea89b2e6a60f1a36b28c32661ff2d48c5b8e26dca265bb69d984
     # 镜像默认 root；降权到主人的用户，SQLite 和上传的文件归主人。
     user: "${PUID}:${PGID}"
     environment:
